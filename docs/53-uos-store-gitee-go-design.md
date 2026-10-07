@@ -1,5 +1,8 @@
 # 统信应用商店投递迁移到 Gitee Go 设计
 
+> 2026-10-07 补充：维护者已选择并实测「本地直接读取 GitHub Release → 提交商店」；
+> 后续本地发布优先按第 10 节执行。第 1～9 节保留原 Gitee Go 方案及历史背景。
+
 ## 1. 背景与问题
 
 release 流程里有一个「自动把最新版本投递到统信应用商店」的环节，原先放在
@@ -130,3 +133,175 @@ flowchart TD
 - [ ] Chromium 可用，`sync-capabilities` 登录成功
 - [ ] `MODE=verify` 运行不会产生任何提交
 - [ ] `MODE=submit` 能产出报告并完成提交
+
+## 10. 本地直接发布：已跑通的快速路径
+
+### 10.1 下次给编码助手的指令
+
+> 将 GitHub Release `vX.Y.Z` 的 amd64、arm64、loong64 DEB 发布到 UOS 商店。
+> 按 `docs/53-uos-store-gitee-go-design.md` 第 10 节在本地执行，不走 Gitee，
+> 从 `private.env` 读取商店凭据，复用现有 Python 环境、Chrome 和投递工具。
+> 更新说明依据该 Release 整理；校验 SHA256 后直接提交，并回读版本、更新说明
+> 和审核状态，保存报告。若已提交同一版本，先核对商店状态，避免重复提审。
+
+### 10.2 已准备好的环境与业务边界
+
+| 项目 | 本机已验证配置 |
+| --- | --- |
+| 工作目录 | `/home/han/code/linglong-store/flutter-linglong-store` |
+| Release 仓库 | `HanHan666666/flutter-linglong-store` |
+| 商店应用 | `玲珑应用商店社区版`，包名 `linglong-store`，应用 ID `1096239` |
+| 凭据 | 根目录 `private.env` 的 `APPSTORE_USERNAME`、`APPSTORE_PASSWORD`；Git 忽略，权限 `0600` |
+| Python 环境 | `build/uos-store/3.7.0/venv/bin/python3`，Python 3.12，依赖已安装 |
+| 投递工具 | `build/uos-store/3.7.0/appstore-tool`，来源 `https://github.com/guanzi008/appstore.git` |
+| 工具版本 | 已实测 commit `f65b6227f8c3acd76a0314f0a0fa4768a89ad6e9` |
+| 浏览器 | `/usr/bin/google-chrome`；通过 `UTPUBLISHER_CHROMIUM_EXECUTABLE` 指定 |
+| 投递模式 | `upload-packages --mode api --release-key latest-release --headless` |
+| 每版本工作区 | `build/uos-store/<版本>/`，保存包、哈希、说明、能力缓存与报告 |
+
+`3.7.0` 目录目前兼作可复用运行环境，下一次发新版仍可引用其中的 `venv` 和
+`appstore-tool`，无需重新 clone、安装 Python 依赖或下载 Chromium。它属于 Git
+忽略的本机缓存，换机器或清理 `build/` 后必须重新准备，不能把目录存在当作
+仓库自带依赖。工具升级应单独核验，日常投递无需追随远端 `main` 更新。
+
+3.7.0 首次投递沿用旧脚本仅提交 amd64、arm64，工具保留了商店原有的 loong64
+3.5.0，造成架构版本不一致。随后实查能力缓存：商店支持 `loong64`（架构代码
+`6`），已有应用也包含该架构。因此旧脚本「商店当前受理这两个架构」的注释
+不符合本次查询结果，不能作为排除龙芯的依据。
+
+后续本地完整发布应核对并提交 amd64、arm64、loong64 三个包；如果某架构缺包或
+不兼容，必须明确告知维护者，不能把部分架构成功报告为全架构发布完成。龙芯
+3.7.0 包已下载并通过 SHA256 与 DEB 元数据校验，但尚未补交，当前提交仍在审核。
+本手册的三包命令尚未实测提审，须先核对商店对审核中修改的限制，不自动撤回审核。
+提交成功表示已经提审，不表示商店审核通过或公开上架。
+
+### 10.3 准备产物与更新说明
+
+下列命令在仓库根目录、独立 Bash 会话中执行。先把 `vX.Y.Z` 换成实际 Release
+tag；指定版本，避免误取 latest。准备阶段只下载和校验，不提交。
+
+```bash
+set -euo pipefail
+umask 077
+UOS_RELEASE_TAG='vX.Y.Z'
+UOS_RELEASE_VERSION="${UOS_RELEASE_TAG#v}"
+UOS_RELEASE_REPO='HanHan666666/flutter-linglong-store'
+UOS_RUNTIME="$PWD/build/uos-store/3.7.0"
+UOS_RUN_DIR="$PWD/build/uos-store/$UOS_RELEASE_VERSION"
+mkdir -p "$UOS_RUN_DIR"
+
+# 保留每次发布的源信息；已有包也必须再次校验，不能仅凭下载缓存判断可信。
+gh release view "$UOS_RELEASE_TAG" --repo "$UOS_RELEASE_REPO" \
+  --json tagName,isDraft,isPrerelease,body,url > "$UOS_RUN_DIR/release.json"
+gh release download "$UOS_RELEASE_TAG" --repo "$UOS_RELEASE_REPO" \
+  -p "linglong-store_${UOS_RELEASE_VERSION}_amd64.deb" \
+  -p "linglong-store_${UOS_RELEASE_VERSION}_arm64.deb" \
+  -p "linglong-store_${UOS_RELEASE_VERSION}_loong64.deb" \
+  -p hashes.sha256 --dir "$UOS_RUN_DIR" --skip-existing
+
+# 核验本次要上传的三个包；哈希文件缺少条目或不匹配时立即停止。
+python3 - "$UOS_RUN_DIR" "$UOS_RELEASE_TAG" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+tag = sys.argv[2]
+release = json.loads((root / 'release.json').read_text())
+if release['tagName'] != tag or release['isDraft'] or release['isPrerelease']:
+    raise SystemExit('目标必须是指定 tag 的已发布正式 Release')
+checks = {
+    name.lstrip('*'): digest.lower()
+    for digest, name in (
+        line.split(maxsplit=1)
+        for line in (root / 'hashes.sha256').read_text().splitlines()
+        if line.strip()
+    )
+}
+for arch in ('amd64', 'arm64', 'loong64'):
+    package = root / f'linglong-store_{tag.removeprefix("v")}_{arch}.deb'
+    if hashlib.sha256(package.read_bytes()).hexdigest() != checks.get(package.name):
+        raise SystemExit(f'SHA256 校验失败：{package.name}')
+    print(f'{package.name}: SHA256 OK')
+(root / 'release-notes.md').write_text(release['body'])
+PY
+
+# 先提取 Release 正文，再按商店展示需要整理，去掉下载、哈希等分发信息。
+bash build/scripts/extract-release-note-summary.sh \
+  "$UOS_RUN_DIR/release-notes.md" > "$UOS_RUN_DIR/uos-note.txt"
+dpkg-deb -f "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_amd64.deb" \
+  Package Version Architecture
+dpkg-deb -f "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_arm64.deb" \
+  Package Version Architecture
+dpkg-deb -f "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_loong64.deb" \
+  Package Version Architecture
+```
+
+核对三个包的包名、版本和架构后，将 `uos-note.txt` 整理为具体用户变化的简短
+条目。3.7.0 实例约 291 字，涵盖安装授权、依赖进度、多语言、个性化与缺陷修复；
+不要照搬上一版本说明。投递工具会把同一说明写入既有语言条目，本次简体中文与
+英文条目均回读一致；若需要分别提供译文，需要另行评审工具的调用方式。
+
+### 10.4 登录校验与真实提交
+
+在同一个 Bash 会话中继续执行。凭据只加载到环境，不写入命令参数或输出；
+不要开启 `set -x`。先确认缓存中的运行环境存在，并核对商店当前版本/审核状态。
+
+```bash
+# 已授权的本地配置文件提供凭据；不会提交到 Git，也不打印变量值。
+set -a
+source private.env
+set +a
+: "${APPSTORE_USERNAME:?缺少商店账号}"
+: "${APPSTORE_PASSWORD:?缺少商店密码}"
+export PYTHONPATH="$UOS_RUNTIME/appstore-tool"
+export UTPUBLISHER_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome
+export TZ=Asia/Shanghai
+
+# 能力数据按版本重新同步，避免长期复用过期的平台兼容信息。
+"$UOS_RUNTIME/venv/bin/python3" -m appstore.upload_batch sync-capabilities \
+  --cache-dir "$UOS_RUN_DIR/capabilities"
+
+# 此命令真实上传并提审；只执行一次，失败后先读报告和远端状态再决定是否重试。
+"$UOS_RUNTIME/venv/bin/python3" -m appstore.upload_batch upload-packages \
+  "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_amd64.deb" \
+  "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_arm64.deb" \
+  "$UOS_RUN_DIR/linglong-store_${UOS_RELEASE_VERSION}_loong64.deb" \
+  --output-dir "$UOS_RUN_DIR/output" \
+  --capabilities-cache "$UOS_RUN_DIR/capabilities" \
+  --mode api --release-key latest-release \
+  --note "$(cat "$UOS_RUN_DIR/uos-note.txt")" --headless
+```
+
+### 10.5 成功判定与排障经验
+
+不能仅凭进程退出码为 `0` 宣称成功：已实测工具的认证失败、提交失败路径也可能
+返回 `0`。必须读取 `output/report.json`，确认恰有三个目标包、版本正确、应用
+ID 为 `1096239`，且每行 `status` 均为 `submitted`。
+
+然后通过同一工具的 `AppStoreClient` 登录并回读：
+
+1. `find_apps_by_pkg_name('linglong-store')` 获取当前应用条目；核对应用 ID。
+2. 对当前条目的 `id` 调用 `get_app_detail()`，经 `extract_detail_data()` 解析，
+   核对 `app_origin_pkgs` 的 ARM/x86/loong64 包均为目标版本。
+3. 核对 `app_lan_infos[*].update_desc` 与 `uos-note.txt` 一致。
+4. 调用 `get_app_audit_status(当前条目 id)`，记录提交时间和审核状态，保存到
+   `output/server-verification.json`。应用 ID 稳定，条目 `id` 随版本变化，不可复用。
+
+已跑通的 3.7.0 提交证据在 `build/uos-store/3.7.0/output/`：两行 `submitted`，
+应用 ID `1096239`；服务端 ARM/x86 均为 3.7.0，简体中文与英文更新说明一致，
+回读时审核尚未完成。不要再次执行 3.7.0 的提交命令作为测试。
+
+本机首次 `python3 -m venv` 会因缺少 `ensurepip` 失败，但已留下可用的 venv
+解释器。已实测无需安装系统软件，可使用系统 pip 给该解释器安装依赖：
+
+```bash
+# 仅在重建环境时使用；已有环境不重复安装，保持下次投递速度。
+python3 -m pip --python "$UOS_RUNTIME/venv/bin/python3" install \
+  --disable-pip-version-check -r "$UOS_RUNTIME/appstore-tool/appstore/requirements.txt"
+```
+
+原 `build/scripts/uos-store-submit.sh` 会从 Gitee 下载、重建工作目录，且可能安装
+系统依赖和改写 Debian 镜像源；它没有直接 GitHub 产物模式，不能拿它覆盖这条
+本地快速路径。现阶段复用其底层投递工具，不修改既有 CI 行为。
