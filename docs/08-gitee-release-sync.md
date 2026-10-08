@@ -25,10 +25,19 @@ Git refs 与 Release 同步分成两段：
 至少需要：
 
 ```bash
-export GITHUB_TOKEN=...
 export GITEE_TOKEN=...
 export GITEE_REPO=hanplus/flutter-linglong-store
 ```
+
+`GITHUB_TOKEN` 为可选项：本仓库是公开仓库，GitHub 侧的 Release 列表与资产下载
+均支持匿名访问。仅当需要更高 API 配额（例如 CI 中注入 Actions token）时才设置。
+
+注意两个已知陷阱：
+
+- 本机 `gh` CLI 会持续轮换自身 token，把某次 `gh auth token` 的输出固化到环境
+  文件里会很快失效并引发 401；本地同步推荐直接走匿名访问。
+- 匿名访问 api.github.com 的配额是每 IP 60 次/小时，仅够少量同步使用；配额
+  耗尽时会返回 403，需等待整点窗口重置。
 
 `GITEE_REPO` 允许以下两种写法，脚本会统一归一成 `owner/repo`：
 
