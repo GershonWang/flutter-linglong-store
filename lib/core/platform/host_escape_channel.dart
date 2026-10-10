@@ -76,14 +76,14 @@ class HostEscapeChannel {
   ///   2. 启动器在 PATH 上可解析；
   ///   3. 用户会话总线可用——`systemd-run --user` 必须经它请求宿主管理器。
   ///
-  /// [isDirectory]、[lookPath]、[environment] 均为测试注入点；生产代码不传参。
+  /// [isDirectory]、[lookPath] 为测试注入点；[environment] 缺省时取当前进程环境。
   static HostEscapeChannel? detect({
     Map<String, String>? environment,
     String hostRootfsPath = defaultHostRootfsPath,
     bool Function(String path)? isDirectory,
     String? Function(String name)? lookPath,
   }) {
-    final env = environment ?? const <String, String>{};
+    final env = resolveEnvironment(environment);
     final directoryExists = isDirectory ?? _defaultIsDirectory;
     final resolve = lookPath ?? _defaultLookPath;
 
@@ -106,6 +106,15 @@ class HostEscapeChannel {
       workingDirectory: _sharedWorkingDirectory(env, directoryExists),
     );
   }
+
+  /// 解析探测使用的环境变量。
+  ///
+  /// 单独抽出来是因为这里曾经写成 `environment ?? const <String, String>{}`：生产
+  /// 代码不传该参数，于是进程环境被当成**空 map**，会话总线判据永远不成立、探测恒为
+  /// null，而单元测试都显式注入了环境所以没暴露。缺省值必须是当前进程环境。
+  static Map<String, String> resolveEnvironment([
+    Map<String, String>? environment,
+  ]) => environment ?? Platform.environment;
 
   /// 在宿主根挂载点下探测 [name]，返回**宿主视角**的绝对路径。
   ///

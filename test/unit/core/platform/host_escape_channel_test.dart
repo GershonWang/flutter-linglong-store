@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/core/platform/host_escape_channel.dart';
@@ -17,6 +19,20 @@ class _FakeFs {
 
 void main() {
   group('HostEscapeChannel.detect', () {
+    test('未注入环境时使用进程环境，而不是空 map', () {
+      // 回归：缺省值曾经写成 `const <String, String>{}`。生产代码不传该参数，于是
+      // 进程环境被当成空 map、会话总线判据永远不成立、探测恒为 null、桥永不启用；
+      // 而所有用例都显式注入环境，所以单元测试全绿却线上失效。
+      expect(
+        identical(HostEscapeChannel.resolveEnvironment(), Platform.environment),
+        isTrue,
+      );
+      expect(
+        HostEscapeChannel.resolveEnvironment(const <String, String>{}),
+        isEmpty,
+      );
+    });
+
     test('挂载点、启动器、会话总线齐备时返回通道', () {
       final fs = _FakeFs(
         directories: <String>{'/run/host/rootfs', '/home/tester'},
