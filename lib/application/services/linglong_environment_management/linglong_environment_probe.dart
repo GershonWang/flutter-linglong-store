@@ -53,19 +53,13 @@ class LinglongEnvironmentProbe {
   LinglongEnvironmentProbe({
     required ShellCommandExecutor executor,
     required LinglongManagementCommandWorkspace workspace,
-    LinglongCliCommandBuilder? commandBuilder,
     required this.rootPath,
     this.serviceUser = 'deepin-linglong',
     this.serviceGroup = 'deepin-linglong',
   }) : _executor = executor,
-       _commandBuilder =
-           commandBuilder ?? const LocalLinglongCliCommandBuilder(),
        _workspace = workspace;
 
   final ShellCommandExecutor _executor;
-
-  /// ll-cli 命令构造器；玲珑形态下由组合根注入宿主透传实现。
-  final LinglongCliCommandBuilder _commandBuilder;
 
   final LinglongManagementCommandWorkspace _workspace;
 
@@ -94,8 +88,10 @@ class LinglongEnvironmentProbe {
   /// 旧版 linyaps 输出形态存在差异，因此保留 JSON 对象和文本表格兼容读取；
   /// 探测失败按零处理，后续特权迁移脚本仍会再次阻断运行中的应用。
   Future<int> loadRunningAppCount() async {
-    // 命令形态统一由构造器决定：玲珑形态下会变成宿主透传命令，本探测无需感知。
-    final result = await _runSafely(_commandBuilder.build(['--json', 'ps']));
+    // 命令形态统一由进程级构造器决定：玲珑形态下会变成宿主透传命令，本探测无需感知。
+    final result = await _runSafely(
+      linglongCliCommandBuilder.build(['--json', 'ps']),
+    );
     if (result == null || !result.success) {
       return 0;
     }
@@ -230,7 +226,7 @@ class LinglongEnvironmentProbe {
   /// 默认健康检查不执行底层完整性审计，避免把合法的 partial pull 误判为损坏。
   Future<LinglongOstreeCheckResult> checkLocalDataAccess() async {
     final listResult = await _runSafely(
-      _commandBuilder.build(['--json', 'list']),
+      linglongCliCommandBuilder.build(['--json', 'list']),
       timeout: const Duration(minutes: 2),
     );
 

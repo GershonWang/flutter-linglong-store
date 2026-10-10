@@ -103,17 +103,10 @@ class CliExecutor {
   /// ll-cli 命令构造器。
   ///
   /// 默认是本地实现（DEB / RPM / AppImage 与开发态行为不变）；玲珑形态下由组合根
-  /// 在启动期替换为宿主透传实现。这里保持静态是因为 [CliExecutor] 本身是静态单例，
-  /// 改成实例化会波及全部调用点，与"收敛调用点"的目标相悖。
-  static LinglongCliCommandBuilder _commandBuilder =
-      const LocalLinglongCliCommandBuilder();
-
-  /// 安装 ll-cli 命令构造器。
-  ///
-  /// 由组合根在启动期调用一次。重复调用会覆盖上一次结果，便于测试与形态切换。
-  static void configureCommandBuilder(LinglongCliCommandBuilder builder) {
-    _commandBuilder = builder;
-  }
+  /// 在启动期替换为宿主透传实现。这里读取进程级持有者，与其它 ll-cli 调用点共用
+  /// 同一个答案——命令形态是进程级事实，不需要逐层注入。
+  static LinglongCliCommandBuilder get _commandBuilder =>
+      linglongCliCommandBuilder;
 
   /// 按当前命令构造器启动 ll-cli 进程。
   ///
@@ -153,13 +146,11 @@ class CliExecutor {
   /// 活跃进程的取消信号
   static final Map<String, Completer<void>> _cancelSignals = {};
 
-  /// 强制英文 locale 环境变量（确保输出可解析）
-  static Map<String, String> get _englishLocaleEnv => {
-    'LC_ALL': 'C.UTF-8',
-    'LANG': 'C.UTF-8',
-    'LANGUAGE': 'C.UTF-8',
-    'LC_MESSAGES': 'C.UTF-8',
-  };
+  /// 强制英文 locale 环境变量（确保输出可解析）。
+  ///
+  /// 与宿主透传路径共用同一份常量：两条执行路径的"输出可解析"前提必须一致，
+  /// 否则容器形态下的解析行为会与其它形态分叉。
+  static Map<String, String> get _englishLocaleEnv => kEnglishLocaleEnvironment;
 
   /// 执行 ll-cli 命令（同步等待）
   ///

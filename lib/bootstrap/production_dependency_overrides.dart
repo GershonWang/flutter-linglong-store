@@ -14,6 +14,8 @@ import '../application/providers/application_dependency_providers.dart';
 import '../application/providers/polkit_rule_provider.dart';
 import '../core/logging/app_logger.dart';
 import '../core/platform/file_downloader.dart';
+import '../core/platform/host_escape_channel.dart';
+import '../core/platform/linglong_cli_command.dart';
 import '../core/platform/polkit_rule_gateway.dart';
 import '../core/platform/privileged_helper/privileged_helper_client.dart';
 import '../core/platform/shell_command_executor.dart';
@@ -47,6 +49,10 @@ List<Override> createProductionDependencyOverrides({
   // 首次授权一次、后续复用都依赖同一进程句柄；两个 CLI Repository 覆盖共享
   // 同一客户端，防止 autoDispose 重建实例时重复拉起 pkexec。
   final privilegedHelper = PrivilegedHelperClient();
+
+  // 运行形态决定 ll-cli 的命令形态，必须在任何 Repository/Service 发起调用之前
+  // 安装好（它们是调用时读取，所以这里只要在返回 overrides 前完成即可）。
+  _configureLinglongCliCommandForm();
 
   return [
     sharedPreferencesProvider.overrideWithValue(sharedPreferences),
@@ -123,6 +129,41 @@ List<Override> createProductionDependencyOverrides({
       );
     }),
   ];
+}
+
+/// 按运行形态安装 ll-cli 命令构造器。
+///
+/// 玲珑（UAB）形态下容器里没有 ll-cli，也没有宿主的玲珑守护进程与层仓库，
+/// 因此把命令透传到宿主执行；其它形态（DEB / RPM / AppImage / 开发态）保持本地
+/// 直调，行为与收敛前完全一致。
+///
+/// 探测失败或宿主未装玲珑时**保持本地直调**而不是静默失败：既有的"ll-cli 未安装
+/// 或不可用"诊断路径会照常给出可读错误，比在这里悄悄降级更好定位。
+///
+/// 安全提示：透传是沙箱逃逸通道，能力面由 [BridgedLinglongCliCommandBuilder] 承载的
+/// 命令决定。本函数只接入 ll-cli，不接入 pkexec 等提权命令（见 docs/60）。
+void _configureLinglongCliCommandForm() {
+  final channel = HostEscapeChannel.detect();
+  if (channel == null) {
+    AppLogger.info('[HostBridge] 未检测到宿主透传通道，ll-cli 走本地直调');
+    return;
+  }
+
+  final hostLlCli = channel.hostExecutable('ll-cli');
+  if (hostLlCli == null) {
+    AppLogger.warning('[HostBridge] 宿主上未找到 ll-cli，保持本地直调');
+    return;
+  }
+
+  configureLinglongCliCommandBuilder(
+    BridgedLinglongCliCommandBuilder(
+      channel: channel,
+      hostLlCliPath: hostLlCli,
+    ),
+  );
+  AppLogger.info(
+    '[HostBridge] ll-cli 透传到宿主执行: $hostLlCli（工作目录 ${channel.workingDirectory}）',
+  );
 }
 
 /// 构造 helper 信任解析器：单次解析 + 会话内缓存（docs/51 §4.2）。

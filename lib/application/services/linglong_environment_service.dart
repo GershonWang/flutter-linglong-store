@@ -14,15 +14,12 @@ typedef TimestampReader = int Function();
 class LinglongEnvironmentService {
   LinglongEnvironmentService({
     required ShellCommandExecutor executor,
-    LinglongCliCommandBuilder? commandBuilder,
     OsReleaseReader? osReleaseReader,
     EnvVarReader? environmentReader,
     LinuxDistributionResolver? distributionResolver,
     TimestampReader? clock,
     String minimumVersion = '1.9.0',
   }) : _executor = executor,
-       _commandBuilder =
-           commandBuilder ?? const LocalLinglongCliCommandBuilder(),
        _osReleaseReader = osReleaseReader ?? _defaultOsReleaseReader,
        _environmentReader = environmentReader ?? _defaultEnvironmentReader,
        _distributionResolver =
@@ -31,21 +28,15 @@ class LinglongEnvironmentService {
        _minimumVersion = minimumVersion;
 
   final ShellCommandExecutor _executor;
-
-  /// ll-cli 命令构造器；玲珑形态下由组合根注入宿主透传实现。
-  final LinglongCliCommandBuilder _commandBuilder;
   final OsReleaseReader _osReleaseReader;
   final EnvVarReader _environmentReader;
   final LinuxDistributionResolver _distributionResolver;
   final TimestampReader _clock;
   final String _minimumVersion;
 
-  static const Map<String, String> _englishLocaleEnv = {
-    'LC_ALL': 'C.UTF-8',
-    'LANG': 'C.UTF-8',
-    'LANGUAGE': 'C.UTF-8',
-    'LC_MESSAGES': 'C.UTF-8',
-  };
+  /// 强制英文 locale 环境变量（确保输出可解析）；与 CliExecutor 共用同一份常量。
+  static const Map<String, String> _englishLocaleEnv =
+      kEnglishLocaleEnvironment;
 
   static const String _packageManagerServiceName =
       'org.deepin.linglong.PackageManager.service';
@@ -429,10 +420,11 @@ class LinglongEnvironmentService {
   }
 
   Future<ShellCommandResult?> _runLlCli(List<String> arguments) {
-    // 命令形态统一由构造器决定：玲珑形态下这里会变成宿主透传命令，
-    // 本服务不需要感知执行位置。
+    // 命令形态统一由进程级构造器决定：玲珑形态下这里会变成宿主透传命令，
+    // 本服务不需要感知执行位置。调用时读取而不是构造时快照，避免构造早于
+    // 组合根配置时拿到默认实现。
     return _run(
-      _commandBuilder.build(arguments),
+      linglongCliCommandBuilder.build(arguments),
       environment: _englishLocaleEnv,
     );
   }

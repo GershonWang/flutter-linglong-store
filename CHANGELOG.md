@@ -5,6 +5,17 @@
 
 ## 变更记录
 
+- 2026-10-10：新增玲珑容器形态的**宿主透传桥**：`HostEscapeChannel` +
+  `BridgedLinglongCliCommandBuilder`（`lib/core/platform/host_escape_channel.dart`）。
+  容器内没有 ll-cli（base 镜像不含玲珑工具链，ll-cli 依赖 Qt6 等宿主库），组合根在
+  启动期探测宿主透传通道（宿主根挂载点 + systemd-run + 会话总线），命中则把 ll-cli
+  命令经 `systemd-run --user` 送回宿主执行；未命中保持本地直调，DEB/RPM/AppImage 与
+  开发态行为不变。三条实测硬约束必须保留：`--expand-environment=no`（否则 `$` 形式
+  被 systemd 改写）、`--setenv` 显式声明英文 locale（**systemd-run 不转发调用者
+  环境**，缺失会破坏 JSON 解析）、`--working-directory` 只能用两侧同路径的家目录
+  （容器专有路径会静默失败返回 200）。该通道是沙箱逃逸，能力面刻意只接 ll-cli，
+  不接 pkexec；容器形态下免密安装提示不支持、取消按钮禁用。设计见
+  `docs/60-linglong-host-bridge-design.md`。
 - 2026-10-10：收敛 ll-cli 调用点到统一命令构造入口
   `LinglongCliCommandBuilder`（`lib/core/platform/linglong_cli_command.dart`）。
   商店所有 ll-cli 调用——`CliExecutor` 的等待/流式/detached 三条路径、环境检测、

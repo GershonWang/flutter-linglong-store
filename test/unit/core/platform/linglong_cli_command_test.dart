@@ -41,14 +41,14 @@ void main() {
 
   group('CliExecutor 命令构造器接缝', () {
     tearDown(() {
-      // 静态接缝是全局状态，用例结束必须还原，避免污染其它测试。
-      CliExecutor.configureCommandBuilder(
+      // 进程级持有者是全局状态，用例结束必须还原，避免污染其它测试。
+      configureLinglongCliCommandBuilder(
         const LocalLinglongCliCommandBuilder(),
       );
     });
 
     test('execute 使用构造器给出的命令', () async {
-      CliExecutor.configureCommandBuilder(
+      configureLinglongCliCommandBuilder(
         const _FixedCommandBuilder(<String>['/bin/echo', 'from-builder']),
       );
 
