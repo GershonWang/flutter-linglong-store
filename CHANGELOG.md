@@ -5,6 +5,14 @@
 
 ## 变更记录
 
+- 2026-10-10：收敛 ll-cli 调用点到统一命令构造入口
+  `LinglongCliCommandBuilder`（`lib/core/platform/linglong_cli_command.dart`）。
+  商店所有 ll-cli 调用——`CliExecutor` 的等待/流式/detached 三条路径、环境检测、
+  环境管理探测——必须经过它构造命令，禁止再自行拼 `'ll-cli'` 字面量。收敛前共有
+  5 处独立调用点，其中 `runApp` 自行 `Process.start('ll-cli', …)` 是后续宿主透传
+  改造的漏网点，现改走新增的 `CliExecutor.startDetached`，并统一使用与其它调用
+  一致的英文 locale 环境变量（原先只设 `LC_ALL`/`LANG` 两项）。这一层是"玲珑形态下
+  把 ll-cli 透传到宿主执行"的唯一接入点，接入时只需替换实现，调用点无需感知。
 - 2026-10-10：新增玲珑（linyaps）UAB 打包轨道：`build/packaging/linux/linyaps/`
   存放清单模板与装配脚本，`build/scripts/package-linyaps.sh` 在**宿主机**编排
   （刻意不做 `--inner` 重入）。原因是实测玲珑 base 镜像无 gcc/pkg-config/GTK 开发

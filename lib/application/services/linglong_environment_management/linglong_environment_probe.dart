@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+import '../../../core/platform/linglong_cli_command.dart';
 import '../../../core/platform/shell_command_executor.dart';
 import '../../../domain/models/linglong_environment_management.dart';
 import 'linglong_management_command_workspace.dart';
@@ -52,13 +53,20 @@ class LinglongEnvironmentProbe {
   LinglongEnvironmentProbe({
     required ShellCommandExecutor executor,
     required LinglongManagementCommandWorkspace workspace,
+    LinglongCliCommandBuilder? commandBuilder,
     required this.rootPath,
     this.serviceUser = 'deepin-linglong',
     this.serviceGroup = 'deepin-linglong',
   }) : _executor = executor,
+       _commandBuilder =
+           commandBuilder ?? const LocalLinglongCliCommandBuilder(),
        _workspace = workspace;
 
   final ShellCommandExecutor _executor;
+
+  /// ll-cli 命令构造器；玲珑形态下由组合根注入宿主透传实现。
+  final LinglongCliCommandBuilder _commandBuilder;
+
   final LinglongManagementCommandWorkspace _workspace;
 
   /// 玲珑本地数据根目录。
@@ -86,7 +94,8 @@ class LinglongEnvironmentProbe {
   /// 旧版 linyaps 输出形态存在差异，因此保留 JSON 对象和文本表格兼容读取；
   /// 探测失败按零处理，后续特权迁移脚本仍会再次阻断运行中的应用。
   Future<int> loadRunningAppCount() async {
-    final result = await _runSafely(['ll-cli', '--json', 'ps']);
+    // 命令形态统一由构造器决定：玲珑形态下会变成宿主透传命令，本探测无需感知。
+    final result = await _runSafely(_commandBuilder.build(['--json', 'ps']));
     if (result == null || !result.success) {
       return 0;
     }
@@ -220,11 +229,10 @@ class LinglongEnvironmentProbe {
   ///
   /// 默认健康检查不执行底层完整性审计，避免把合法的 partial pull 误判为损坏。
   Future<LinglongOstreeCheckResult> checkLocalDataAccess() async {
-    final listResult = await _runSafely([
-      'll-cli',
-      '--json',
-      'list',
-    ], timeout: const Duration(minutes: 2));
+    final listResult = await _runSafely(
+      _commandBuilder.build(['--json', 'list']),
+      timeout: const Duration(minutes: 2),
+    );
 
     if (listResult == null) {
       return const LinglongOstreeCheckResult(

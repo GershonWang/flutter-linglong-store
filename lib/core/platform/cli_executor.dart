@@ -4,10 +4,8 @@ import 'dart:convert';
 
 import '../logging/app_logger.dart';
 import 'bounded_output_buffer.dart';
+import 'linglong_cli_command.dart';
 import '../network/api_exceptions.dart';
-
-/// ll-cli 命令路径
-const String kLlCliPath = 'll-cli';
 
 /// 默认超时时间
 const Duration kDefaultTimeout = Duration(minutes: 30);
@@ -102,6 +100,53 @@ enum ProgressEventType { stdout, stderr, error }
 class CliExecutor {
   CliExecutor._();
 
+  /// ll-cli 命令构造器。
+  ///
+  /// 默认是本地实现（DEB / RPM / AppImage 与开发态行为不变）；玲珑形态下由组合根
+  /// 在启动期替换为宿主透传实现。这里保持静态是因为 [CliExecutor] 本身是静态单例，
+  /// 改成实例化会波及全部调用点，与"收敛调用点"的目标相悖。
+  static LinglongCliCommandBuilder _commandBuilder =
+      const LocalLinglongCliCommandBuilder();
+
+  /// 安装 ll-cli 命令构造器。
+  ///
+  /// 由组合根在启动期调用一次。重复调用会覆盖上一次结果，便于测试与形态切换。
+  static void configureCommandBuilder(LinglongCliCommandBuilder builder) {
+    _commandBuilder = builder;
+  }
+
+  /// 按当前命令构造器启动 ll-cli 进程。
+  ///
+  /// 这是本类唯一的 ll-cli 进程启动点：命令形态（本地直调或宿主透传）由构造器
+  /// 决定，而环境变量、PID 注册、超时与取消语义仍由各自调用方处理。
+  static Future<Process> _startProcess(List<String> args) {
+    final command = _commandBuilder.build(args);
+    return Process.start(
+      command.first,
+      command.skip(1).toList(growable: false),
+      environment: _englishLocaleEnv,
+    );
+  }
+
+  /// 以 detached 模式启动 ll-cli 并立即返回进程句柄。
+  ///
+  /// `run` 这类不等待退出码、且需要在商店退出后继续存活（应用本身要跑下去）的命令
+  /// 使用它；其余场景一律走 [execute] / [executeWithProgressAndProcess]。
+  /// 单独提供入口是为了让调用方不必知道命令形态——收敛前 `runApp` 自行拼了
+  /// `'ll-cli'` 字面量，成为透传改造的漏网点。
+  ///
+  /// 环境变量与其它 ll-cli 调用保持同一份英文 locale：输出可解析是全局约定，
+  /// 不允许个别调用点自行缩减。
+  static Future<Process> startDetached(List<String> args) {
+    final command = _commandBuilder.build(args);
+    return Process.start(
+      command.first,
+      command.skip(1).toList(growable: false),
+      environment: _englishLocaleEnv,
+      mode: ProcessStartMode.detached,
+    );
+  }
+
   /// 活跃进程映射（用于取消）
   static final Map<String, Process> _activeProcesses = {};
 
@@ -155,11 +200,7 @@ class CliExecutor {
     Process? process;
     try {
       // 启动进程
-      process = await Process.start(
-        kLlCliPath,
-        args,
-        environment: _englishLocaleEnv,
-      );
+      process = await _startProcess(args);
 
       // 注册活跃进程
       if (processId != null) {
@@ -265,11 +306,7 @@ class CliExecutor {
     Process? process;
     try {
       // 启动进程
-      process = await Process.start(
-        kLlCliPath,
-        args,
-        environment: _englishLocaleEnv,
-      );
+      process = await _startProcess(args);
 
       // 回调通知进程已创建（可用于记录 PID）
       onProcessCreated?.call(process);

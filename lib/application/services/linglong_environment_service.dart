@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'linux_distribution_resolver.dart';
 import '../../core/platform/system_arch_resolver.dart';
+import '../../core/platform/linglong_cli_command.dart';
 import '../../core/platform/shell_command_executor.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 
@@ -13,12 +14,15 @@ typedef TimestampReader = int Function();
 class LinglongEnvironmentService {
   LinglongEnvironmentService({
     required ShellCommandExecutor executor,
+    LinglongCliCommandBuilder? commandBuilder,
     OsReleaseReader? osReleaseReader,
     EnvVarReader? environmentReader,
     LinuxDistributionResolver? distributionResolver,
     TimestampReader? clock,
     String minimumVersion = '1.9.0',
   }) : _executor = executor,
+       _commandBuilder =
+           commandBuilder ?? const LocalLinglongCliCommandBuilder(),
        _osReleaseReader = osReleaseReader ?? _defaultOsReleaseReader,
        _environmentReader = environmentReader ?? _defaultEnvironmentReader,
        _distributionResolver =
@@ -27,6 +31,9 @@ class LinglongEnvironmentService {
        _minimumVersion = minimumVersion;
 
   final ShellCommandExecutor _executor;
+
+  /// ll-cli 命令构造器；玲珑形态下由组合根注入宿主透传实现。
+  final LinglongCliCommandBuilder _commandBuilder;
   final OsReleaseReader _osReleaseReader;
   final EnvVarReader _environmentReader;
   final LinuxDistributionResolver _distributionResolver;
@@ -422,7 +429,12 @@ class LinglongEnvironmentService {
   }
 
   Future<ShellCommandResult?> _runLlCli(List<String> arguments) {
-    return _run(['ll-cli', ...arguments], environment: _englishLocaleEnv);
+    // 命令形态统一由构造器决定：玲珑形态下这里会变成宿主透传命令，
+    // 本服务不需要感知执行位置。
+    return _run(
+      _commandBuilder.build(arguments),
+      environment: _englishLocaleEnv,
+    );
   }
 
   Future<ShellCommandResult?> _run(

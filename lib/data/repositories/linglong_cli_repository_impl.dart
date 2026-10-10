@@ -1212,13 +1212,9 @@ class LinglongCliRepositoryImpl
     return _guardCommand('run', () async {
       AppLogger.info('[LinglongCli] 运行应用: $appId');
 
-      // run 命令不等待完成，后台运行
-      final process = await Process.start(
-        'll-cli',
-        ['run', appId],
-        environment: {'LC_ALL': 'C.UTF-8', 'LANG': 'C.UTF-8'},
-        mode: ProcessStartMode.detached,
-      );
+      // run 命令不等待完成，后台运行。命令形态由 CliExecutor 统一决定：
+      // 收敛前这里自行拼了 'll-cli' 字面量，是宿主透传改造的漏网点。
+      final process = await CliExecutor.startDetached(['run', appId]);
 
       // 不等待结果，直接返回
       AppLogger.info('[LinglongCli] 应用已启动: $appId (pid: ${process.pid})');
