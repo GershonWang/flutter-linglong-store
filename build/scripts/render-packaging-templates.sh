@@ -226,6 +226,8 @@ compat_desktop_file_entries="${compat_desktop_file_entries%$'\n'}"
 render_file() {
   local input_path="$1"
   local output_path="$2"
+  # 可选：覆盖图标名。玲珑轨道需要独立图标名，否则两种发行形态共用同一个图标资源。
+  local icon_name_override="${3:-$icon_name}"
   local content
 
   mkdir -p "$(dirname "$output_path")"
@@ -234,7 +236,7 @@ render_file() {
   content="${content//@SUMMARY@/$package_summary_text}"
   content="${content//@DESCRIPTION@/$package_description_text}"
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
-  content="${content//@ICON_NAME@/$icon_name}"
+  content="${content//@ICON_NAME@/$icon_name_override}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
   content="${content//@COMPAT_DESKTOP_FILE_ENTRIES@/$compat_desktop_file_entries}"
   content="${content//@WM_CLASS@/$wm_class}"
@@ -258,6 +260,17 @@ mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/copr" "$output_dir/app
 render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
   "$output_dir/$desktop_filename"
+
+# 玲珑（UAB）轨道入口：文件名与图标名都与主入口分开，否则启动器会把两种发行形态
+# 合并成一个图标（DEB 已占用主 desktop 路径时，玲珑包甚至不会导出自己的入口）。
+# StartupWMClass 必须保持主应用 ID —— 它由 runner 编译期写入（-DAPPLICATION_ID），
+# 写别的值会让窗口与入口对不上。
+linyaps_desktop_filename="$LINYAPS_CANONICAL_DESKTOP_ID"
+linyaps_icon_name="${icon_name}-linyaps"
+render_file \
+  "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
+  "$output_dir/linyaps/$linyaps_desktop_filename" \
+  "$linyaps_icon_name"
 
 for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
   render_file \
@@ -293,7 +306,8 @@ LINGLONG_RELEASE_TOOL_ROOT="$ROOT_DIR" \
   --channel "$channel" \
   --desktop-file "$output_dir/$desktop_filename" \
   --compat-directory "$output_dir/compat" \
-  --appstream-file "$output_dir/appimage/linglong-store.appdata.xml"
+  --appstream-file "$output_dir/appimage/linglong-store.appdata.xml" \
+  --linyaps-desktop-file "$output_dir/linyaps/$linyaps_desktop_filename"
 
 chmod +x "$output_dir/appimage/AppRun"
 

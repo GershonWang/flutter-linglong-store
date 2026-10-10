@@ -4,6 +4,7 @@
   "@@appStreamLocale": "ko",
   "appTitle": "Linyaps 스토어 커뮤니티 에디션",
   "linuxDesktopNameNightly": "Linyaps 스토어 커뮤니티 에디션 Nightly",
+  "linuxDesktopNameLinyaps": "Linyaps 스토어 커뮤니티 에디션 (Linyaps)",
   "linuxDesktopGenericName": "앱 스토어",
   "linuxDesktopComment": "Linyaps 앱 탐색, 설치 및 관리",
   "linuxDesktopCommentNightly": "Linyaps 앱을 탐색, 설치, 관리하기 위한 Nightly 빌드",

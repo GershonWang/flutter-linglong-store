@@ -18,6 +18,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'متجر تطبيقات Linglong (الإصدار المجتمعي) Nightly';
 
   @override
+  String get linuxDesktopNameLinyaps =>
+      'متجر تطبيقات Linglong (الإصدار المجتمعي) (Linyaps)';
+
+  @override
   String get linuxDesktopGenericName => 'متجر التطبيقات';
 
   @override

@@ -127,6 +127,12 @@ abstract class AppLocalizations {
   /// **'玲珑应用商店社区版 Nightly'**
   String get linuxDesktopNameNightly;
 
+  /// Linux 玲珑（UAB）包在启动器与软件中心显示的应用名称；必须与 DEB/RPM 形态可区分，否则启动器会把两个入口合并
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑应用商店社区版（玲珑版）'**
+  String get linuxDesktopNameLinyaps;
+
   /// Linux Desktop Entry 使用的通用应用类型名称
   ///
   /// In zh, this message translates to:

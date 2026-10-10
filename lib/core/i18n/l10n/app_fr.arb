@@ -4,6 +4,7 @@
   "@@appStreamLocale": "fr",
   "appTitle": "Linyaps Store Édition Communautaire",
   "linuxDesktopNameNightly": "Linyaps Store Édition Communautaire Nightly",
+  "linuxDesktopNameLinyaps": "Linyaps Store Édition Communautaire (Linyaps)",
   "linuxDesktopGenericName": "Magasin d'applications",
   "linuxDesktopComment": "Parcourir, installer et gérer les applications Linyaps",
   "linuxDesktopCommentNightly": "Build Nightly pour parcourir, installer et gérer les applications Linyaps",

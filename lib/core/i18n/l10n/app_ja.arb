@@ -4,6 +4,7 @@
   "@@appStreamLocale": "ja",
   "appTitle": "Linyaps ストアコミュニティ版",
   "linuxDesktopNameNightly": "Linyaps ストアコミュニティ版 Nightly",
+  "linuxDesktopNameLinyaps": "Linyaps ストアコミュニティ版（Linyaps）",
   "linuxDesktopGenericName": "アプリストア",
   "linuxDesktopComment": "Linyaps アプリの閲覧・インストール・管理",
   "linuxDesktopCommentNightly": "Linyaps アプリの閲覧・インストール・管理を行う Nightly ビルド",

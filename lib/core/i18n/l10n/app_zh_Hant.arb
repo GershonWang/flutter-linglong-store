@@ -4,6 +4,7 @@
   "@@appStreamLocale": "zh-Hant",
   "appTitle": "玲瓏應用商店社群版",
   "linuxDesktopNameNightly": "玲瓏應用商店社群版 Nightly",
+  "linuxDesktopNameLinyaps": "玲瓏應用商店社群版（玲瓏版）",
   "linuxDesktopGenericName": "應用商店",
   "linuxDesktopComment": "瀏覽、安裝與管理玲瓏應用",
   "linuxDesktopCommentNightly": "用於瀏覽、安裝與管理玲瓏應用的 Nightly 構建",

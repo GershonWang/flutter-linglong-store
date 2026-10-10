@@ -34,6 +34,12 @@ const String _appStreamDescriptionMarker = '@LOCALIZED_APPSTREAM_DESCRIPTION@';
 /// 仍残留在已渲染平台文件中的模板标记。
 final RegExp _unresolvedMarkerPattern = RegExp(r'@[A-Z][A-Z0-9_]+@');
 
+/// 玲珑（UAB）轨道 canonical Desktop Entry 使用的名称键。
+///
+/// 与渠道默认键（`appTitle` / `linuxDesktopNameNightly`）分开：两种发行形态共用
+/// 同一份名称时，启动器会把它们显示成同一个入口。
+const String _linyapsDesktopNameKey = 'linuxDesktopNameLinyaps';
+
 /// Stable 与 Nightly 共享的渠道模型。
 enum _ReleaseChannel {
   /// 正式稳定版。
@@ -60,6 +66,7 @@ class _RenderArguments {
     required this.desktopFile,
     required this.compatibilityDirectory,
     required this.appStreamFile,
+    this.linyapsDesktopFile,
   });
 
   /// 从成对的长选项解析渲染参数。
@@ -76,11 +83,27 @@ class _RenderArguments {
     final desktopPath = values['--desktop-file'];
     final compatibilityPath = values['--compat-directory'];
     final appStreamPath = values['--appstream-file'];
-    if (values.length != 4 ||
-        channel == null ||
+    // 可选：玲珑（UAB）轨道的 canonical Desktop Entry。
+    //
+    // 它与 DEB/RPM 共用同一套本地化文案，但启动器里必须显示成两个可区分的入口，
+    // 因此使用独立的名称键。必须在**同一次调用**里渲染：标记替换只允许命中一次，
+    // 对已渲染文件再跑一遍会直接失败。
+    final linyapsDesktopPath = values['--linyaps-desktop-file'];
+    const requiredKeys = <String>{
+      '--channel',
+      '--desktop-file',
+      '--compat-directory',
+      '--appstream-file',
+    };
+    final hasUnknownKey = values.keys.any(
+      (key) =>
+          !requiredKeys.contains(key) && key != '--linyaps-desktop-file',
+    );
+    if (channel == null ||
         desktopPath == null ||
         compatibilityPath == null ||
-        appStreamPath == null) {
+        appStreamPath == null ||
+        hasUnknownKey) {
       throw const FormatException(_usage);
     }
 
@@ -89,11 +112,17 @@ class _RenderArguments {
       desktopFile: File(desktopPath),
       compatibilityDirectory: Directory(compatibilityPath),
       appStreamFile: File(appStreamPath),
+      linyapsDesktopFile: linyapsDesktopPath == null
+          ? null
+          : File(linyapsDesktopPath),
     );
   }
 
   /// 当前发布渠道。
   final _ReleaseChannel channel;
+
+  /// 玲珑（UAB）轨道的 canonical Desktop Entry；null 表示本次不渲染该轨道。
+  final File? linyapsDesktopFile;
 
   /// canonical Desktop Entry 输出文件。
   final File desktopFile;
@@ -108,7 +137,8 @@ class _RenderArguments {
   static const String _usage =
       'Usage: render_localized_linux_metadata.dart '
       '--channel <stable|nightly> --desktop-file <path> '
-      '--compat-directory <path> --appstream-file <path>';
+      '--compat-directory <path> --appstream-file <path> '
+      '[--linyaps-desktop-file <path>]';
 }
 
 /// 加载 ARB、渲染全部平台文件并验证语言集合。
@@ -145,6 +175,16 @@ void main(List<String> arguments) {
       catalog: catalog,
       channel: options.channel,
     );
+    // 玲珑轨道的入口必须与主入口可区分，否则启动器会把两种发行形态合并成一个图标。
+    final linyapsDesktop = options.linyapsDesktopFile;
+    if (linyapsDesktop != null) {
+      _renderCanonicalDesktop(
+        file: linyapsDesktop,
+        catalog: catalog,
+        channel: options.channel,
+        desktopNameKey: _linyapsDesktopNameKey,
+      );
+    }
     for (final file in compatibilityFiles) {
       _renderCompatibilityDesktop(
         file: file,
@@ -174,6 +214,7 @@ void _renderCanonicalDesktop({
   required File file,
   required LocalizationResourceCatalog catalog,
   required _ReleaseChannel channel,
+  String? desktopNameKey,
 }) {
   var content = file.readAsStringSync();
   content = _replaceMarker(
@@ -182,7 +223,7 @@ void _renderCanonicalDesktop({
     _desktopFieldBlock(
       catalog: catalog,
       field: 'Name',
-      messageKey: _nameKey(channel),
+      messageKey: desktopNameKey ?? _nameKey(channel),
     ),
     file,
   );

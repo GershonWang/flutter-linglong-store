@@ -5,6 +5,15 @@
 
 ## 变更记录
 
+- 2026-10-10：玲珑（UAB）轨道改用**独立应用身份**，与 DEB/RPM 形态在启动器中拆成两个
+  可区分的入口。新增 `config/application_identity.conf` 的 `LINYAPS_APPLICATION_ID`
+  （必填且必须与主 ID 不同，否则失败闭合），由它派生玲珑包的 `package.id`、desktop
+  文件名与图标名；`render-packaging-templates.sh` 额外渲染一份玲珑轨道 desktop，名称取自
+  新增的多语言键 `linuxDesktopNameLinyaps`（10 个语言），
+  `render_localized_linux_metadata.dart` 新增 `--linyaps-desktop-file` 在**同一次调用**内
+  渲染（标记替换只允许命中一次，不能二次调用）。`StartupWMClass` 刻意保持主应用 ID——
+  它编译进 runner，改别的值会让窗口与入口对不上、图标关联失效。遗留：任务栏若按
+  WM Class 归并仍会合并，彻底分开需玲珑轨道独立编译（docs/59 §5.3）。
 - 2026-10-10：新增**运行形态**事实并据此降级特权能力：`linglongRuntimeFormProvider`
   （`lib/application/providers/runtime_form_provider.dart`）。玲珑容器形态下两项特权
   能力按设计不可用——免密安装要写宿主 `/etc/polkit-1/rules.d`、需要从沙箱打通 pkexec

@@ -17,6 +17,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linuxDesktopNameNightly => '玲珑应用商店社区版 Nightly';
 
   @override
+  String get linuxDesktopNameLinyaps => '玲珑应用商店社区版（玲珑版）';
+
+  @override
   String get linuxDesktopGenericName => '应用商店';
 
   @override
@@ -2441,6 +2444,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linuxDesktopNameNightly => '玲瓏應用商店社群版 Nightly';
+
+  @override
+  String get linuxDesktopNameLinyaps => '玲瓏應用商店社群版（玲瓏版）';
 
   @override
   String get linuxDesktopGenericName => '應用商店';

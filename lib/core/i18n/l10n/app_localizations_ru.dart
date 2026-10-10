@@ -18,6 +18,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Магазин Linyaps — ночная версия сообщества';
 
   @override
+  String get linuxDesktopNameLinyaps =>
+      'Магазин Linyaps — версия сообщества (Linyaps)';
+
+  @override
   String get linuxDesktopGenericName => 'Магазин приложений';
 
   @override

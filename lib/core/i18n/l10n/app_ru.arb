@@ -4,6 +4,7 @@
   "@@appStreamLocale": "ru",
   "appTitle": "Магазин Linyaps — версия сообщества",
   "linuxDesktopNameNightly": "Магазин Linyaps — ночная версия сообщества",
+  "linuxDesktopNameLinyaps": "Магазин Linyaps — версия сообщества (Linyaps)",
   "linuxDesktopGenericName": "Магазин приложений",
   "linuxDesktopComment": "Просматривайте, устанавливайте и управляйте приложениями Linyaps",
   "linuxDesktopCommentNightly": "Ночная сборка для поиска, установки и управления приложениями Linyaps",

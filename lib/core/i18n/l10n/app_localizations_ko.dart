@@ -17,6 +17,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get linuxDesktopNameNightly => 'Linyaps 스토어 커뮤니티 에디션 Nightly';
 
   @override
+  String get linuxDesktopNameLinyaps => 'Linyaps 스토어 커뮤니티 에디션 (Linyaps)';
+
+  @override
   String get linuxDesktopGenericName => '앱 스토어';
 
   @override

@@ -5,6 +5,7 @@
   "@@linuxMetadataFallback": true,
   "appTitle": "Linyaps Store Community Edition",
   "linuxDesktopNameNightly": "Linyaps Store Community Edition Nightly",
+  "linuxDesktopNameLinyaps": "Linyaps Store Community Edition (Linyaps)",
   "linuxDesktopGenericName": "Application Store",
   "linuxDesktopComment": "Browse, install, and manage Linyaps applications",
   "linuxDesktopCommentNightly": "Nightly build for browsing, installing, and managing Linyaps applications",

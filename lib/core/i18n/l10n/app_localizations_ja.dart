@@ -17,6 +17,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get linuxDesktopNameNightly => 'Linyaps ストアコミュニティ版 Nightly';
 
   @override
+  String get linuxDesktopNameLinyaps => 'Linyaps ストアコミュニティ版（Linyaps）';
+
+  @override
   String get linuxDesktopGenericName => 'アプリストア';
 
   @override

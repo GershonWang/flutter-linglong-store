@@ -4,6 +4,7 @@
   "@@appStreamLocale": "ar",
   "appTitle": "متجر تطبيقات Linglong (الإصدار المجتمعي)",
   "linuxDesktopNameNightly": "متجر تطبيقات Linglong (الإصدار المجتمعي) Nightly",
+  "linuxDesktopNameLinyaps": "متجر تطبيقات Linglong (الإصدار المجتمعي) (Linyaps)",
   "@linuxDesktopNameNightly": {
     "description": "Linux Nightly 包在启动器和软件中心显示的应用名称"
   },

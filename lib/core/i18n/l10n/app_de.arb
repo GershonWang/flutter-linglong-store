@@ -4,6 +4,7 @@
   "@@appStreamLocale": "de",
   "appTitle": "Linyaps Store Community Edition",
   "linuxDesktopNameNightly": "Linyaps Store Community Edition Nightly",
+  "linuxDesktopNameLinyaps": "Linyaps Store Community Edition (Linyaps)",
   "linuxDesktopGenericName": "App-Store",
   "linuxDesktopComment": "Linyaps-Anwendungen durchsuchen, installieren und verwalten",
   "linuxDesktopCommentNightly": "Nightly-Build zum Durchsuchen, Installieren und Verwalten von Linyaps-Anwendungen",

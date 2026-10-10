@@ -22,6 +22,10 @@ load_application_identity "$IDENTITY_CONFIG"
 [[ "$CANONICAL_DESKTOP_ID" == "${APPLICATION_ID}.desktop" ]]
 [[ "$WM_CLASS" == "$APPLICATION_ID" ]]
 [[ "$SYSTEM_NOTIFICATION_CHANNEL" == "${APPLICATION_ID}/system_notification" ]]
+# 玲珑轨道身份必须独立派生，且不能与主身份相同——相同就意味着 desktop 文件名、
+# 图标名与数据目录全部相撞，启动器里只会剩一个入口。
+[[ "$LINYAPS_APPLICATION_ID" != "$APPLICATION_ID" ]]
+[[ "$LINYAPS_CANONICAL_DESKTOP_ID" == "${LINYAPS_APPLICATION_ID}.desktop" ]]
 
 mapfile -t stable_aliases < <(application_identity_compat_desktop_ids stable)
 mapfile -t nightly_aliases < <(application_identity_compat_desktop_ids nightly)
@@ -59,26 +63,41 @@ expect_invalid_config() {
 expect_invalid_config \
   unknown-field \
   '包含未知字段' \
-  $'APPLICATION_ID=com.example.store\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop\nSHELL_COMMAND=$(touch /tmp/should-not-run)'
+  $'APPLICATION_ID=com.example.store\nLINYAPS_APPLICATION_ID=com.example.store.linyaps\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop\nSHELL_COMMAND=$(touch /tmp/should-not-run)'
 
 expect_invalid_config \
   duplicate-field \
   '重复定义字段 APPLICATION_ID' \
-  $'APPLICATION_ID=com.example.store\nAPPLICATION_ID=com.example.other\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+  $'APPLICATION_ID=com.example.store\nAPPLICATION_ID=com.example.other\nLINYAPS_APPLICATION_ID=com.example.store.linyaps\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+
+expect_invalid_config \
+  missing-linyaps-id \
+  '缺少字段 LINYAPS_APPLICATION_ID' \
+  $'APPLICATION_ID=com.example.store\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
 
 expect_invalid_config \
   invalid-application-id \
   'APPLICATION_ID 不符合反向 DNS/GLib 标识格式' \
-  $'APPLICATION_ID=$(touch-danger)\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+  $'APPLICATION_ID=$(touch-danger)\nLINYAPS_APPLICATION_ID=com.example.store.linyaps\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+
+expect_invalid_config \
+  invalid-linyaps-id \
+  'LINYAPS_APPLICATION_ID 不符合反向 DNS/GLib 标识格式' \
+  $'APPLICATION_ID=com.example.store\nLINYAPS_APPLICATION_ID=$(touch-danger)\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+
+expect_invalid_config \
+  linyaps-id-equals-application-id \
+  'LINYAPS_APPLICATION_ID 必须与 APPLICATION_ID 不同' \
+  $'APPLICATION_ID=com.example.store\nLINYAPS_APPLICATION_ID=com.example.store\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
 
 expect_invalid_config \
   canonical-alias \
   '兼容 desktop ID 不能等于 canonical desktop ID' \
-  $'APPLICATION_ID=com.example.store\nSTABLE_COMPAT_DESKTOP_IDS=com.example.store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
+  $'APPLICATION_ID=com.example.store\nLINYAPS_APPLICATION_ID=com.example.store.linyaps\nSTABLE_COMPAT_DESKTOP_IDS=com.example.store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store-nightly.desktop'
 
 expect_invalid_config \
   duplicate-alias \
   '兼容 desktop ID 重复' \
-  $'APPLICATION_ID=com.example.store\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store.desktop'
+  $'APPLICATION_ID=com.example.store\nLINYAPS_APPLICATION_ID=com.example.store.linyaps\nSTABLE_COMPAT_DESKTOP_IDS=store.desktop\nNIGHTLY_COMPAT_DESKTOP_IDS=store.desktop'
 
 printf 'application identity smoke tests passed\n'

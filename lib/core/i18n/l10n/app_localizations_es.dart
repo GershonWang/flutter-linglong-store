@@ -18,6 +18,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tienda de Aplicaciones Linyaps Edición Comunitaria Nightly';
 
   @override
+  String get linuxDesktopNameLinyaps =>
+      'Tienda de Aplicaciones Linyaps Edición Comunitaria (Linyaps)';
+
+  @override
   String get linuxDesktopGenericName => 'Tienda de aplicaciones';
 
   @override

@@ -4,8 +4,12 @@
   "@@appStreamLocale": "zh-CN",
   "appTitle": "玲珑应用商店社区版",
   "linuxDesktopNameNightly": "玲珑应用商店社区版 Nightly",
+  "linuxDesktopNameLinyaps": "玲珑应用商店社区版（玲珑版）",
   "@linuxDesktopNameNightly": {
     "description": "Linux Nightly 包在启动器和软件中心显示的应用名称"
+  },
+  "@linuxDesktopNameLinyaps": {
+    "description": "Linux 玲珑（UAB）包在启动器与软件中心显示的应用名称；必须与 DEB/RPM 形态可区分，否则启动器会把两个入口合并"
   },
   "linuxDesktopGenericName": "应用商店",
   "@linuxDesktopGenericName": {

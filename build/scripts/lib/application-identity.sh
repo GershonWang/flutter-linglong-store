@@ -85,7 +85,7 @@ load_application_identity() {
     fi
 
     case "$key" in
-      APPLICATION_ID|STABLE_COMPAT_DESKTOP_IDS|NIGHTLY_COMPAT_DESKTOP_IDS)
+      APPLICATION_ID|LINYAPS_APPLICATION_ID|STABLE_COMPAT_DESKTOP_IDS|NIGHTLY_COMPAT_DESKTOP_IDS)
         ;;
       *)
         _application_identity_fail "${config_path}:${line_number} 包含未知字段 $key"
@@ -103,6 +103,7 @@ load_application_identity() {
   local required_key
   for required_key in \
     APPLICATION_ID \
+    LINYAPS_APPLICATION_ID \
     STABLE_COMPAT_DESKTOP_IDS \
     NIGHTLY_COMPAT_DESKTOP_IDS; do
     if [[ -z "${values[$required_key]+present}" ]]; then
@@ -119,6 +120,23 @@ load_application_identity() {
   fi
 
   local canonical_desktop_id="${application_id}.desktop"
+
+  # 玲珑（UAB）轨道使用独立应用 ID。
+  #
+  # 两种发行形态共用同一应用 ID 时，desktop 文件名、图标名、数据目录与单实例锁
+  # 全部撞在一起：DEB 已占用 /usr/share/applications/<id>.desktop 后，玲珑包不会
+  # 覆盖它，启动器里只剩一个入口。因此玲珑轨道必须有自己的 ID，且不允许与主 ID
+  # 相同——相同就等于没拆开，这里失败闭合。
+  local linyaps_application_id="${values[LINYAPS_APPLICATION_ID]}"
+  if [[ "${#linyaps_application_id}" -gt 255 ||
+        ! "$linyaps_application_id" =~ ^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)+$ ]]; then
+    _application_identity_fail "LINYAPS_APPLICATION_ID 不符合反向 DNS/GLib 标识格式: $linyaps_application_id"
+    return 78
+  fi
+  if [[ "$linyaps_application_id" == "$application_id" ]]; then
+    _application_identity_fail "LINYAPS_APPLICATION_ID 必须与 APPLICATION_ID 不同: $linyaps_application_id"
+    return 78
+  fi
   local stable_ids="${values[STABLE_COMPAT_DESKTOP_IDS]}"
   local nightly_ids="${values[NIGHTLY_COMPAT_DESKTOP_IDS]}"
   local encoded_ids
@@ -166,7 +184,10 @@ load_application_identity() {
 
   # 这些变量是所有脚本消费者的只读契约；派生值不再进入人工配置。
   declare -gr APPLICATION_ID="$application_id"
+  declare -gr LINYAPS_APPLICATION_ID="$linyaps_application_id"
   declare -gr CANONICAL_DESKTOP_ID="$canonical_desktop_id"
+  # 玲珑轨道的 desktop 文件名同样由它的应用 ID 派生，供 linyaps 渲染与打包复用。
+  declare -gr LINYAPS_CANONICAL_DESKTOP_ID="${linyaps_application_id}.desktop"
   declare -gr STABLE_COMPAT_DESKTOP_IDS="$stable_ids"
   declare -gr NIGHTLY_COMPAT_DESKTOP_IDS="$nightly_ids"
   declare -gr WM_CLASS="$application_id"

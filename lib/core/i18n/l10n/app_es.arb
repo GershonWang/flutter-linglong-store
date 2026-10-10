@@ -4,6 +4,7 @@
   "@@appStreamLocale": "es",
   "appTitle": "Tienda de Aplicaciones Linyaps Edición Comunitaria",
   "linuxDesktopNameNightly": "Tienda de Aplicaciones Linyaps Edición Comunitaria Nightly",
+  "linuxDesktopNameLinyaps": "Tienda de Aplicaciones Linyaps Edición Comunitaria (Linyaps)",
   "linuxDesktopGenericName": "Tienda de aplicaciones",
   "linuxDesktopComment": "Explora, instala y gestiona aplicaciones Linyaps",
   "linuxDesktopCommentNightly": "Versión Nightly para explorar, instalar y gestionar aplicaciones Linyaps",

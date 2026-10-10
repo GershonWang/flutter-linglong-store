@@ -35,7 +35,11 @@ load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
 # 应用文件在包内的固定前缀。玲珑把它作为 $PREFIX 注入构建容器，两侧必须一致，
 # 因此只在这里推导一次，渲染清单与改写 desktop 都复用它。
-readonly APP_PREFIX="/opt/apps/$APPLICATION_ID/files"
+#
+# 用玲珑轨道的独立应用 ID：两种发行形态共用同一 ID 时，desktop 文件名、图标名与
+# 数据目录全部相撞，DEB 已占用主 desktop 路径后玲珑包不会覆盖它，启动器里只会剩
+# 一个入口（config/application_identity.conf 的 LINYAPS_APPLICATION_ID）。
+readonly APP_PREFIX="/opt/apps/$LINYAPS_APPLICATION_ID/files"
 
 # 默认 base 决定运行时提供的系统库。Flutter Linux 产物依赖 GTK3，而 base 镜像里
 # 只有运行时（无开发头文件），因此这个引用必须指向一个已发布的 base。
@@ -45,7 +49,8 @@ readonly DEFAULT_BASE_REF="org.deepin.base/25.2.2"
 readonly APP_BINARY_NAME="linglong_store"
 
 # 图标名必须与渲染出的 desktop 里 Icon= 字段一致，否则启动器找不到图标。
-readonly APP_ICON_NAME="linglong-store"
+# 与主入口分开命名，两种形态才能各自使用自己的图标资源。
+readonly APP_ICON_NAME="linglong-store-linyaps"
 
 if [[ -n "${LINGLONG_RELEASE_CONTAINER:-}" ]]; then
   echo "package-linyaps.sh 必须在宿主机上运行：ll-builder 依赖宿主的玲珑守护进程与层仓库。" >&2
@@ -167,12 +172,14 @@ installed_size_kb="$(du -sk "$payload_dir" | cut -f1)"
   --installed-size-kb "$installed_size_kb" \
   --channel "$channel"
 
-mapfile -t rendered_desktop_files < <(find "$metadata_dir" -maxdepth 1 -type f -name '*.desktop' | sort)
-if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
-  echo "Expected exactly one rendered desktop file in $metadata_dir, found ${#rendered_desktop_files[@]}" >&2
+# 玲珑轨道使用渲染器单独产出的入口（独立文件名 + 独立名称键 + 独立图标名），
+# 主入口那份是 DEB/RPM/AppImage 用的，不能拿来打玲珑包。
+linyaps_desktop_path="$metadata_dir/linyaps/$LINYAPS_CANONICAL_DESKTOP_ID"
+if [[ ! -f "$linyaps_desktop_path" ]]; then
+  echo "缺少玲珑轨道 desktop 条目: $linyaps_desktop_path" >&2
   exit 1
 fi
-desktop_filename="$(basename "${rendered_desktop_files[0]}")"
+desktop_filename="$(basename "$linyaps_desktop_path")"
 
 install -d "$share_dir/applications" "$share_dir/icons/hicolor/256x256/apps"
 
@@ -180,14 +187,14 @@ install -d "$share_dir/applications" "$share_dir/icons/hicolor/256x256/apps"
 # `ll-cli run <appid> -- <Exec>`，而容器内没有 PATH 查找，裸命令名会启动失败。
 # %u 保留，用于承接 og:// 安装链接（desktop 模板已注册 x-scheme-handler/og）。
 sed "s|^Exec=.*|Exec=${APP_PREFIX}/${APP_BINARY_NAME} %u|" \
-  "${rendered_desktop_files[0]}" > "$share_dir/applications/$desktop_filename"
+  "$linyaps_desktop_path" > "$share_dir/applications/$desktop_filename"
 
 rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$icon_path"
 
 # 3) 渲染玲珑清单。占位符替换与仓库其它渲染脚本保持同一种写法（纯字符串替换，
 #    不执行模板内容）。
 manifest_content="$(<"$ROOT_DIR/build/packaging/linux/linyaps/linglong.yaml.in")"
-manifest_content="${manifest_content//@APPLICATION_ID@/$APPLICATION_ID}"
+manifest_content="${manifest_content//@APPLICATION_ID@/$LINYAPS_APPLICATION_ID}"
 manifest_content="${manifest_content//@PACKAGE_NAME@/linglong-store}"
 manifest_content="${manifest_content//@LINGLONG_VERSION@/$linglong_version}"
 manifest_content="${manifest_content//@PACKAGE_DESCRIPTION@/玲珑应用商店社区版：浏览、安装与管理玲珑应用。}"
@@ -221,15 +228,14 @@ fi
 echo "UAB 产物: $artifact_path"
 echo "SHA256: $(sha256sum "$artifact_path" | cut -d' ' -f1)"
 echo "安装: ll-cli install -y \"$artifact_path\""
-echo "卸载: ll-cli uninstall $APPLICATION_ID"
+echo "卸载: ll-cli uninstall $LINYAPS_APPLICATION_ID"
 
-# 同一 desktop ID 可能已被 DEB/RPM 形态占用。本机实测：DEB 版 linglong-store 3.7.0
-# 已占用 /usr/share/applications/<desktop id>，玲珑安装不会覆盖它，启动器入口仍指向
-# 旧形态。这里只提示，不阻断打包。
+# 玲珑轨道已使用独立 desktop ID，不再与 DEB/RPM 的入口相撞；但另一种形态若同时安装，
+# 启动器里会出现两个入口（这正是拆分身份的目的）。这里只提示，不阻断打包。
 if [[ -e "/usr/share/applications/$CANONICAL_DESKTOP_ID" ]]; then
-  echo "注意：/usr/share/applications/$CANONICAL_DESKTOP_ID 已存在（可能来自 DEB/RPM 安装），玲珑包不会覆盖该入口。" >&2
+  echo "提示：检测到 $CANONICAL_DESKTOP_ID（DEB/RPM 形态）已安装，玲珑版会作为另一个入口共存。" >&2
 fi
 
-# 诚实提示：这个包能装上、能浏览商品，但容器内没有 ll-cli，安装/卸载/更新/已装
-# 列表等能力尚不可用（详见 docs/59-linyaps-uab-packaging-design.md）。
-echo "注意：该产物运行时尚未接通宿主玲珑通道，应用管理能力不可用。" >&2
+# 诚实提示：应用管理能力已由宿主透传桥接通（docs/60），但两项特权能力在容器形态下
+# 按设计关闭：免密安装点击后提示"当前环境不支持"，取消安装入口不可用。
+echo "注意：容器形态下免密安装与取消安装按设计不可用（docs/60 §7）。" >&2

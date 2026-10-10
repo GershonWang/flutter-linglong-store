@@ -157,20 +157,44 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 | B. UAB + 宿主机伴随组件 | 另发 DEB/RPM 提供宿主侧 bridge，复用 DSH 已验证的 `systemd-run` 通道 | 功能完整，但新增组件与信任边界，需安全评审 |
 | C. UAB 直连守护进程 DBus | 用 `PackageManager1` 方法替代 `ll-cli` | 技术上可达，但需重写数据源，且容器进程发起 polkit 认证的可行性**未验证** |
 
-### 5.3 与 DEB/RPM 形态共存的冲突（实测）
+### 5.3 与 DEB/RPM 形态共存：身份拆分
 
-玲珑包与 DEB/RPM 包共用同一个应用 ID 与 desktop ID，因此在同一台机器上共存会互相
-遮挡。本机实测（DEB 版 `linglong-store 3.7.0` 已安装，随后安装玲珑 UAB）：
+**问题（实测）**：早期版本两种形态共用同一应用 ID 与 desktop ID，在同一台机器上
+共存会互相遮挡：
 
-- 玲珑安装本身成功（`install uab successfully`，`ll-cli list/info` 都能读到 3.7.0.0）；
-- 但 `/usr/share/applications/com.dongpl.linglong-store.v2.desktop` **仍是 DEB 那份**
-  （`dpkg -S` 确认归属 `linglong-store`，内容为 `Exec=linglong-store %u`，未被玲珑的
-  `Exec=/usr/bin/ll-cli run ...` 覆盖），启动器入口因此仍指向 DEB 形态；
-- `/var/lib/linglong/entries/share/applications/` 里**没有**本应用的条目（其它应用都有
-  指向各自 layer 的软链），即玲珑侧没有导出自己的 desktop 入口。
+- 玲珑安装本身成功（`install uab successfully`），但
+  `/usr/share/applications/com.dongpl.linglong-store.v2.desktop` **仍是 DEB 那份**
+  （`dpkg -S` 确认归属 `linglong-store`，内容为 `Exec=linglong-store %u`），玲珑的
+  `Exec=/usr/bin/ll-cli run ...` 没有覆盖它；
+- `/var/lib/linglong/entries/share/applications/` 里没有本应用的条目，即玲珑侧没有
+  导出自己的 desktop 入口；
+- 结果启动器里只有一个图标，用户无法区分两个安装。
 
-结论：**两种发行形态不应在同一台机器上并存**，安装前应先卸载另一种；发版说明需要
-明确这一点。`package-linyaps.sh` 在打包时会检测该 desktop 路径已存在并给出提示。
+**解法**：玲珑轨道使用**独立应用身份** `LINYAPS_APPLICATION_ID`
+（`config/application_identity.conf`），由它派生玲珑包的 `package.id`、desktop 文件名
+与图标名。拆分后逐项对照：
+
+| 身份项 | DEB/RPM/AppImage | 玲珑（UAB） |
+|--------|------------------|-------------|
+| 应用 ID | `com.dongpl.linglong-store.v2` | `com.dongpl.linglong-store.v2.linyaps` |
+| desktop 文件名 | `…v2.desktop` | `…v2.linyaps.desktop` |
+| 启动器名称 | 玲珑应用商店社区版 | 玲珑应用商店社区版**（玲珑版）** |
+| 图标名 | `linglong-store` | `linglong-store-linyaps` |
+| 数据目录 / 单实例锁 | `$XDG_*/…v2` | `$XDG_*/…v2.linyaps` |
+| `StartupWMClass` | `com.dongpl.linglong-store.v2` | **同左（刻意相同）** |
+
+`StartupWMClass` 必须保持主应用 ID：它由 runner 编译期写入
+（`-DAPPLICATION_ID`），写别的值会让窗口与入口对不上、图标关联失效。
+
+**遗留影响**：
+
+1. 任务栏 / dock 若按 WM Class 归并，仍可能把两个窗口合成一个分组——彻底分开需要
+   玲珑轨道用独立身份**编译** runner（第二条编译轨道），本次未做。
+2. 数据目录分开意味着玲珑版首次启动没有 DEB 版的设置与日志；既有迁移机制只处理
+   历史 ID 的一次性迁移，不跨形态复制。
+3. 两个包都注册 `x-scheme-handler/og`，默认处理器只能有一个（后注册者生效）。
+
+`package-linyaps.sh` 在打包时会提示另一种形态已安装，但不阻断。
 
 ## 6. 验收与未决问题
 
