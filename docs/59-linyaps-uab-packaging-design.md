@@ -180,7 +180,7 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 | desktop 文件名 | `…v2.desktop` | `…v2.linyaps.desktop` |
 | 启动器名称 | 玲珑应用商店社区版 | 玲珑应用商店社区版**（玲珑版）** |
 | 图标名 | `linglong-store` | `linglong-store-linyaps` |
-| 数据目录 / 单实例锁 | `$XDG_*/…v2` | `$XDG_*/…v2.linyaps` |
+| 数据目录 / 单实例锁 | `$XDG_*/com.dongpl.linglong-store.v2` | **同左（未分开）** |
 | `StartupWMClass` | `com.dongpl.linglong-store.v2` | **同左（刻意相同）** |
 
 `StartupWMClass` 必须保持主应用 ID：它由 runner 编译期写入
@@ -190,11 +190,47 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 
 1. 任务栏 / dock 若按 WM Class 归并，仍可能把两个窗口合成一个分组——彻底分开需要
    玲珑轨道用独立身份**编译** runner（第二条编译轨道），本次未做。
-2. 数据目录分开意味着玲珑版首次启动没有 DEB 版的设置与日志；既有迁移机制只处理
-   历史 ID 的一次性迁移，不跨形态复制。
+2. **数据目录没有分开**：应用的 XDG 路径取自**编译期**身份
+   （`ApplicationIdentity.applicationId`，即 `com.dongpl.linglong-store.v2`），而不是
+   玲珑包 ID，因此两种形态共用同一份设置、日志与单实例锁。要真正分开需要让玲珑轨道
+   用独立身份编译 runner（与第 1 点同一条改动）。
 3. 两个包都注册 `x-scheme-handler/og`，默认处理器只能有一个（后注册者生效）。
 
 `package-linyaps.sh` 在打包时会提示另一种形态已安装，但不阻断。
+
+### 5.4 真机验收发现（2026-10-10，linglong 1.14.3）
+
+装上 UAB 后逐项核对，暴露出两个**身份拆分无法解决**的问题：
+
+**① UAB 安装不会把 desktop 条目导出到宿主。**
+
+- 层里条目齐全：`layers/<hash>/entries/share/applications/<id>.desktop`（已被 ll-builder
+  改写 Exec）与 `entries/share/icons/hicolor/256x256/apps/<icon>.png` 都在；
+- 但 `/var/lib/linglong/entries/share/applications/` 与 `/usr/share/applications/` 里
+  **都没有**本应用的条目；
+- 对照组：`/var/lib/linglong/entries/share/applications/` 里有 14 个**从仓库安装**的
+  应用条目（bilibili、motrix、wechat…），而两个 **UAB 安装**的应用（本应用与
+  `com.deepseek.dsh-desktop-dual`）都没有条目。
+
+结论：`ll-cli install <file.uab>` 这条路径没有执行条目导出（仓库安装路径会）。
+**因此启动器里不会自动出现玲珑版入口**，与身份是否拆分无关。
+
+**② ll-builder 改写 `Exec` 时会破坏 `%u` 字段码。**
+
+打进包的是 `Exec=/opt/apps/<id>/files/linglong_store %u`，层里被改写成：
+
+```
+Exec=/usr/bin/ll-cli run <id> --url %u -- -- /opt/apps/<id>/files/linglong_store %%u
+```
+
+同时插入了 `--url %u --` 又保留了 `-- --` 与 `%%u`。玲珑轨道若要保留 `og://` 承接，
+需要先确认这条改写的正确形态；否则应在玲珑轨道的 desktop 里**去掉 `%u`**，
+让改写结果退化为干净的 `ll-cli run <id> -- <命令>`。
+
+**当前可行做法（未纳入打包链路）**：把层里的条目与图标复制到**用户级 XDG 目录**
+（`~/.local/share/applications/`、`~/.local/share/icons/hicolor/256x256/apps/`），
+启动器即可看到第二个入口。实测两个入口并存且名称可区分。这属于运行时注册，
+是否需要由应用自己完成、或改为从仓库安装，待定。
 
 ## 6. 验收与未决问题
 
