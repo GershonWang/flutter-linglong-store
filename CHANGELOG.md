@@ -5,6 +5,14 @@
 
 ## 变更记录
 
+- 2026-10-10：新增玲珑（linyaps）UAB 打包轨道：`build/packaging/linux/linyaps/`
+  存放清单模板与装配脚本，`build/scripts/package-linyaps.sh` 在**宿主机**编排
+  （刻意不做 `--inner` 重入）。原因是实测玲珑 base 镜像无 gcc/pkg-config/GTK 开发
+  头文件与 Flutter SDK，编译必须由发布容器完成，而 `ll-builder` 只能跑在宿主侧，
+  因此采用与 RPM「二进制重打包」同构的双轨制。构建状态目录 `linglong/` 只落在
+  `build/tmp/` 下，不污染工作树。**该产物运行时功能不完整**：容器内没有 `ll-cli`，
+  应用管理能力需要宿主通道才能工作，设计、约束与后续方案见
+  `docs/59-linyaps-uab-packaging-design.md`。
 - 2026-10-03：设置页「关于」区域复用真实应用 Logo，并在应用名下新增灰色小字号
   署名「本应用由 deepin 社区开发者 Linyaps Simple Store SIG 小组开发」。开发者
   信息行同步显示 `Linyaps Simple Store SIG`，共用配置中的正式小组名称；署名句
