@@ -130,7 +130,17 @@ icon_path="$share_dir/icons/hicolor/256x256/apps/${APP_ICON_NAME}.png"
 
 # 暂存目录放在 build/tmp 下：ll-builder 会在工作目录里创建 linglong/ 构建状态目录，
 # 若在仓库根目录直接构建就会把未跟踪的 linglong/ 留在工作树里（build/tmp 已被忽略）。
-rm -rf "$stage_root"
+remove_stage_root() {
+  [[ -e "$stage_root" ]] || return 0
+  # ll-builder 的 overlay workdir 会被建成权限 0000（属主仍是当前用户），此时
+  # `rm -rf` 无法遍历目录内容而失败。find 是前序遍历，会先放开目录自身再进入，
+  # 因此这里先补属主权限再删；权限本身补不动时不阻断，让 rm 的失败照常暴露。
+  find "$stage_root" -type d -exec chmod u+rwx {} + 2> /dev/null || true
+  find "$stage_root" -type f -exec chmod u+rw {} + 2> /dev/null || true
+  rm -rf -- "$stage_root"
+}
+
+remove_stage_root
 mkdir -p "$payload_dir" "$share_dir"
 
 # 1) 取得预编译产物。默认走仓库既有的发布编译链路；--bundle-dir 供 CI 复用。
@@ -195,7 +205,12 @@ mkdir -p "$output_dir"
 (
   cd "$stage_root"
   ll-builder build -f linglong.yaml
-  ll-builder export -f linglong.yaml --uabx --icon "$icon_path" -o "$artifact_path"
+  # 必须用默认导出模式，它产出的是**可安装** UAB（`ll-cli install <file.uab>`）。
+  # 不要加 --uabx：那是「可执行 UABX」，设计为直接运行（./xxx.uab），
+  # ll-cli 安装时会直接拒绝并报
+  # `Error -1: executable UAB installation is not supported`（实测）。
+  # 图标随 share/icons 打进层内即可，无需 --icon（该参数仅对 --uabx 有效）。
+  ll-builder export -f linglong.yaml -o "$artifact_path"
 )
 
 if [[ ! -f "$artifact_path" ]]; then
@@ -205,6 +220,15 @@ fi
 
 echo "UAB 产物: $artifact_path"
 echo "SHA256: $(sha256sum "$artifact_path" | cut -d' ' -f1)"
+echo "安装: ll-cli install -y \"$artifact_path\""
+echo "卸载: ll-cli uninstall $APPLICATION_ID"
+
+# 同一 desktop ID 可能已被 DEB/RPM 形态占用。本机实测：DEB 版 linglong-store 3.7.0
+# 已占用 /usr/share/applications/<desktop id>，玲珑安装不会覆盖它，启动器入口仍指向
+# 旧形态。这里只提示，不阻断打包。
+if [[ -e "/usr/share/applications/$CANONICAL_DESKTOP_ID" ]]; then
+  echo "注意：/usr/share/applications/$CANONICAL_DESKTOP_ID 已存在（可能来自 DEB/RPM 安装），玲珑包不会覆盖该入口。" >&2
+fi
 
 # 诚实提示：这个包能装上、能浏览商品，但容器内没有 ll-cli，安装/卸载/更新/已装
 # 列表等能力尚不可用（详见 docs/59-linyaps-uab-packaging-design.md）。

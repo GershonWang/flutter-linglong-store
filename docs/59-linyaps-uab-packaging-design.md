@@ -79,6 +79,15 @@ desktop 文件名或图标名，只需把两棵树搬到 `$PREFIX` 与 `$PREFIX/
 - **版本号转换只做一次**：仓库发布版本是三段式（`3.7.0`），玲珑要求四段式
   （`3.7.0.0`）。nightly 版本号含 `+<sha>`，不符合玲珑版本号语法，脚本**失败闭合**
   而不是拼出一个装不上的包。
+- **必须用默认导出模式**：`ll-builder export` 不带 `--uabx` 产出的是**可安装** UAB
+  （`ll-cli install <file.uab>`）；`--uabx` 产出的是「可执行 UABX」，设计为直接运行
+  （`./xxx.uab`），`ll-cli install` 会直接拒绝并报
+  `Error -1: executable UAB installation is not supported`（实测）。两者都是 ELF
+  可执行文件，肉眼与 `file` 命令都无法区分，只能靠导出参数保证。图标随
+  `share/icons` 打进层内即可，不需要 `--icon`（该参数仅对 `--uabx` 有效）。
+- **暂存目录清理必须先修权限**：`ll-builder` 的 overlay workdir 权限为 `0000`
+  （属主仍是当前用户），直接 `rm -rf` 会因无法遍历而失败，导致重复打包时脚本在第一步
+  就中断。脚本用 `find` 前序补 `u+rwx` 后再删。
 
 ### 3.3 包内布局
 
@@ -148,6 +157,21 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 | B. UAB + 宿主机伴随组件 | 另发 DEB/RPM 提供宿主侧 bridge，复用 DSH 已验证的 `systemd-run` 通道 | 功能完整，但新增组件与信任边界，需安全评审 |
 | C. UAB 直连守护进程 DBus | 用 `PackageManager1` 方法替代 `ll-cli` | 技术上可达，但需重写数据源，且容器进程发起 polkit 认证的可行性**未验证** |
 
+### 5.3 与 DEB/RPM 形态共存的冲突（实测）
+
+玲珑包与 DEB/RPM 包共用同一个应用 ID 与 desktop ID，因此在同一台机器上共存会互相
+遮挡。本机实测（DEB 版 `linglong-store 3.7.0` 已安装，随后安装玲珑 UAB）：
+
+- 玲珑安装本身成功（`install uab successfully`，`ll-cli list/info` 都能读到 3.7.0.0）；
+- 但 `/usr/share/applications/com.dongpl.linglong-store.v2.desktop` **仍是 DEB 那份**
+  （`dpkg -S` 确认归属 `linglong-store`，内容为 `Exec=linglong-store %u`，未被玲珑的
+  `Exec=/usr/bin/ll-cli run ...` 覆盖），启动器入口因此仍指向 DEB 形态；
+- `/var/lib/linglong/entries/share/applications/` 里**没有**本应用的条目（其它应用都有
+  指向各自 layer 的软链），即玲珑侧没有导出自己的 desktop 入口。
+
+结论：**两种发行形态不应在同一台机器上并存**，安装前应先卸载另一种；发版说明需要
+明确这一点。`package-linyaps.sh` 在打包时会检测该 desktop 路径已存在并给出提示。
+
 ## 6. 验收与未决问题
 
 ### 6.1 已验证
@@ -161,7 +185,10 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 | 发布容器编译 | 通过，`Impeller 关闭调用` 校验 PASS |
 | 元数据渲染 | 通过，10 个 locale + 1 个兼容入口 |
 | `ll-builder build` | 通过，`Successfully build com.dongpl.linglong-store.v2` |
-| `ll-builder export --uabx` | 通过，erofs（lz4）内嵌进 UAB |
+| `ll-builder export`（默认模式） | 通过，erofs（lz4）内嵌进 UAB |
+| **`ll-cli install`** | 通过，`install uab successfully`；`ll-cli list` 与 `ll-cli info` 均能读到 3.7.0.0 |
+| `ll-cli uninstall` | 通过，`Uninstall main:.../3.7.0.0/x86_64 binary success` |
+| **`--uabx` 模式（错误用法）** | 安装被拒：`Error -1: executable UAB installation is not supported` |
 | 构建容器注入值 | `PREFIX=/opt/apps/<appid>/files`、`LINGLONG_APPID=<appid>`、`/project` = 调用目录 |
 | 包内布局 | `files/linglong_store`(44 KB)、`files/lib/libapp.so`(9.8 MB)、`files/libexec/linglong_store_helper`(191 KB)、`files/data/*` 均在位 |
 | 图标导出 | `entries/share/icons/hicolor/256x256/apps/linglong-store.png`(6.5 KB) 在位 |
@@ -179,8 +206,8 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 3. compat desktop 入口是否需要一并放进 `share/applications`（当前只放 canonical 一个）。
 4. 玲珑 base 镜像在 loong64 上是否有对应版本。
 5. `--bundle-dir` 复用路径下的产物与完整链路产物是否字节一致（应一致，未比对）。
-6. UAB 未在真机上安装启动过：容器内 GTK3 运行时具备，但窗口、字体、渲染的实际表现
-   未验收。
+6. UAB 已在本机安装成功，但**未启动过**：容器内 GTK3 运行时具备，窗口、字体、
+   渲染的实际表现未验收。
 
 ## 7. 实施记录
 
@@ -195,16 +222,23 @@ UAB 能装上、能浏览商品目录（走 HTTP `storeapi.linyaps.org.cn`），
 
 ```
 build/out/linux/3.7.0/amd64/linglong-store_3.7.0_amd64.uab
-60 MiB  sha256=50595fb8a72d9cb3cc50e9a3a026a05dcab89a00b43a5b595577a243717e9572
+60 MiB  sha256=7baee75f81ff86f6e477d91122f116d935ddd19fd1cfaf9a21e1f916658a8d0b
 ```
+
+产物不是字节可复现的：erofs 每次导出都会写入新的 UUID 与时间戳，同一输入两次导出
+哈希不同。需要可复现性时应在 UAB 之外另附校验和，而不是比对两次导出的哈希。
 
 排障记录（供后续维护参考）：
 
 - `"$arr[0]"` 在双引号内**不会**解析为数组下标，会展开成 `${arr}` 加字面量 `[0]`；
   必须写 `"${arr[0]}"`。首次运行即因此失败，已修正。
-- 首次探测 `ll-builder` 时在仓库根目录留下了未跟踪的 `linglong/` 状态目录（其
-  `cache/overlay/workdir/work` 权限为 `0000`，需先 `chmod -R u+rwX` 才能删除）。
+- 首次实现误用 `export --uabx`，产出的是可执行 UABX，`ll-cli install` 直接拒绝
+  （`executable UAB installation is not supported`）。已改为默认导出模式，并实测
+  卸载后重装成功。
+- 首次探测 `ll-builder` 时在仓库根目录留下了未跟踪的 `linglong/` 状态目录。
   正式脚本固定 `cd` 到 `build/tmp/` 下的暂存目录，从设计上避免该问题。
+- `ll-builder` 的 overlay workdir 权限为 `0000`，导致重复打包时 `rm -rf "$stage_root"`
+  在第一步就失败（第二次运行时实际踩到）。已改为先 `find ... -exec chmod u+rwx` 再删。
 
 未纳入本次改动（后续可选）：
 

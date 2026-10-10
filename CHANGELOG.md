@@ -10,9 +10,12 @@
   （刻意不做 `--inner` 重入）。原因是实测玲珑 base 镜像无 gcc/pkg-config/GTK 开发
   头文件与 Flutter SDK，编译必须由发布容器完成，而 `ll-builder` 只能跑在宿主侧，
   因此采用与 RPM「二进制重打包」同构的双轨制。构建状态目录 `linglong/` 只落在
-  `build/tmp/` 下，不污染工作树。**该产物运行时功能不完整**：容器内没有 `ll-cli`，
-  应用管理能力需要宿主通道才能工作，设计、约束与后续方案见
-  `docs/59-linyaps-uab-packaging-design.md`。
+  `build/tmp/` 下，不污染工作树。产物必须用 `ll-builder export` **默认模式**导出：
+  `--uabx` 产出的是可执行 UABX，`ll-cli install` 会报
+  `executable UAB installation is not supported`。已实测卸载后重装成功。**该产物
+  运行时功能不完整**：容器内没有 `ll-cli`，应用管理能力需要宿主通道才能工作；
+  且玲珑包与 DEB/RPM 共用同一 desktop ID，两者不应在同一台机器上并存。设计、约束
+  与后续方案见 `docs/59-linyaps-uab-packaging-design.md`。
 - 2026-10-03：设置页「关于」区域复用真实应用 Logo，并在应用名下新增灰色小字号
   署名「本应用由 deepin 社区开发者 Linyaps Simple Store SIG 小组开发」。开发者
   信息行同步显示 `Linyaps Simple Store SIG`，共用配置中的正式小组名称；署名句
