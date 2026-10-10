@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
 import '../application/providers/polkit_rule_provider.dart';
+import '../application/providers/runtime_form_provider.dart';
 import '../core/logging/app_logger.dart';
 import '../core/platform/file_downloader.dart';
 import '../core/platform/host_escape_channel.dart';
@@ -50,11 +51,12 @@ List<Override> createProductionDependencyOverrides({
   // 同一客户端，防止 autoDispose 重建实例时重复拉起 pkexec。
   final privilegedHelper = PrivilegedHelperClient();
 
-  // 运行形态决定 ll-cli 的命令形态，必须在任何 Repository/Service 发起调用之前
-  // 安装好（它们是调用时读取，所以这里只要在返回 overrides 前完成即可）。
-  _configureLinglongCliCommandForm();
+  // 运行形态决定 ll-cli 的命令形态，也决定哪些特权能力必须提前降级；必须在任何
+  // Repository/Service 发起调用之前定好（它们是调用时读取）。
+  final runtimeForm = _configureLinglongCliCommandForm();
 
   return [
+    linglongRuntimeFormProvider.overrideWithValue(runtimeForm),
     sharedPreferencesProvider.overrideWithValue(sharedPreferences),
     appRepositoryProvider.overrideWith((ref) => AppRepositoryImpl()),
     analyticsRepositoryProvider.overrideWith(
@@ -131,7 +133,7 @@ List<Override> createProductionDependencyOverrides({
   ];
 }
 
-/// 按运行形态安装 ll-cli 命令构造器。
+/// 按运行形态安装 ll-cli 命令构造器，并返回本次进程的运行形态。
 ///
 /// 玲珑（UAB）形态下容器里没有 ll-cli，也没有宿主的玲珑守护进程与层仓库，
 /// 因此把命令透传到宿主执行；其它形态（DEB / RPM / AppImage / 开发态）保持本地
@@ -141,18 +143,18 @@ List<Override> createProductionDependencyOverrides({
 /// 或不可用"诊断路径会照常给出可读错误，比在这里悄悄降级更好定位。
 ///
 /// 安全提示：透传是沙箱逃逸通道，能力面由 [BridgedLinglongCliCommandBuilder] 承载的
-/// 命令决定。本函数只接入 ll-cli，不接入 pkexec 等提权命令（见 docs/60）。
-void _configureLinglongCliCommandForm() {
+/// 命令决定。本函数只接入 ll-cli，不接入 pkexec 等提权命令（见 docs/60 §7）。
+LinglongRuntimeForm _configureLinglongCliCommandForm() {
   final channel = HostEscapeChannel.detect();
   if (channel == null) {
     AppLogger.info('[HostBridge] 未检测到宿主透传通道，ll-cli 走本地直调');
-    return;
+    return LinglongRuntimeForm.hostInstalled;
   }
 
   final hostLlCli = channel.hostExecutable('ll-cli');
   if (hostLlCli == null) {
     AppLogger.warning('[HostBridge] 宿主上未找到 ll-cli，保持本地直调');
-    return;
+    return LinglongRuntimeForm.hostInstalled;
   }
 
   configureLinglongCliCommandBuilder(
@@ -164,6 +166,7 @@ void _configureLinglongCliCommandForm() {
   AppLogger.info(
     '[HostBridge] ll-cli 透传到宿主执行: $hostLlCli（工作目录 ${channel.workingDirectory}）',
   );
+  return LinglongRuntimeForm.linglongContainer;
 }
 
 /// 构造 helper 信任解析器：单次解析 + 会话内缓存（docs/51 §4.2）。

@@ -85,7 +85,11 @@ class AppDetailHeroHeader extends StatelessWidget {
   final VoidCallback onPrimaryPressed;
 
   /// 安装或排队取消回调。
-  final VoidCallback onCancel;
+  ///
+  /// 为 null 表示当前运行形态不支持取消（玲珑容器形态下 ll-cli 在宿主上执行，
+  /// 拿不到宿主进程 PID）；[InstallButton] 会因此隐藏取消入口，而不是给出一个
+  /// 点了没反应的按钮。
+  final VoidCallback? onCancel;
 
   /// 创建桌面快捷方式回调。
   final VoidCallback onCreateShortcut;

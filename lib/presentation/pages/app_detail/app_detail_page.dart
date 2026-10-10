@@ -13,6 +13,7 @@ import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/linglong_env_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
+import '../../../application/providers/runtime_form_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
@@ -222,7 +223,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 installSourceKey: _installSourceKey,
               );
             },
-            onCancel: () => _actions.cancelInstall(app),
+            // 玲珑容器形态下取消不可靠（拿不到宿主 ll-cli 的 PID），按形态隐藏取消入口。
+            onCancel: ref.watch(installCancelEnabledProvider)
+                ? () => _actions.cancelInstall(app)
+                : null,
             onCreateShortcut: () => _actions.createShortcut(context, app),
             onUninstall: () {
               _actions.showHeaderUninstallDialog(context, app);

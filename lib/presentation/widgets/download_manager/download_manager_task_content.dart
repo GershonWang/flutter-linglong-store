@@ -42,7 +42,11 @@ class DownloadManagerTaskContent extends StatelessWidget {
   final String currentDownloadSpeed;
 
   /// 取消当前任务的回调。
-  final ValueChanged<InstallTask> onCancelCurrent;
+  ///
+  /// 为 null 表示当前运行形态不支持取消（玲珑容器形态下 ll-cli 在宿主上执行，
+  /// 拿不到宿主进程 PID），此时取消按钮置为不可用；等待项仍可移除，因为那只是
+  /// 本地队列操作，不涉及宿主进程。
+  final ValueChanged<InstallTask>? onCancelCurrent;
 
   /// 移除指定等待任务的回调。
   final ValueChanged<InstallTask> onRemoveQueued;
@@ -83,7 +87,9 @@ class DownloadManagerTaskContent extends StatelessWidget {
                 featured: true,
                 showProgress: true,
                 downloadSpeed: currentDownloadSpeed,
-                onCancel: () => onCancelCurrent(data.task),
+                onCancel: onCancelCurrent == null
+                    ? null
+                    : () => onCancelCurrent!(data.task),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],

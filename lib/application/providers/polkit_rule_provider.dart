@@ -17,6 +17,7 @@ import '../../domain/models/polkit_rule_state.dart';
 import '../services/polkit_rule_service.dart';
 import 'application_dependency_providers.dart';
 import 'install_queue_provider.dart';
+import 'runtime_form_provider.dart';
 
 part 'polkit_rule_provider.freezed.dart';
 part 'polkit_rule_provider.g.dart';
@@ -154,6 +155,24 @@ class PolkitRule extends _$PolkitRule {
     if (enabled && state.phase != PasswordFreeInstallPhase.confirming) {
       AppLogger.warning('[PolkitRule] 未经过风险确认，拒绝开启请求');
       return PasswordFreeInstallFeedback.none;
+    }
+
+    // 玲珑容器形态下免密规则要写宿主 `/etc/polkit-1/rules.d`，需要从沙箱打通
+    // pkexec 提权通道，而本设计刻意不打通（docs/60 §7）。这里直接按"当前环境不
+    // 支持"结束，而不是走到 pkexec 失败再报"授权组件不可用"——后者会把设计决策
+    // 误报成环境故障，也会把开关留在错误的状态上。
+    //
+    // 不改动 enabled/needsSync：本次没有尝试任何系统修改，缓存值仍然可靠。
+    if (!ref.read(passwordFreeInstallSupportedProvider)) {
+      AppLogger.info('[PolkitRule] 当前运行形态不支持修改系统授权规则');
+      state = state.copyWith(
+        phase: PasswordFreeInstallPhase.ready,
+        lastFailureKind: PolkitRuleFailureKind.unsupportedEnvironment,
+        lastDiagnostic:
+            '运行形态=${ref.read(linglongRuntimeFormProvider).name}，'
+            '容器形态不提供提权通道',
+      );
+      return PasswordFreeInstallFeedback.unsupported;
     }
 
     _inFlight = true;

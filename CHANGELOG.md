@@ -5,6 +5,14 @@
 
 ## 变更记录
 
+- 2026-10-10：新增**运行形态**事实并据此降级特权能力：`linglongRuntimeFormProvider`
+  （`lib/application/providers/runtime_form_provider.dart`）。玲珑容器形态下两项特权
+  能力按设计不可用——免密安装要写宿主 `/etc/polkit-1/rules.d`、需要从沙箱打通 pkexec
+  提权通道（本设计刻意不打通，docs/60 §7）；取消安装需要宿主 ll-cli 的 PID，而桥返回
+  的是本地 `systemd-run` 句柄。因此：免密开关保留，点击后按既有文案提示"当前环境不
+  支持修改系统授权规则"且**不发起任何提权**；下载管理、应用详情与更新页的取消入口
+  按形态置为不可用（等待项移除不受影响，那只是本地队列操作）。默认形态为常规宿主
+  安装，其它发行形态行为不变。
 - 2026-10-10：新增玲珑容器形态的**宿主透传桥**：`HostEscapeChannel` +
   `BridgedLinglongCliCommandBuilder`（`lib/core/platform/host_escape_channel.dart`）。
   容器内没有 ll-cli（base 镜像不含玲珑工具链，ll-cli 依赖 Qt6 等宿主库），组合根在

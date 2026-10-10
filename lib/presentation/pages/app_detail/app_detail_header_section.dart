@@ -68,8 +68,8 @@ class AppDetailHeaderSection extends StatelessWidget {
   /// 主安装、更新或打开操作。
   final VoidCallback onPrimaryPressed;
 
-  /// 取消当前安装或更新。
-  final VoidCallback onCancel;
+  /// 取消当前安装或更新；null 表示当前运行形态不支持取消（见 hero header 说明）。
+  final VoidCallback? onCancel;
 
   /// 创建桌面快捷方式。
   final VoidCallback onCreateShortcut;

@@ -12,6 +12,7 @@ import '../../application/providers/application_dependency_providers.dart'
 import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/linglong_env_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
+import '../../application/providers/runtime_form_provider.dart';
 import '../../core/config/theme.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/models/linux_distribution.dart';
@@ -114,11 +115,16 @@ class DownloadManagerDialog extends ConsumerWidget {
                         queuedTasks: queuedTasks,
                         historyTasks: historyTasks,
                         currentDownloadSpeed: resolvedSpeed,
-                        onCancelCurrent: (task) {
-                          ref
-                              .read(installQueueProvider.notifier)
-                              .cancelTask(task.appId);
-                        },
+                        // 玲珑容器形态下取消运行中的任务不可靠（宿主进程 PID 拿不到），
+                        // 因此按形态把按钮置为不可用；等待项移除不受影响。
+                        onCancelCurrent:
+                            ref.watch(installCancelEnabledProvider)
+                            ? (task) {
+                                ref
+                                    .read(installQueueProvider.notifier)
+                                    .cancelTask(task.appId);
+                              }
+                            : null,
                         onRemoveQueued: (task) {
                           ref
                               .read(installQueueProvider.notifier)

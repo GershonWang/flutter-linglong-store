@@ -8,6 +8,7 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/ignored_updates_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
+import '../../../application/providers/runtime_form_provider.dart';
 import '../../../application/providers/update_all_controller.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../application/services/ignored_update_service.dart';
@@ -307,7 +308,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
               onTap: () =>
                   context.goToAppDetail(app.appId, appInfo: app.installedApp),
               onUpdate: () => _updateApp(app),
-              onCancel: () => _cancelAppInstall(app.appId),
+              // 玲珑容器形态下取消不可靠（拿不到宿主 ll-cli 的 PID），按形态隐藏入口。
+              onCancel: ref.watch(installCancelEnabledProvider)
+                  ? () => _cancelAppInstall(app.appId)
+                  : null,
               onIgnore: () => _ignoreAppUpdates(app),
             );
           },
@@ -375,7 +379,8 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
 
   final VoidCallback onTap;
   final String Function() onUpdate;
-  final VoidCallback onCancel;
+  /// 取消该应用正在进行的安装；null 表示当前运行形态不支持取消。
+  final VoidCallback? onCancel;
 
   /// 触发统一忽略更新服务的回调。
   final Future<void> Function() onIgnore;
@@ -509,7 +514,12 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       onPressed: isUpdateDisabled
                           ? () {}
                           : _handleUpdatePressed,
-                      onCancel: installTask != null ? widget.onCancel : null,
+                      // 玲珑容器形态下取消不可靠，按形态隐藏入口。
+                      onCancel:
+                          installTask != null &&
+                              ref.watch(installCancelEnabledProvider)
+                          ? widget.onCancel
+                          : null,
                       size: ButtonSize.small,
                     ),
                     const SizedBox(width: AppSpacing.xs),

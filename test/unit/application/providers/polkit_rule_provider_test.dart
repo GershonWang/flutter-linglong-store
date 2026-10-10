@@ -16,6 +16,7 @@ import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/application/providers/polkit_rule_provider.dart';
+import 'package:linglong_store/application/providers/runtime_form_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
@@ -150,11 +151,13 @@ ProviderContainer _createContainer({
   required _FakePolkitRuleGateway gateway,
   required SharedPreferences prefs,
   MockLinglongCliRepository? cliRepository,
+  LinglongRuntimeForm runtimeForm = LinglongRuntimeForm.hostInstalled,
 }) {
   return ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       polkitRuleGatewayProvider.overrideWithValue(gateway),
+      linglongRuntimeFormProvider.overrideWithValue(runtimeForm),
       appOperationJournalRepositoryProvider.overrideWithValue(
         MemoryAppOperationJournalRepository(),
       ),
@@ -829,5 +832,28 @@ void main() {
     expect(state.phase, PasswordFreeInstallPhase.ready);
     expect(state.needsSync, isTrue);
     expect(state.lastFailureKind, PolkitRuleFailureKind.unexpected);
+  });
+
+  test('玲珑容器形态下直接按当前环境不支持结束，且不发起任何提权', () async {
+    final prefs = await _mockPreferences();
+    final gateway = _FakePolkitRuleGateway();
+    final container = _createContainer(
+      gateway: gateway,
+      prefs: prefs,
+      runtimeForm: LinglongRuntimeForm.linglongContainer,
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    expect(notifier.beginEnableRequest(), isTrue);
+    final feedback = await notifier.applyTarget(enabled: true);
+
+    expect(feedback, PasswordFreeInstallFeedback.unsupported);
+    // 关键：一次提权都不该发生——容器形态不提供 pkexec 通道（docs/60 §7）。
+    expect(gateway.requests, isEmpty);
+    // 开关必须回到可交互状态，否则用户会看到永久卡住的 loading。
+    final state = container.read(polkitRuleProvider);
+    expect(state.phase, PasswordFreeInstallPhase.ready);
+    expect(state.lastFailureKind, PolkitRuleFailureKind.unsupportedEnvironment);
   });
 }
