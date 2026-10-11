@@ -1,6 +1,8 @@
 /// 验证新设置入口只对新版可见，并保持一次提交期间交互稳定。
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +19,26 @@ class _MemorySetting extends Setting {
 
   @override
   Future<void> setAutoPruneDependencies(bool value) async {
+    state = state.copyWith(autoPruneDependencies: value);
+  }
+}
+
+/// 延迟持久化事务，验证重复输入与失败不会污染事实状态。
+class _ControlledSetting extends Setting {
+  /// 测试手动完成事务而非依赖时间延迟。
+  _ControlledSetting(this.completion);
+
+  /// 当前提交的可控结果。
+  final Completer<void> completion;
+
+  /// 同一事务只允许提交一次。
+  int calls = 0;
+  @override
+  SettingState build() => const SettingState();
+  @override
+  Future<void> setAutoPruneDependencies(bool value) async {
+    calls++;
+    await completion.future;
     state = state.copyWith(autoPruneDependencies: value);
   }
 }
@@ -67,5 +89,45 @@ void main() {
       tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
       isFalse,
     );
+  });
+
+  testWidgets('保存期间禁用重复点击，失败后保留原值', (tester) async {
+    final completion = Completer<void>();
+    final setting = _ControlledSetting(completion);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          linglongCliCapabilitiesProvider.overrideWithValue(
+            LinglongCliCapabilities.fromVersion('1.14.0'),
+          ),
+          settingProvider.overrideWith(() => setting),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: AutomaticDependencyCleanupTile()),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).onChanged,
+      isNull,
+    );
+    await tester.tap(find.byType(Switch));
+    expect(setting.calls, 1);
+    completion.completeError(StateError('storage unavailable'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue,
+    );
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).onChanged,
+      isNotNull,
+    );
+    await tester.pump(const Duration(seconds: 6));
   });
 }

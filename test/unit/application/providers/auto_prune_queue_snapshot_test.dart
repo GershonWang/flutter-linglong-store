@@ -74,7 +74,7 @@ void main() {
         ),
         appOperationJournalRepositoryProvider.overrideWithValue(
           MemoryAppOperationJournalRepository(
-            AppOperationJournalSnapshot(history: [failed]),
+            const AppOperationJournalSnapshot(history: [failed]),
           ),
         ),
         noAutoPrunePreferenceProvider.overrideWithValue(false),
@@ -102,5 +102,46 @@ void main() {
       ).noAutoPrune,
       true,
     );
+  });
+
+  test('整批升级冻结一致策略，偏好改变不回写批次成员', () async {
+    SharedPreferences.setMockInitialValues({});
+    var preserve = true;
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(
+          await SharedPreferences.getInstance(),
+        ),
+        appOperationJournalRepositoryProvider.overrideWithValue(
+          MemoryAppOperationJournalRepository(),
+        ),
+        noAutoPrunePreferenceProvider.overrideWith((ref) => preserve),
+      ],
+    );
+    addTearDown(container.dispose);
+    final queue = container.read(installQueueProvider.notifier)
+      ..pauseDequeueForSettings();
+    queue.enqueueBatchOperations(const [
+      EnqueueTaskParams(
+        kind: InstallTaskKind.update,
+        appId: 'org.first',
+        appName: 'first',
+      ),
+      EnqueueTaskParams(
+        kind: InstallTaskKind.update,
+        appId: 'org.second',
+        appName: 'second',
+      ),
+    ]);
+    preserve = false;
+    container.invalidate(noAutoPrunePreferenceProvider);
+    expect(
+      container
+          .read(installQueueProvider)
+          .queue
+          .map((task) => task.noAutoPrune),
+      [true, true],
+    );
+    await Future<void>.delayed(Duration.zero);
   });
 }
