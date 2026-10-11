@@ -5,6 +5,7 @@ import 'linux_distribution_resolver.dart';
 import '../../core/platform/system_arch_resolver.dart';
 import '../../core/platform/shell_command_executor.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import '../../domain/models/linglong_cli_capabilities.dart';
 
 typedef OsReleaseReader = Future<String?> Function();
 typedef EnvVarReader = String? Function(String name);
@@ -386,17 +387,15 @@ class LinglongEnvironmentService {
     try {
       final json = jsonDecode(result.stdout);
       if (json is Map<String, dynamic>) {
-        final version = json['version']?.toString().trim();
-        if (version != null && version.isNotEmpty) {
-          return version;
-        }
+        return LinglongCliCapabilities.normalizeVersion(
+          json['version']?.toString(),
+        );
       }
     } catch (_) {
-      // Fall back to regex parsing below.
+      // 旧 CLI 可能忽略 JSON 参数，文本也必须完整可信，不能截掉版本后缀。
     }
 
-    final match = RegExp(r'(\d+\.\d+\.\d+)').firstMatch(result.stdout);
-    return match?.group(1);
+    return LinglongCliCapabilities.normalizeVersion(result.stdout);
   }
 
   Future<String?> _loadLinglongBinVersion() async {

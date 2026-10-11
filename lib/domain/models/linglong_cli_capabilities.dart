@@ -33,6 +33,14 @@ class LinglongCliCapabilities {
     );
   }
 
+  /// 环境检测文本回退复用严格识别，保留后缀，不能截断预发布版伪装正式版。
+  static String? normalizeVersion(String? output) {
+    final match = _versionPattern.firstMatch(output?.trim() ?? '');
+    if (match == null) return null;
+    return '${match.group(1)}.${match.group(2)}.${match.group(3)}'
+        '${match.group(4) ?? ''}${match.group(5) ?? ''}';
+  }
+
   /// 全量空间扫描和应用依赖关系自 1.14.0 正式版提供。
   final bool supportsDiskAnalysis;
 
@@ -45,6 +53,6 @@ class LinglongCliCapabilities {
   /// 只接受已知 CLI 前缀和完整三段版本，避免把其他诊断数字当版本。
   static final RegExp _versionPattern = RegExp(
     r'^(?:(?:linyaps CLI version|linglong CLI version|ll-cli(?: version)?)\s+)?'
-    r'(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$',
+    r'(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$',
   );
 }
