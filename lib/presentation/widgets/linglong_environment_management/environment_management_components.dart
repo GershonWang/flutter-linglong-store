@@ -231,6 +231,7 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
   const EnvironmentManagementSegmentedTabBar({
     required this.isBusy,
     required this.onRefresh,
+    this.showDiskAnalysis = false,
     super.key,
   });
 
@@ -239,6 +240,9 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
 
   /// 刷新完整环境管理状态的回调。
   final VoidCallback onRefresh;
+
+  /// 统一 CLI 能力门槛控制新页签，旧版维持三个管理区域。
+  final bool showDiskAnalysis;
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +262,11 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
         icon: Icons.storage_outlined,
         label: l10n.envManagementStorageTab,
       ),
+      if (showDiskAnalysis)
+        _EnvironmentManagementTabData(
+          icon: Icons.pie_chart_outline,
+          label: l10n.analysisSpace,
+        ),
     ];
 
     return Container(
@@ -342,11 +351,21 @@ class _EnvironmentManagementTabItem extends StatelessWidget {
               children: [
                 Icon(data.icon, size: 16, color: foreground),
                 const SizedBox(width: 6),
-                Text(
-                  data.label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                // 四页签与大字体下限制标签宽度，完整名称保留于悬浮提示。
+                Flexible(
+                  child: Tooltip(
+                    message: data.label,
+                    child: Text(
+                      data.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
               ],

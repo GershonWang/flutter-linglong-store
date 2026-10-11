@@ -23,6 +23,7 @@ import '../data/repositories/app_repository_impl.dart';
 import '../data/repositories/error_solution_repository_impl.dart';
 import '../data/repositories/file_app_operation_journal_repository.dart';
 import '../data/repositories/linglong_cli_repository_impl.dart';
+import '../data/repositories/linglong_app_analysis_repository_impl.dart';
 import '../data/repositories/shared_preferences_legacy_app_operation_state_repository.dart';
 import '../domain/models/privileged_helper_trust.dart';
 import '../domain/repositories/app_self_update_gateways.dart';
@@ -50,6 +51,10 @@ List<Override> createProductionDependencyOverrides({
 
   return [
     sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    // 分析不经过安装授权，复用既有只读 CLI 执行器。
+    linglongAppAnalysisRepositoryProvider.overrideWith(
+      (ref) => LinglongAppAnalysisRepositoryImpl(),
+    ),
     appRepositoryProvider.overrideWith((ref) => AppRepositoryImpl()),
     analyticsRepositoryProvider.overrideWith(
       (ref) => AnalyticsRepositoryImpl(),

@@ -5,6 +5,7 @@ import '../../domain/models/app_operation_target_snapshot.dart';
 import '../services/update_convergence_service.dart';
 import 'installed_app_diff_report_provider.dart';
 import 'installed_apps_provider.dart';
+import 'linglong_app_analysis_provider.dart';
 import 'update_apps_provider.dart';
 
 /// 应用集合变更后的统一同步服务。
@@ -25,6 +26,8 @@ class AppCollectionSyncService {
   Future<void> syncAfterSuccessfulOperation({
     List<AppOperationTargetSnapshot> updateTargets = const [],
   }) async {
+    // 修改本地模块后仅使分析缓存过期；下次打开分析页才扫描磁盘。
+    invalidateLinglongAppAnalysis(_ref);
     final shouldRecomputeUpdates = await _prepareInstalledSnapshot(
       updateTargets,
     );
@@ -36,9 +39,7 @@ class AppCollectionSyncService {
     // 同步完成后触发差量检测上报（对齐旧版 reflushInstalledItemsImmediate），
     // 防抖合并且不阻塞操作链路：安装/卸载统计由差量结果统一产生。该上报与
     // 更新列表重算解耦，跳过重算时同样必须执行，否则统计会丢事件。
-    _ref
-        .read(installedAppDiffReportServiceProvider)
-        .scheduleImmediateCheck();
+    _ref.read(installedAppDiffReportServiceProvider).scheduleImmediateCheck();
   }
 
   /// 准备供更新检查使用的已安装快照，返回是否允许重算更新列表。

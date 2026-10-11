@@ -10,6 +10,8 @@ import '../../core/platform/linux_renderer_service.dart';
 import 'application_dependency_providers.dart'
     show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import 'installed_apps_provider.dart';
+import 'app_collection_sync_provider.dart';
+import 'linglong_app_analysis_provider.dart';
 import 'linux_renderer_provider.dart';
 
 part 'setting_provider.freezed.dart';
@@ -215,10 +217,22 @@ class Setting extends _$Setting {
   ///
   /// 调用 `ll-cli prune` 移除已不再使用的基础运行时。
   Future<bool> pruneBaseService() async {
+    // 多入口共享同一事务，重复点击不得启动第二次清理。
+    if (state.isPruningBaseService) return false;
     state = state.copyWith(isPruningBaseService: true);
     try {
       final cliRepo = ref.read(linglongCliRepositoryProvider);
       await cliRepo.pruneApps();
+      // 清理成功即使分析过期，不在操作回调内启动昂贵磁盘扫描。
+      invalidateLinglongAppAnalysis(ref);
+      try {
+        await ref
+            .read(appCollectionSyncServiceProvider)
+            .syncAfterSuccessfulOperation();
+      } catch (error, stackTrace) {
+        // 列表刷新失败不能把已完成的清理报告为失败，后续手动刷新可重试。
+        AppLogger.error('清理成功后的列表同步失败', error, stackTrace);
+      }
       state = state.copyWith(isPruningBaseService: false);
       AppLogger.info('Base service pruned');
       return true;

@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/config/theme.dart';
+import '../../../core/accessibility/accessibility.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../domain/models/app_detail.dart';
@@ -215,6 +216,7 @@ class AppDetailMetadataSection extends StatelessWidget {
   const AppDetailMetadataSection({
     required this.app,
     required this.detail,
+    this.onShowAnalysis,
     super.key,
   });
 
@@ -223,6 +225,9 @@ class AppDetailMetadataSection extends StatelessWidget {
 
   /// 详情接口的扩展信息。
   final AppDetail? detail;
+
+  /// 只有能力满足且存在本地安装身份时提供分析入口。
+  final VoidCallback? onShowAnalysis;
 
   @override
   Widget build(BuildContext context) {
@@ -304,6 +309,18 @@ class AppDetailMetadataSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           AppDetailInfoSection(entries: entries),
+          if (onShowAnalysis != null)
+            A11yButton(
+              semanticsLabel: AppLocalizations.of(context)!.a11yAnalysisApp,
+              onTap: onShowAnalysis!,
+              child: TextButton.icon(
+                onPressed: onShowAnalysis,
+                icon: const ExcludeSemantics(
+                  child: Icon(Icons.pie_chart_outline),
+                ),
+                label: Text(AppLocalizations.of(context)!.analysisApp),
+              ),
+            ),
         ],
       ),
     );
