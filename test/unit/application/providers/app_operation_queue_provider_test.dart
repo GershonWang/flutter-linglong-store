@@ -85,8 +85,9 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
     bool noAutoPrune = false,
   }) async* {
     installCallCount += 1;
-    if (!firstInstallStrategy.isCompleted)
+    if (!firstInstallStrategy.isCompleted) {
       firstInstallStrategy.complete(noAutoPrune);
+    }
     for (final event in installEvents) {
       yield event.copyWith(appId: appId);
     }
