@@ -11,6 +11,76 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => 'تحديث';
+
+  @override
+  String get a11yAnalysisRetry => 'إعادة المحاولة';
+
+  @override
+  String get a11yAnalysisCopy => 'نسخ';
+
+  @override
+  String get a11yAnalysisSort => 'ترتيب الوحدات';
+
+  @override
+  String get a11yAnalysisVersion => 'الإصدار المثبت';
+
+  @override
+  String get analysisSpace => 'تحليل المساحة';
+
+  @override
+  String get analysisApp => 'المساحة والاعتماديات';
+
+  @override
+  String get analysisRepository => 'استخدام المستودع';
+
+  @override
+  String get analysisModulesTotal => 'إجمالي الوحدات المثبتة';
+
+  @override
+  String get analysisActual => 'تقدير موزع';
+
+  @override
+  String get analysisExclusive => 'حصري';
+
+  @override
+  String get analysisShared => 'مشترك';
+
+  @override
+  String get analysisLogical => 'منطقي';
+
+  @override
+  String get analysisDependencies => 'بيئات التطبيق';
+
+  @override
+  String get analysisEmpty => 'لا توجد بيانات تحليل';
+
+  @override
+  String get analysisSearch => 'البحث عن الوحدات';
+
+  @override
+  String get analysisSort => 'ترتيب الوحدات';
+
+  @override
+  String get analysisAllocationNotice =>
+      'توزع الكتل المشتركة بين الوحدات. لا تمثل هذه القيم المساحة التي يمكن استعادتها بإلغاء التثبيت.';
+
+  @override
+  String get analysisInstalledVersion => 'الإصدار المثبت';
+
+  @override
+  String get analysisNoMatches => 'لا توجد وحدات مطابقة';
+
+  @override
+  String get analysisDescending => 'الأكبر أولاً';
+
+  @override
+  String get a11yAnalysisArea => 'تحليل المساحة';
+
+  @override
+  String get a11yAnalysisApp => 'المساحة والاعتماديات';
+
+  @override
   String get appTitle => 'متجر تطبيقات Linglong (الإصدار المجتمعي)';
 
   @override
@@ -642,6 +712,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get showBaseServices => 'عرض الخدمات الأساسية';
+
+  @override
+  String get autoPruneDependencies => 'تنظيف التبعيات غير المستخدمة تلقائيا';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'ينظف لينابس التبعيات غير المستخدمة بعد التحديث أو الإزالة. تعطيل الخيار يحتفظ بالتبعيات ولا يضمن الاحتفاظ بإصدارات التطبيق السابقة.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'تنظيف التبعيات غير المستخدمة تلقائيا';
 
   @override
   String get showBaseServicesDesc =>

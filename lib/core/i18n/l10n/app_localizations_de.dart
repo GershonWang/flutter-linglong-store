@@ -11,6 +11,76 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => 'Aktualisieren';
+
+  @override
+  String get a11yAnalysisRetry => 'Erneut versuchen';
+
+  @override
+  String get a11yAnalysisCopy => 'Kopieren';
+
+  @override
+  String get a11yAnalysisSort => 'Module sortieren';
+
+  @override
+  String get a11yAnalysisVersion => 'Installierte Version';
+
+  @override
+  String get analysisSpace => 'Speicheranalyse';
+
+  @override
+  String get analysisApp => 'Speicher und Abhängigkeiten';
+
+  @override
+  String get analysisRepository => 'Repository-Belegung';
+
+  @override
+  String get analysisModulesTotal => 'Installierte Module insgesamt';
+
+  @override
+  String get analysisActual => 'Anteilig geschätzt';
+
+  @override
+  String get analysisExclusive => 'Exklusiv';
+
+  @override
+  String get analysisShared => 'Gemeinsam';
+
+  @override
+  String get analysisLogical => 'Logisch';
+
+  @override
+  String get analysisDependencies => 'Umgebungen der Anwendung';
+
+  @override
+  String get analysisEmpty => 'Keine Analysedaten';
+
+  @override
+  String get analysisSearch => 'Module suchen';
+
+  @override
+  String get analysisSort => 'Module sortieren';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Gemeinsame Blöcke werden auf Module verteilt. Diese Werte geben keinen durch Deinstallation freigebbaren Speicher an.';
+
+  @override
+  String get analysisInstalledVersion => 'Installierte Version';
+
+  @override
+  String get analysisNoMatches => 'Keine passenden Module';
+
+  @override
+  String get analysisDescending => 'Größte zuerst';
+
+  @override
+  String get a11yAnalysisArea => 'Speicheranalyse';
+
+  @override
+  String get a11yAnalysisApp => 'Speicher und Abhängigkeiten';
+
+  @override
   String get appTitle => 'Linyaps Store Community Edition';
 
   @override
@@ -593,6 +663,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Basis-Laufzeitdienste anzeigen';
+
+  @override
+  String get autoPruneDependencies =>
+      'Ungenutzte Abhängigkeiten automatisch entfernen';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps bereinigt ungenutzte Abhängigkeiten nach Updates oder Deinstallationen. Deaktivieren behält Abhängigkeiten, garantiert aber keine früheren App-Versionen.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Ungenutzte Abhängigkeiten automatisch entfernen';
 
   @override
   String get showBaseServicesDesc =>

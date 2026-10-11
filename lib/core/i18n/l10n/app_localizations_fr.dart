@@ -11,6 +11,76 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => 'Actualiser';
+
+  @override
+  String get a11yAnalysisRetry => 'Réessayer';
+
+  @override
+  String get a11yAnalysisCopy => 'Copier';
+
+  @override
+  String get a11yAnalysisSort => 'Trier les modules';
+
+  @override
+  String get a11yAnalysisVersion => 'Version installée';
+
+  @override
+  String get analysisSpace => 'Analyse de l’espace';
+
+  @override
+  String get analysisApp => 'Espace et dépendances';
+
+  @override
+  String get analysisRepository => 'Espace du dépôt';
+
+  @override
+  String get analysisModulesTotal => 'Total des modules installés';
+
+  @override
+  String get analysisActual => 'Estimation répartie';
+
+  @override
+  String get analysisExclusive => 'Exclusif';
+
+  @override
+  String get analysisShared => 'Partagé';
+
+  @override
+  String get analysisLogical => 'Logique';
+
+  @override
+  String get analysisDependencies => 'Environnements de l’application';
+
+  @override
+  String get analysisEmpty => 'Aucune donnée d’analyse';
+
+  @override
+  String get analysisSearch => 'Rechercher des modules';
+
+  @override
+  String get analysisSort => 'Trier les modules';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Les blocs partagés sont répartis entre les modules. Ces valeurs ne représentent pas l’espace libéré par une désinstallation.';
+
+  @override
+  String get analysisInstalledVersion => 'Version installée';
+
+  @override
+  String get analysisNoMatches => 'Aucun module correspondant';
+
+  @override
+  String get analysisDescending => 'Plus grands d’abord';
+
+  @override
+  String get a11yAnalysisArea => 'Analyse de l’espace';
+
+  @override
+  String get a11yAnalysisApp => 'Espace et dépendances';
+
+  @override
   String get appTitle => 'Linyaps Store Édition Communautaire';
 
   @override
@@ -595,6 +665,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Afficher les services d\'exécution de base';
+
+  @override
+  String get autoPruneDependencies =>
+      'Supprimer automatiquement les dépendances inutilisées';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps nettoie les dépendances inutilisées après les mises à jour ou suppressions. Désactiver conserve les dépendances, sans garantir les anciennes versions des applications.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Supprimer automatiquement les dépendances inutilisées';
 
   @override
   String get showBaseServicesDesc =>

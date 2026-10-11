@@ -115,6 +115,144 @@ abstract class AppLocalizations {
     Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
   ];
 
+  /// No description provided for @a11yAnalysisRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get a11yAnalysisRefresh;
+
+  /// No description provided for @a11yAnalysisRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get a11yAnalysisRetry;
+
+  /// No description provided for @a11yAnalysisCopy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get a11yAnalysisCopy;
+
+  /// No description provided for @a11yAnalysisSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'模块排序'**
+  String get a11yAnalysisSort;
+
+  /// No description provided for @a11yAnalysisVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装版本'**
+  String get a11yAnalysisVersion;
+
+  /// No description provided for @analysisSpace.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间分析'**
+  String get analysisSpace;
+
+  /// No description provided for @analysisApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间与依赖'**
+  String get analysisApp;
+
+  /// No description provided for @analysisRepository.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库真实占用'**
+  String get analysisRepository;
+
+  /// No description provided for @analysisModulesTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装模块实际总量'**
+  String get analysisModulesTotal;
+
+  /// No description provided for @analysisActual.
+  ///
+  /// In zh, this message translates to:
+  /// **'实际（分摊估算）'**
+  String get analysisActual;
+
+  /// No description provided for @analysisExclusive.
+  ///
+  /// In zh, this message translates to:
+  /// **'独占'**
+  String get analysisExclusive;
+
+  /// No description provided for @analysisShared.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享'**
+  String get analysisShared;
+
+  /// No description provided for @analysisLogical.
+  ///
+  /// In zh, this message translates to:
+  /// **'逻辑'**
+  String get analysisLogical;
+
+  /// No description provided for @analysisDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用使用的环境'**
+  String get analysisDependencies;
+
+  /// No description provided for @analysisEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无分析数据'**
+  String get analysisEmpty;
+
+  /// No description provided for @analysisSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索模块'**
+  String get analysisSearch;
+
+  /// No description provided for @analysisSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'模块排序'**
+  String get analysisSort;
+
+  /// No description provided for @analysisAllocationNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享数据块按模块分摊。这些数值不代表卸载可释放的空间。'**
+  String get analysisAllocationNotice;
+
+  /// No description provided for @analysisInstalledVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装版本'**
+  String get analysisInstalledVersion;
+
+  /// No description provided for @analysisNoMatches.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的模块'**
+  String get analysisNoMatches;
+
+  /// No description provided for @analysisDescending.
+  ///
+  /// In zh, this message translates to:
+  /// **'从大到小'**
+  String get analysisDescending;
+
+  /// No description provided for @a11yAnalysisArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间分析'**
+  String get a11yAnalysisArea;
+
+  /// No description provided for @a11yAnalysisApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间与依赖'**
+  String get a11yAnalysisApp;
+
   /// No description provided for @appTitle.
   ///
   /// In zh, this message translates to:
@@ -1122,6 +1260,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'显示基础运行服务'**
   String get showBaseServices;
+
+  /// No description provided for @autoPruneDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动清理未使用依赖'**
+  String get autoPruneDependencies;
+
+  /// No description provided for @autoPruneDependenciesDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'由玲珑在升级或卸载后清理闲置依赖。关闭后保留依赖，不保证保留历史应用版本。'**
+  String get autoPruneDependenciesDescription;
+
+  /// No description provided for @a11yAutoPruneDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动清理未使用依赖'**
+  String get a11yAutoPruneDependencies;
 
   /// No description provided for @showBaseServicesDesc.
   ///

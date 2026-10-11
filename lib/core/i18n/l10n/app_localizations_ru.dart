@@ -11,6 +11,76 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => 'Обновить';
+
+  @override
+  String get a11yAnalysisRetry => 'Повторить попытку';
+
+  @override
+  String get a11yAnalysisCopy => 'Копировать';
+
+  @override
+  String get a11yAnalysisSort => 'Сортировка модулей';
+
+  @override
+  String get a11yAnalysisVersion => 'Установленная версия';
+
+  @override
+  String get analysisSpace => 'Анализ места';
+
+  @override
+  String get analysisApp => 'Место и зависимости';
+
+  @override
+  String get analysisRepository => 'Размер репозитория';
+
+  @override
+  String get analysisModulesTotal => 'Всего установленных модулей';
+
+  @override
+  String get analysisActual => 'Распределённая оценка';
+
+  @override
+  String get analysisExclusive => 'Исключительное';
+
+  @override
+  String get analysisShared => 'Общее';
+
+  @override
+  String get analysisLogical => 'Логическое';
+
+  @override
+  String get analysisDependencies => 'Окружения приложения';
+
+  @override
+  String get analysisEmpty => 'Нет данных анализа';
+
+  @override
+  String get analysisSearch => 'Поиск модулей';
+
+  @override
+  String get analysisSort => 'Сортировка модулей';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Общие блоки распределяются между модулями. Эти значения не показывают место, освобождаемое при удалении.';
+
+  @override
+  String get analysisInstalledVersion => 'Установленная версия';
+
+  @override
+  String get analysisNoMatches => 'Нет подходящих модулей';
+
+  @override
+  String get analysisDescending => 'Сначала большие';
+
+  @override
+  String get a11yAnalysisArea => 'Анализ места';
+
+  @override
+  String get a11yAnalysisApp => 'Место и зависимости';
+
+  @override
   String get appTitle => 'Магазин Linyaps — версия сообщества';
 
   @override
@@ -595,6 +665,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Показать базовые службы времени выполнения';
+
+  @override
+  String get autoPruneDependencies =>
+      'Автоматически удалять неиспользуемые зависимости';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps очищает зависимости после обновления или удаления. Отключение сохраняет зависимости, но не гарантирует сохранение старых версий приложений.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Автоматически удалять неиспользуемые зависимости';
 
   @override
   String get showBaseServicesDesc =>

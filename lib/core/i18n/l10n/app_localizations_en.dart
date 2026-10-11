@@ -11,6 +11,76 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => 'Refresh';
+
+  @override
+  String get a11yAnalysisRetry => 'Retry';
+
+  @override
+  String get a11yAnalysisCopy => 'Copy';
+
+  @override
+  String get a11yAnalysisSort => 'Sort modules';
+
+  @override
+  String get a11yAnalysisVersion => 'Installed version';
+
+  @override
+  String get analysisSpace => 'Space analysis';
+
+  @override
+  String get analysisApp => 'Space and dependencies';
+
+  @override
+  String get analysisRepository => 'Repository usage';
+
+  @override
+  String get analysisModulesTotal => 'Installed module total';
+
+  @override
+  String get analysisActual => 'Allocated estimate';
+
+  @override
+  String get analysisExclusive => 'Exclusive';
+
+  @override
+  String get analysisShared => 'Shared';
+
+  @override
+  String get analysisLogical => 'Logical';
+
+  @override
+  String get analysisDependencies => 'Applications\' environments';
+
+  @override
+  String get analysisEmpty => 'No analysis data';
+
+  @override
+  String get analysisSearch => 'Search modules';
+
+  @override
+  String get analysisSort => 'Sort modules';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Shared blocks are allocated across modules. These values do not indicate space recoverable by uninstalling.';
+
+  @override
+  String get analysisInstalledVersion => 'Installed version';
+
+  @override
+  String get analysisNoMatches => 'No matching modules';
+
+  @override
+  String get analysisDescending => 'Largest first';
+
+  @override
+  String get a11yAnalysisArea => 'Space analysis';
+
+  @override
+  String get a11yAnalysisApp => 'Space and dependencies';
+
+  @override
   String get appTitle => 'Linyaps Store Community Edition';
 
   @override
@@ -585,6 +655,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Show base runtime services';
+
+  @override
+  String get autoPruneDependencies =>
+      'Automatically remove unused dependencies';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps cleans up unused dependencies after upgrades or removals. Turning this off retains dependencies, but does not preserve historical app versions.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Automatically remove unused dependencies';
 
   @override
   String get showBaseServicesDesc =>

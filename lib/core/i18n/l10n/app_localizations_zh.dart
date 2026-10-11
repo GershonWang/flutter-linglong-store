@@ -11,6 +11,75 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => '刷新';
+
+  @override
+  String get a11yAnalysisRetry => '重试';
+
+  @override
+  String get a11yAnalysisCopy => '复制';
+
+  @override
+  String get a11yAnalysisSort => '模块排序';
+
+  @override
+  String get a11yAnalysisVersion => '已安装版本';
+
+  @override
+  String get analysisSpace => '空间分析';
+
+  @override
+  String get analysisApp => '空间与依赖';
+
+  @override
+  String get analysisRepository => '仓库真实占用';
+
+  @override
+  String get analysisModulesTotal => '已安装模块实际总量';
+
+  @override
+  String get analysisActual => '实际（分摊估算）';
+
+  @override
+  String get analysisExclusive => '独占';
+
+  @override
+  String get analysisShared => '共享';
+
+  @override
+  String get analysisLogical => '逻辑';
+
+  @override
+  String get analysisDependencies => '应用使用的环境';
+
+  @override
+  String get analysisEmpty => '暂无分析数据';
+
+  @override
+  String get analysisSearch => '搜索模块';
+
+  @override
+  String get analysisSort => '模块排序';
+
+  @override
+  String get analysisAllocationNotice => '共享数据块按模块分摊。这些数值不代表卸载可释放的空间。';
+
+  @override
+  String get analysisInstalledVersion => '已安装版本';
+
+  @override
+  String get analysisNoMatches => '没有匹配的模块';
+
+  @override
+  String get analysisDescending => '从大到小';
+
+  @override
+  String get a11yAnalysisArea => '空间分析';
+
+  @override
+  String get a11yAnalysisApp => '空间与依赖';
+
+  @override
   String get appTitle => '玲珑应用商店社区版';
 
   @override
@@ -554,6 +623,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get showBaseServices => '显示基础运行服务';
+
+  @override
+  String get autoPruneDependencies => '自动清理未使用依赖';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '由玲珑在升级或卸载后清理闲置依赖。关闭后保留依赖，不保证保留历史应用版本。';
+
+  @override
+  String get a11yAutoPruneDependencies => '自动清理未使用依赖';
 
   @override
   String get showBaseServicesDesc => '在已安装列表中显示底层基础运行服务';
@@ -2437,6 +2516,75 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   AppLocalizationsZhHant() : super('zh_Hant');
 
   @override
+  String get a11yAnalysisRefresh => '重新整理';
+
+  @override
+  String get a11yAnalysisRetry => '重試';
+
+  @override
+  String get a11yAnalysisCopy => '複製';
+
+  @override
+  String get a11yAnalysisSort => '模組排序';
+
+  @override
+  String get a11yAnalysisVersion => '已安裝版本';
+
+  @override
+  String get analysisSpace => '空間分析';
+
+  @override
+  String get analysisApp => '空間與依賴';
+
+  @override
+  String get analysisRepository => '儲存庫實際用量';
+
+  @override
+  String get analysisModulesTotal => '已安裝模組實際總量';
+
+  @override
+  String get analysisActual => '實際（分攤估算）';
+
+  @override
+  String get analysisExclusive => '獨占';
+
+  @override
+  String get analysisShared => '共用';
+
+  @override
+  String get analysisLogical => '邏輯';
+
+  @override
+  String get analysisDependencies => '應用程式使用的環境';
+
+  @override
+  String get analysisEmpty => '暫無分析資料';
+
+  @override
+  String get analysisSearch => '搜尋模組';
+
+  @override
+  String get analysisSort => '模組排序';
+
+  @override
+  String get analysisAllocationNotice => '共用資料區塊按模組分攤。這些數值不代表解除安裝可釋放的空間。';
+
+  @override
+  String get analysisInstalledVersion => '已安裝版本';
+
+  @override
+  String get analysisNoMatches => '沒有符合的模組';
+
+  @override
+  String get analysisDescending => '從大到小';
+
+  @override
+  String get a11yAnalysisArea => '空間分析';
+
+  @override
+  String get a11yAnalysisApp => '空間與依賴';
+
+  @override
   String get appTitle => '玲瓏應用商店社群版';
 
   @override
@@ -2980,6 +3128,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get showBaseServices => '顯示基礎執行服務';
+
+  @override
+  String get autoPruneDependencies => '自動清理未使用相依套件';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '玲瓏在升級或移除後清理閒置相依套件。關閉後保留相依套件，但不保證保留歷史應用程式版本。';
+
+  @override
+  String get a11yAutoPruneDependencies => '自動清理未使用相依套件';
 
   @override
   String get showBaseServicesDesc => '在已安裝清單中顯示底層基礎執行服務';

@@ -11,6 +11,76 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => '새로 고침';
+
+  @override
+  String get a11yAnalysisRetry => '재시도';
+
+  @override
+  String get a11yAnalysisCopy => '복사';
+
+  @override
+  String get a11yAnalysisSort => '모듈 정렬';
+
+  @override
+  String get a11yAnalysisVersion => '설치된 버전';
+
+  @override
+  String get analysisSpace => '공간 분석';
+
+  @override
+  String get analysisApp => '공간 및 의존성';
+
+  @override
+  String get analysisRepository => '저장소 사용량';
+
+  @override
+  String get analysisModulesTotal => '설치된 모듈 합계';
+
+  @override
+  String get analysisActual => '분담 추정치';
+
+  @override
+  String get analysisExclusive => '독점';
+
+  @override
+  String get analysisShared => '공유';
+
+  @override
+  String get analysisLogical => '논리';
+
+  @override
+  String get analysisDependencies => '앱이 사용하는 환경';
+
+  @override
+  String get analysisEmpty => '분석 데이터 없음';
+
+  @override
+  String get analysisSearch => '모듈 검색';
+
+  @override
+  String get analysisSort => '모듈 정렬';
+
+  @override
+  String get analysisAllocationNotice =>
+      '공유 블록은 모듈 간에 분담됩니다. 이 값은 제거 시 확보할 수 있는 공간을 나타내지 않습니다.';
+
+  @override
+  String get analysisInstalledVersion => '설치된 버전';
+
+  @override
+  String get analysisNoMatches => '일치하는 모듈 없음';
+
+  @override
+  String get analysisDescending => '큰 순서';
+
+  @override
+  String get a11yAnalysisArea => '공간 분석';
+
+  @override
+  String get a11yAnalysisApp => '공간 및 의존성';
+
+  @override
   String get appTitle => 'Linyaps 스토어 커뮤니티 에디션';
 
   @override
@@ -564,6 +634,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get showBaseServices => '기반 런타임 서비스 표시';
+
+  @override
+  String get autoPruneDependencies => '사용하지 않는 의존성 자동 정리';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '업데이트 또는 제거 후 사용하지 않는 의존성을 정리합니다. 끄면 의존성은 유지되지만 이전 앱 버전 보존은 보장되지 않습니다.';
+
+  @override
+  String get a11yAutoPruneDependencies => '사용하지 않는 의존성 자동 정리';
 
   @override
   String get showBaseServicesDesc => '설치된 목록에 기반 런타임 서비스를 표시합니다';

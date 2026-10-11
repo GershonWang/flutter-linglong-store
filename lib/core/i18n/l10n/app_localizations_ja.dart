@@ -11,6 +11,76 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get a11yAnalysisRefresh => '更新';
+
+  @override
+  String get a11yAnalysisRetry => '再試行';
+
+  @override
+  String get a11yAnalysisCopy => 'コピー';
+
+  @override
+  String get a11yAnalysisSort => 'モジュールの並べ替え';
+
+  @override
+  String get a11yAnalysisVersion => 'インストール済みバージョン';
+
+  @override
+  String get analysisSpace => '容量分析';
+
+  @override
+  String get analysisApp => '容量と依存関係';
+
+  @override
+  String get analysisRepository => 'リポジトリの使用量';
+
+  @override
+  String get analysisModulesTotal => 'インストール済みモジュールの合計';
+
+  @override
+  String get analysisActual => '実際（按分推定）';
+
+  @override
+  String get analysisExclusive => '専用';
+
+  @override
+  String get analysisShared => '共有';
+
+  @override
+  String get analysisLogical => '論理';
+
+  @override
+  String get analysisDependencies => 'アプリが使用する環境';
+
+  @override
+  String get analysisEmpty => '分析データがありません';
+
+  @override
+  String get analysisSearch => 'モジュールを検索';
+
+  @override
+  String get analysisSort => 'モジュールの並べ替え';
+
+  @override
+  String get analysisAllocationNotice =>
+      '共有ブロックはモジュール間で按分されます。これらの値はアンインストールで解放できる容量ではありません。';
+
+  @override
+  String get analysisInstalledVersion => 'インストール済みバージョン';
+
+  @override
+  String get analysisNoMatches => '一致するモジュールがありません';
+
+  @override
+  String get analysisDescending => '大きい順';
+
+  @override
+  String get a11yAnalysisArea => '容量分析';
+
+  @override
+  String get a11yAnalysisApp => '容量と依存関係';
+
+  @override
   String get appTitle => 'Linyaps ストアコミュニティ版';
 
   @override
@@ -566,6 +636,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get showBaseServices => '基盤ランタイムサービスを表示';
+
+  @override
+  String get autoPruneDependencies => '未使用の依存関係を自動削除';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '更新や削除後に未使用の依存関係を整理します。無効にすると依存関係は残りますが、過去のアプリバージョンは保持されません。';
+
+  @override
+  String get a11yAutoPruneDependencies => '未使用の依存関係を自動削除';
 
   @override
   String get showBaseServicesDesc => 'インストール済みリストに基盤ランタイムサービスを表示します';
