@@ -11,6 +11,70 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'リポジトリを追加';
+
+  @override
+  String get a11yMirrorActions => 'リポジトリ操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'エラーメッセージをコピー';
+
+  @override
+  String get a11yMirrorConfirm => '確認';
+
+  @override
+  String get a11yMirrorCancel => 'キャンセル';
+
+  @override
+  String get a11yMirrorRepositories => 'リポジトリのミラー設定一覧';
+
+  @override
+  String get mirrorRegionTitle => 'ミラー地域';
+
+  @override
+  String get mirrorRegionAuto => '自動選択';
+
+  @override
+  String get mirrorRegionChina => '中国 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '米国 (US)';
+
+  @override
+  String get mirrorRegionEurope => '欧州 (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'カスタム地域';
+
+  @override
+  String get mirrorRegionCode => '地域コード';
+
+  @override
+  String get mirrorRegionInvalid => '英字または数字で始め、英字、数字、ハイフン、アンダースコアを使用してください。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '設定を送信しました。状態は未確認です';
+
+  @override
+  String get mirrorStatusUnknown => 'ミラーの状態が不明';
+
+  @override
+  String get mirrorCustomRegionTitle => 'ミラー地域を設定';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository のミラー切り替え';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository のミラー地域';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'ミラー設定の診断';
+
+  @override
   String get a11yAnalysisRefresh => '更新';
 
   @override

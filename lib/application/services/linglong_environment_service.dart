@@ -364,6 +364,11 @@ class LinglongEnvironmentService {
               url: item['url']?.toString() ?? '',
               alias: item['alias']?.toString(),
               priority: item['priority']?.toString(),
+              // 缺字段保留未知；环境检测不能用默认 false 覆盖真实配置。
+              isMirrorEnabled: item['mirror_enabled'] is bool
+                  ? item['mirror_enabled'] as bool
+                  : null,
+              region: item['region'] is String ? item['region'] as String : null,
             ),
           );
         }

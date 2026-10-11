@@ -11,6 +11,72 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Добавить репозиторий';
+
+  @override
+  String get a11yMirrorActions => 'Действия с репозиторием';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Копировать сообщение об ошибке';
+
+  @override
+  String get a11yMirrorConfirm => 'Подтвердить';
+
+  @override
+  String get a11yMirrorCancel => 'Отмена';
+
+  @override
+  String get a11yMirrorRepositories => 'Список настроек зеркал репозиториев';
+
+  @override
+  String get mirrorRegionTitle => 'Регион зеркала';
+
+  @override
+  String get mirrorRegionAuto => 'Автоматически';
+
+  @override
+  String get mirrorRegionChina => 'Китай (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'США (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Европа (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Другой регион';
+
+  @override
+  String get mirrorRegionCode => 'Код региона';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Используйте буквы, цифры, дефисы и подчёркивания; начните с буквы или цифры.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Настройки отправлены; состояние ещё не подтверждено';
+
+  @override
+  String get mirrorStatusUnknown => 'Состояние зеркала неизвестно';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Выбрать регион зеркала';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Переключатель зеркала для $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Регион зеркала для $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Диагностика настроек зеркала';
+
+  @override
   String get a11yAnalysisRefresh => 'Обновить';
 
   @override

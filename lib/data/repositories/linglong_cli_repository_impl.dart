@@ -824,6 +824,11 @@ class LinglongCliRepositoryImpl
       url: url,
       alias: _stringValue(json['alias']),
       priority: _stringValue(json['priority']),
+      // 文本回退及缺失字段没有开关证据，不能推断镜像已关闭。
+      isMirrorEnabled: json['mirror_enabled'] is bool
+          ? json['mirror_enabled'] as bool
+          : null,
+      region: json['region'] is String ? json['region'] as String : null,
     );
   }
 
@@ -994,11 +999,18 @@ class LinglongCliRepositoryImpl
   Future<String> setRepositoryMirror(
     String aliasOrName, {
     required bool enabled,
+    String? region,
   }) {
+    // 上游直接把地区拼入 URL，调用方也必须拒绝结构性查询字符。
+    if (enabled && region != null && !LinglongRepoInfo.isSafeMirrorRegion(region)) {
+      throw ArgumentError.value(region, 'region', 'Unsafe mirror region code');
+    }
     return _runRepositoryCommand([
       'repo',
       enabled ? 'enable-mirror' : 'disable-mirror',
       aliasOrName,
+      // 关闭时保留上游已存地区；自动模式省略参数，让上游清除旧地区。
+      if (enabled && region != null) ...['--region', region],
     ]);
   }
 

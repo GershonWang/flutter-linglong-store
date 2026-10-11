@@ -11,6 +11,72 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Add repository';
+
+  @override
+  String get a11yMirrorActions => 'Repository actions';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Copy error message';
+
+  @override
+  String get a11yMirrorConfirm => 'Confirm';
+
+  @override
+  String get a11yMirrorCancel => 'Cancel';
+
+  @override
+  String get a11yMirrorRepositories => 'Mirror repository settings list';
+
+  @override
+  String get mirrorRegionTitle => 'Mirror Region';
+
+  @override
+  String get mirrorRegionAuto => 'Automatic';
+
+  @override
+  String get mirrorRegionChina => 'China (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'United States (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Europe (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Custom Region';
+
+  @override
+  String get mirrorRegionCode => 'Region Code';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Use letters, numbers, hyphens or underscores, starting with a letter or number.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Settings submitted; status is not yet confirmed';
+
+  @override
+  String get mirrorStatusUnknown => 'Mirror status unknown';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Set Mirror Region';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Mirror switch for $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Mirror region for $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Mirror configuration diagnostics';
+
+  @override
   String get a11yAnalysisRefresh => 'Refresh';
 
   @override

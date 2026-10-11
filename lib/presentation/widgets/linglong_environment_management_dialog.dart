@@ -66,6 +66,10 @@ class _LinglongEnvironmentManagementDialogState
     final showDiskAnalysis = ref
         .watch(linglongCliCapabilitiesProvider)
         .supportsDiskAnalysis;
+    // 地区能力和分析能力共享启动快照，未知版本不会创建新交互入口。
+    final supportsMirrorRegion = ref
+        .watch(linglongCliCapabilitiesProvider)
+        .supportsMirrorRegion;
 
     return DefaultTabController(
       length: showDiskAnalysis ? 4 : 3,
@@ -121,6 +125,19 @@ class _LinglongEnvironmentManagementDialogState
                         ),
                         RepositoryManagementTab(
                           state: state,
+                          supportsMirrorRegion: supportsMirrorRegion,
+                          onSetMirrorRegion: (repo, region) {
+                            _actions.setRepositoryMirror(
+                              context,
+                              repo,
+                              enabled: true,
+                              region: region,
+                              preserveRegion: false,
+                            );
+                          },
+                          onCustomMirrorRegion: (repo) {
+                            _actions.showMirrorRegionDialog(context, repo);
+                          },
                           onAddRepository: () {
                             _actions.showAddRepositoryDialog(context);
                           },

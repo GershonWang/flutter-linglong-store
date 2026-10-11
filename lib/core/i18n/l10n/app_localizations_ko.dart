@@ -11,6 +11,70 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => '저장소 추가';
+
+  @override
+  String get a11yMirrorActions => '저장소 작업';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '오류 메시지 복사';
+
+  @override
+  String get a11yMirrorConfirm => '확인';
+
+  @override
+  String get a11yMirrorCancel => '취소';
+
+  @override
+  String get a11yMirrorRepositories => '저장소 미러 설정 목록';
+
+  @override
+  String get mirrorRegionTitle => '미러 지역';
+
+  @override
+  String get mirrorRegionAuto => '자동 선택';
+
+  @override
+  String get mirrorRegionChina => '중국 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '미국 (US)';
+
+  @override
+  String get mirrorRegionEurope => '유럽 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '사용자 지정 지역';
+
+  @override
+  String get mirrorRegionCode => '지역 코드';
+
+  @override
+  String get mirrorRegionInvalid => '문자 또는 숫자로 시작하고 문자, 숫자, 하이픈, 밑줄만 사용하세요.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '설정을 제출했지만 상태는 아직 확인되지 않았습니다';
+
+  @override
+  String get mirrorStatusUnknown => '미러 상태 알 수 없음';
+
+  @override
+  String get mirrorCustomRegionTitle => '미러 지역 설정';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository의 미러 전환';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository의 미러 지역';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '미러 설정 진단';
+
+  @override
   String get a11yAnalysisRefresh => '새로 고침';
 
   @override

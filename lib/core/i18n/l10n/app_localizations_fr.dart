@@ -11,6 +11,72 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Ajouter un dépôt';
+
+  @override
+  String get a11yMirrorActions => 'Actions sur le dépôt';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Copier le message d\'erreur';
+
+  @override
+  String get a11yMirrorConfirm => 'Confirmer';
+
+  @override
+  String get a11yMirrorCancel => 'Annuler';
+
+  @override
+  String get a11yMirrorRepositories => 'Liste des paramètres des miroirs';
+
+  @override
+  String get mirrorRegionTitle => 'Région du miroir';
+
+  @override
+  String get mirrorRegionAuto => 'Automatique';
+
+  @override
+  String get mirrorRegionChina => 'Chine (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'États-Unis (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Europe (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Région personnalisée';
+
+  @override
+  String get mirrorRegionCode => 'Code de région';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Utilisez lettres, chiffres, tirets ou tirets bas, en commençant par une lettre ou un chiffre.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Paramètres envoyés ; état non confirmé';
+
+  @override
+  String get mirrorStatusUnknown => 'État du miroir inconnu';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Définir la région du miroir';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Interrupteur du miroir pour $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Région du miroir pour $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Diagnostic de configuration du miroir';
+
+  @override
   String get a11yAnalysisRefresh => 'Actualiser';
 
   @override

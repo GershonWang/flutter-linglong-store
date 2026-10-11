@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
 
 import '../../../application/providers/linglong_environment_management_provider.dart';
+import '../../../application/providers/linglong_cli_capabilities_provider.dart';
+import '../../../core/accessibility/accessibility.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/platform/local_path_opener.dart';
 import '../../../core/utils/app_notification_helpers.dart';
@@ -342,14 +344,43 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongRepoInfo repo, {
     required bool enabled,
+    String? region,
+    bool preserveRegion = true,
   }) async {
     final l10n = AppLocalizations.of(context)!;
+    // 未确认快照不能自动保留旧地区，先刷新或通过地区菜单明确重新选择。
+    final supportsRegion = ref
+        .read(linglongCliCapabilitiesProvider)
+        .supportsMirrorRegion;
+    final snapshotUnknown =
+        ref
+            .read(linglongEnvironmentManagementProvider)
+            .unconfirmedMirrorAlias !=
+        null;
+    if (preserveRegion &&
+        (snapshotUnknown ||
+            (supportsRegion &&
+                repo.isMirrorEnabled == null &&
+                repo.region == null))) {
+      showAppWarning(
+        context,
+        snapshotUnknown
+            ? l10n.mirrorConfigurationUnconfirmed
+            : l10n.mirrorStatusUnknown,
+      );
+      return;
+    }
     try {
       await ref
           .read(linglongEnvironmentManagementProvider.notifier)
           .setRepositoryMirror(
             linglongRepositoryDisplayName(repo),
             enabled: enabled,
+            // 重新启用显式保留地区；只有地区菜单选择自动才清除旧地区。
+            region:
+                ref.read(linglongCliCapabilitiesProvider).supportsMirrorRegion
+                ? (preserveRegion ? repo.region : region)
+                : null,
           );
       if (context.mounted) {
         showAppSuccess(
@@ -357,11 +388,43 @@ class LinglongEnvironmentManagementActions {
           enabled ? l10n.envMirrorEnabled : l10n.envMirrorDisabled,
         );
       }
+    } on LinglongMirrorConfirmationException {
+      if (context.mounted) {
+        // 具体诊断由仓库区域持续展示，toast 只解释提交尚未确认。
+        showAppWarning(context, l10n.mirrorConfigurationUnconfirmed);
+      }
     } catch (error) {
       if (context.mounted) {
         showAppError(context, l10n.envMirrorUpdateFailed(error.toString()));
       }
     }
+  }
+
+  /// 自定义代码不限定服务端地区白名单，只防止改变上游 URL 查询结构。
+  Future<void> showMirrorRegionDialog(
+    BuildContext context,
+    LinglongRepoInfo repo,
+  ) async {
+    if (!ref.read(linglongCliCapabilitiesProvider).supportsMirrorRegion) return;
+    final isUnconfirmed =
+        ref
+            .read(linglongEnvironmentManagementProvider)
+            .unconfirmedMirrorAlias !=
+        null;
+    final region = await showDialog<String>(
+      context: context,
+      builder: (_) => _MirrorRegionDialog(
+        initialRegion: isUnconfirmed ? '' : (repo.region ?? ''),
+      ),
+    );
+    if (region == null || !context.mounted) return;
+    await setRepositoryMirror(
+      context,
+      repo,
+      enabled: true,
+      region: region,
+      preserveRegion: false,
+    );
   }
 
   /// 通过平台路径打开器打开完整日志所在目录。
@@ -418,5 +481,94 @@ class LinglongEnvironmentManagementActions {
     } else {
       showAppError(context, message);
     }
+  }
+}
+
+/// 自定义地区表单独立拥有输入资源，确保退场动画完成前控制器仍然有效。
+class _MirrorRegionDialog extends StatefulWidget {
+  /// 初始值仅来自已确认快照；调用方负责过滤尚未回读的旧值。
+  const _MirrorRegionDialog({required this.initialRegion});
+
+  /// 打开表单时的确认地区，不将用户未提交的输入持久化。
+  final String initialRegion;
+
+  /// 将输入资源生命周期绑定到路由中的组件，而不是提前完成的弹窗 Future。
+  @override
+  State<_MirrorRegionDialog> createState() => _MirrorRegionDialogState();
+}
+
+/// 保留表单与控制器直到路由真正卸载，避免关闭动画读取已释放的输入资源。
+class _MirrorRegionDialogState extends State<_MirrorRegionDialog> {
+  /// 将安全校验集中在提交入口，键盘确认与按钮确认遵循相同规则。
+  final _formKey = GlobalKey<FormState>();
+
+  /// 输入控制器仅属于本次弹窗，不跨仓库或跨打开次数共享。
+  late final TextEditingController _controller;
+
+  /// 在组件挂载时初始化快照输入，保证资源与组件一同创建和释放。
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialRegion);
+  }
+
+  /// 路由退场完成后释放控制器，不使用延时规避生命周期问题。
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// 仅返回显式且安全的地区代码，实际写入仍由统一交互控制器编排。
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.of(context).pop(_controller.text);
+    }
+  }
+
+  /// 复用既有弹窗、焦点与语义组件，保持键盘和辅助技术操作一致。
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return A11yFocusScope(
+      debugLabel: 'mirror-region-dialog',
+      child: AlertDialog(
+        title: Text(l10n.mirrorCustomRegionTitle),
+        content: SizedBox(
+          width: 360,
+          child: Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.mirrorRegionCode,
+                errorMaxLines: 5,
+              ),
+              validator: (value) =>
+                  value != null && LinglongRepoInfo.isSafeMirrorRegion(value)
+                  ? null
+                  : l10n.mirrorRegionInvalid,
+              onFieldSubmitted: (_) => _submit(),
+            ),
+          ),
+        ),
+        actions: [
+          A11yButton(
+            semanticsLabel: l10n.a11yMirrorCancel,
+            onTap: () => Navigator.of(context).pop(),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.cancel),
+            ),
+          ),
+          A11yButton(
+            semanticsLabel: l10n.a11yMirrorConfirm,
+            onTap: _submit,
+            child: FilledButton(onPressed: _submit, child: Text(l10n.confirm)),
+          ),
+        ],
+      ),
+    );
   }
 }

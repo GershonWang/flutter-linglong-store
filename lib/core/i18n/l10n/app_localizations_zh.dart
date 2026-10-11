@@ -11,6 +11,70 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => '添加仓库';
+
+  @override
+  String get a11yMirrorActions => '仓库操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '复制错误信息';
+
+  @override
+  String get a11yMirrorConfirm => '确认';
+
+  @override
+  String get a11yMirrorCancel => '取消';
+
+  @override
+  String get a11yMirrorRepositories => '镜像仓库配置列表';
+
+  @override
+  String get mirrorRegionTitle => '镜像地区';
+
+  @override
+  String get mirrorRegionAuto => '自动选择';
+
+  @override
+  String get mirrorRegionChina => '中国 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '美国 (US)';
+
+  @override
+  String get mirrorRegionEurope => '欧洲 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '自定义地区';
+
+  @override
+  String get mirrorRegionCode => '地区代码';
+
+  @override
+  String get mirrorRegionInvalid => '仅允许字母、数字、连字符和下划线，且以字母或数字开头。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '设置已提交，状态尚未确认';
+
+  @override
+  String get mirrorStatusUnknown => '镜像状态未知';
+
+  @override
+  String get mirrorCustomRegionTitle => '设置镜像地区';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository 的镜像开关';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository 的镜像地区';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '镜像配置诊断';
+
+  @override
   String get a11yAnalysisRefresh => '刷新';
 
   @override
@@ -2514,6 +2578,70 @@ class AppLocalizationsZh extends AppLocalizations {
 /// The translations for Chinese, using the Han script (`zh_Hant`).
 class AppLocalizationsZhHant extends AppLocalizationsZh {
   AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get a11yMirrorAddRepository => '新增儲存庫';
+
+  @override
+  String get a11yMirrorActions => '儲存庫操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '複製錯誤資訊';
+
+  @override
+  String get a11yMirrorConfirm => '確認';
+
+  @override
+  String get a11yMirrorCancel => '取消';
+
+  @override
+  String get a11yMirrorRepositories => '鏡像倉庫設定清單';
+
+  @override
+  String get mirrorRegionTitle => '鏡像地區';
+
+  @override
+  String get mirrorRegionAuto => '自動選擇';
+
+  @override
+  String get mirrorRegionChina => '中國 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '美國 (US)';
+
+  @override
+  String get mirrorRegionEurope => '歐洲 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '自訂地區';
+
+  @override
+  String get mirrorRegionCode => '地區代碼';
+
+  @override
+  String get mirrorRegionInvalid => '僅允許字母、數字、連字號和底線，並以字母或數字開頭。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '設定已提交，狀態尚未確認';
+
+  @override
+  String get mirrorStatusUnknown => '鏡像狀態未知';
+
+  @override
+  String get mirrorCustomRegionTitle => '設定鏡像地區';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository 的鏡像開關';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository 的鏡像地區';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '鏡像設定診斷';
 
   @override
   String get a11yAnalysisRefresh => '重新整理';

@@ -88,6 +88,8 @@ _LinglongRepoInfo _$LinglongRepoInfoFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String,
       alias: json['alias'] as String?,
       priority: json['priority'] as String?,
+      isMirrorEnabled: json['mirror_enabled'] as bool?,
+      region: json['region'] as String?,
     );
 
 Map<String, dynamic> _$LinglongRepoInfoToJson(_LinglongRepoInfo instance) =>
@@ -96,4 +98,6 @@ Map<String, dynamic> _$LinglongRepoInfoToJson(_LinglongRepoInfo instance) =>
       'url': instance.url,
       'alias': instance.alias,
       'priority': instance.priority,
+      'mirror_enabled': instance.isMirrorEnabled,
+      'region': instance.region,
     };

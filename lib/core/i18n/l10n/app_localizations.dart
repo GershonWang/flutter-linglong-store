@@ -115,6 +115,126 @@ abstract class AppLocalizations {
     Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
   ];
 
+  /// No description provided for @a11yMirrorAddRepository.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加仓库'**
+  String get a11yMirrorAddRepository;
+
+  /// No description provided for @a11yMirrorActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库操作'**
+  String get a11yMirrorActions;
+
+  /// No description provided for @a11yMirrorCopyDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制错误信息'**
+  String get a11yMirrorCopyDiagnostic;
+
+  /// No description provided for @a11yMirrorConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认'**
+  String get a11yMirrorConfirm;
+
+  /// No description provided for @a11yMirrorCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get a11yMirrorCancel;
+
+  /// No description provided for @a11yMirrorRepositories.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像仓库配置列表'**
+  String get a11yMirrorRepositories;
+
+  /// No description provided for @mirrorRegionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像地区'**
+  String get mirrorRegionTitle;
+
+  /// No description provided for @mirrorRegionAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动选择'**
+  String get mirrorRegionAuto;
+
+  /// No description provided for @mirrorRegionChina.
+  ///
+  /// In zh, this message translates to:
+  /// **'中国 (CN)'**
+  String get mirrorRegionChina;
+
+  /// No description provided for @mirrorRegionUnitedStates.
+  ///
+  /// In zh, this message translates to:
+  /// **'美国 (US)'**
+  String get mirrorRegionUnitedStates;
+
+  /// No description provided for @mirrorRegionEurope.
+  ///
+  /// In zh, this message translates to:
+  /// **'欧洲 (EU)'**
+  String get mirrorRegionEurope;
+
+  /// No description provided for @mirrorRegionCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义地区'**
+  String get mirrorRegionCustom;
+
+  /// No description provided for @mirrorRegionCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'地区代码'**
+  String get mirrorRegionCode;
+
+  /// No description provided for @mirrorRegionInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅允许字母、数字、连字符和下划线，且以字母或数字开头。'**
+  String get mirrorRegionInvalid;
+
+  /// No description provided for @mirrorConfigurationUnconfirmed.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置已提交，状态尚未确认'**
+  String get mirrorConfigurationUnconfirmed;
+
+  /// No description provided for @mirrorStatusUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像状态未知'**
+  String get mirrorStatusUnknown;
+
+  /// No description provided for @mirrorCustomRegionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置镜像地区'**
+  String get mirrorCustomRegionTitle;
+
+  /// No description provided for @a11yMirrorToggle.
+  ///
+  /// In zh, this message translates to:
+  /// **'{repository} 的镜像开关'**
+  String a11yMirrorToggle(String repository);
+
+  /// No description provided for @a11yMirrorRegion.
+  ///
+  /// In zh, this message translates to:
+  /// **'{repository} 的镜像地区'**
+  String a11yMirrorRegion(String repository);
+
+  /// No description provided for @a11yMirrorDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像配置诊断'**
+  String get a11yMirrorDiagnostic;
+
   /// No description provided for @a11yAnalysisRefresh.
   ///
   /// In zh, this message translates to:

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/linglong_environment_management_provider.dart';
+import 'package:linglong_store/application/providers/linglong_cli_capabilities_provider.dart';
+import 'package:linglong_store/domain/models/linglong_cli_capabilities.dart';
 import 'package:linglong_store/application/services/linglong_environment_management_service.dart';
 import 'package:linglong_store/application/services/linglong_environment_service.dart';
 import 'package:linglong_store/core/config/theme.dart';
@@ -15,6 +17,41 @@ import 'package:linglong_store/domain/repositories/linglong_repository_managemen
 import 'package:linglong_store/presentation/widgets/linglong_environment_management_dialog.dart';
 
 void main() {
+  testWidgets('新版本在仓库行展示地区入口和未知镜像状态', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          linglongCliCapabilitiesProvider.overrideWithValue(
+            LinglongCliCapabilities.fromVersion('1.14.0'),
+          ),
+          linglongEnvironmentManagementServiceProvider.overrideWithValue(
+            _FakeManagementService(),
+          ),
+          linglongRepositoryManagementRepositoryProvider.overrideWithValue(
+            _FakeRepositoryManagementRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: Center(child: LinglongEnvironmentManagementDialog()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('仓库管理'));
+    await tester.pumpAndSettle();
+    expect(find.text('镜像地区'), findsOneWidget);
+    // 文本式旧快照没有开关或地区证据，两处都必须显示未知。
+    expect(find.text('镜像状态未知'), findsNWidgets(2));
+  });
+
   testWidgets('dialog renders analysis, repository and storage tabs', (
     tester,
   ) async {
@@ -288,6 +325,7 @@ class _FakeRepositoryManagementRepository
   Future<String> setRepositoryMirror(
     String aliasOrName, {
     required bool enabled,
+    String? region,
   }) async => 'ok';
 
   @override

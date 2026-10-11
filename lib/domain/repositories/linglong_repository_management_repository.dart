@@ -31,8 +31,11 @@ abstract class LinglongRepositoryManagementRepository {
   Future<String> setRepositoryPriority(String aliasOrName, int priority);
 
   /// 启用或禁用仓库镜像。
+  ///
+  /// region 仅在开启时生效；null 表示清除地区并交由服务端选择。
   Future<String> setRepositoryMirror(
     String aliasOrName, {
     required bool enabled,
+    String? region,
   });
 }

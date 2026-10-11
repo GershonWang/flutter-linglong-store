@@ -11,6 +11,72 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'إضافة مستودع';
+
+  @override
+  String get a11yMirrorActions => 'إجراءات المستودع';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'نسخ رسالة الخطأ';
+
+  @override
+  String get a11yMirrorConfirm => 'تأكيد';
+
+  @override
+  String get a11yMirrorCancel => 'إلغاء';
+
+  @override
+  String get a11yMirrorRepositories => 'قائمة إعدادات مرايا المستودعات';
+
+  @override
+  String get mirrorRegionTitle => 'منطقة المرآة';
+
+  @override
+  String get mirrorRegionAuto => 'تلقائي';
+
+  @override
+  String get mirrorRegionChina => 'الصين (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'الولايات المتحدة (US)';
+
+  @override
+  String get mirrorRegionEurope => 'أوروبا (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'منطقة مخصصة';
+
+  @override
+  String get mirrorRegionCode => 'رمز المنطقة';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'استخدم حروفًا أو أرقامًا أو شرطات أو شرطات سفلية، بدءًا بحرف أو رقم.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'تم إرسال الإعدادات؛ لم يتم تأكيد الحالة بعد';
+
+  @override
+  String get mirrorStatusUnknown => 'حالة المرآة غير معروفة';
+
+  @override
+  String get mirrorCustomRegionTitle => 'تعيين منطقة المرآة';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'مفتاح المرآة للمستودع ⁨$repository⁩';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'منطقة المرآة للمستودع ⁨$repository⁩';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'تشخيص إعدادات المرآة';
+
+  @override
   String get a11yAnalysisRefresh => 'تحديث';
 
   @override

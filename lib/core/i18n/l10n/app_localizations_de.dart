@@ -11,6 +11,72 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Repository hinzufügen';
+
+  @override
+  String get a11yMirrorActions => 'Repository-Aktionen';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Fehlermeldung kopieren';
+
+  @override
+  String get a11yMirrorConfirm => 'Bestätigen';
+
+  @override
+  String get a11yMirrorCancel => 'Abbrechen';
+
+  @override
+  String get a11yMirrorRepositories => 'Liste der Spiegelkonfigurationen';
+
+  @override
+  String get mirrorRegionTitle => 'Spiegelregion';
+
+  @override
+  String get mirrorRegionAuto => 'Automatisch';
+
+  @override
+  String get mirrorRegionChina => 'China (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'USA (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Europa (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Eigene Region';
+
+  @override
+  String get mirrorRegionCode => 'Regionscode';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Buchstaben, Zahlen, Bindestriche oder Unterstriche; mit Buchstabe oder Zahl beginnen.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Einstellungen übermittelt; Status noch nicht bestätigt';
+
+  @override
+  String get mirrorStatusUnknown => 'Spiegelstatus unbekannt';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Spiegelregion festlegen';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Spiegelschalter für $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Spiegelregion für $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Diagnose der Spiegelkonfiguration';
+
+  @override
   String get a11yAnalysisRefresh => 'Aktualisieren';
 
   @override
