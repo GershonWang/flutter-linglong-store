@@ -55,6 +55,9 @@ sealed class InstallTask with _$InstallTask {
     /// 是否强制安装
     @Default(false) bool force,
 
+    /// 入队时冻结的依赖清理策略，重试复用；旧快照缺字段时使用上游默认。
+    @Default(false) bool noAutoPrune,
+
     /// 当前状态
     @Default(InstallStatus.pending) InstallStatus status,
 

@@ -321,6 +321,7 @@ class LinglongCliRepositoryImpl
     required InstallTaskKind kind,
     String? version,
     bool force = false,
+    bool noAutoPrune = false,
   }) async* {
     final processId = _operationProcessId(appId, kind);
     final operationLabel = _operationLabel(kind);
@@ -339,6 +340,8 @@ class LinglongCliRepositoryImpl
     if (force && kind == InstallTaskKind.install) {
       args.add('--force');
     }
+    // 能力门槛由 Application 冻结，默认不改变旧 CLI 的命令参数。
+    if (noAutoPrune) args.add('--no-auto-prune');
     final commandLine = 'll-cli ${args.join(' ')}';
 
     // 每次开始新任务前重置该任务的取消标志。
@@ -416,6 +419,7 @@ class LinglongCliRepositoryImpl
           kind: kind,
           version: kind == InstallTaskKind.install ? version : null,
           force: force,
+          noAutoPrune: noAutoPrune,
         );
       } else {
         lines = _executeWithProgressAndProcess(
@@ -688,6 +692,7 @@ class LinglongCliRepositoryImpl
     required InstallTaskKind kind,
     String? version,
     bool force = false,
+    bool noAutoPrune = false,
   }) async* {
     await helper.ensureStarted();
     final events = helper.startTask(
@@ -699,6 +704,7 @@ class LinglongCliRepositoryImpl
         appId: appId,
         version: kind == InstallTaskKind.install ? version : null,
         force: force,
+        noAutoPrune: noAutoPrune,
       ),
     );
     await for (final event in events) {
@@ -1073,12 +1079,14 @@ class LinglongCliRepositoryImpl
     String appId, {
     String? version,
     bool force = false,
+    bool noAutoPrune = false,
   }) async* {
     yield* _runInstallLikeOperation(
       appId,
       kind: InstallTaskKind.install,
       version: version,
       force: force,
+      noAutoPrune: noAutoPrune,
     );
   }
 
@@ -1175,12 +1183,24 @@ class LinglongCliRepositoryImpl
   }
 
   @override
-  Stream<InstallProgress> updateApp(String appId) async* {
-    yield* _runInstallLikeOperation(appId, kind: InstallTaskKind.update);
+  Stream<InstallProgress> updateApp(
+    String appId, {
+    bool noAutoPrune = false,
+  }) async* {
+    // 升级和安装使用相同的清理偏好，但仍保留 upgrade 的版本语义。
+    yield* _runInstallLikeOperation(
+      appId,
+      kind: InstallTaskKind.update,
+      noAutoPrune: noAutoPrune,
+    );
   }
 
   @override
-  Future<void> uninstallApp(String appId, String? version) {
+  Future<void> uninstallApp(
+    String appId,
+    String? version, {
+    bool noAutoPrune = false,
+  }) {
     // version 为空时只传 appId，交由 ll-cli 自行解析目标（应用详情页头部
     // “整体卸载”场景）；version 非空时按 appId/version 精确卸载指定版本
     // （应用详情页历史版本列表场景）。ll-cli uninstall 会把 APP 解析为
@@ -1194,6 +1214,8 @@ class LinglongCliRepositoryImpl
       final output = await _execute([
         'uninstall',
         target,
+        // 仅控制未使用依赖，卸载目标及系统授权路径保持统一。
+        if (noAutoPrune) '--no-auto-prune',
       ], timeout: const Duration(minutes: 5));
 
       if (output.success) {

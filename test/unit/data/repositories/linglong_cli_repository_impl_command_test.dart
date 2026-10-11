@@ -78,6 +78,44 @@ void main() {
   });
 
   group('LinglongCliRepositoryImpl command building', () {
+    // 三类包操作必须保持同一清理策略，不能只适配普通安装而遗漏升级或卸载。
+    test('未使用依赖保留策略透传安装升级卸载', () async {
+      final executor = _RecordingCliExecutor();
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+      await repository
+          .installApp('org.example.demo', noAutoPrune: true)
+          .drain<void>();
+      await repository
+          .updateApp('org.example.demo', noAutoPrune: true)
+          .drain<void>();
+      await repository.uninstallApp(
+        'org.example.demo',
+        '1.2.3',
+        noAutoPrune: true,
+      );
+      expect(executor.progressCalls[0], [
+        'install',
+        '--json',
+        'org.example.demo',
+        '--no-auto-prune',
+      ]);
+      expect(executor.progressCalls[1], [
+        'upgrade',
+        '--json',
+        'org.example.demo',
+        '--no-auto-prune',
+      ]);
+      expect(executor.executeCalls.last, [
+        'uninstall',
+        'org.example.demo/1.2.3',
+        '--no-auto-prune',
+      ]);
+    });
+
     test(
       'installApp without version uses install command without version suffix',
       () async {
@@ -691,9 +729,7 @@ void main() {
   });
 
   group('授权失败归类（docs/50 §7.3）', () {
-    Future<InstallProgress> runInstallWithFailure(
-      String jsonErrorLine,
-    ) async {
+    Future<InstallProgress> runInstallWithFailure(String jsonErrorLine) async {
       final executor = _RecordingCliExecutor()
         ..progressEvents = <ProgressEvent>[
           ProgressEvent(line: jsonErrorLine, type: ProgressEventType.stdout),
@@ -704,9 +740,7 @@ void main() {
         cancelWithSystemKill: executor.cancelWithSystemKill,
       );
 
-      final events = await repository
-          .installApp('org.example.demo')
-          .toList();
+      final events = await repository.installApp('org.example.demo').toList();
       return events.last;
     }
 
@@ -716,10 +750,7 @@ void main() {
       );
 
       expect(failed.status, InstallStatus.failed);
-      expect(
-        failed.failure?.kind,
-        AppOperationFailureKind.authorizationDenied,
-      );
+      expect(failed.failure?.kind, AppOperationFailureKind.authorizationDenied);
       expect(failed.failure?.cliCode, 2);
     });
 
@@ -728,10 +759,7 @@ void main() {
         '{"code":-1,"message":"Access denied by policy"}',
       );
 
-      expect(
-        failed.failure?.kind,
-        AppOperationFailureKind.authorizationDenied,
-      );
+      expect(failed.failure?.kind, AppOperationFailureKind.authorizationDenied);
     });
 
     test('明确的用户取消事实沿用 authorizationCancelled', () async {

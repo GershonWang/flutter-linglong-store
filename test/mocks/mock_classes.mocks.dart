@@ -270,21 +270,25 @@ class MockLinglongCliRepository extends _i1.Mock
     String? appId, {
     String? version,
     bool? force = false,
+    bool? noAutoPrune = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
               #installApp,
               [appId],
-              {#version: version, #force: force},
+              {#version: version, #force: force, #noAutoPrune: noAutoPrune},
             ),
             returnValue: _i5.Stream<_i13.InstallProgress>.empty(),
           )
           as _i5.Stream<_i13.InstallProgress>);
 
   @override
-  _i5.Stream<_i13.InstallProgress> updateApp(String? appId) =>
+  _i5.Stream<_i13.InstallProgress> updateApp(
+    String? appId, {
+    bool? noAutoPrune = false,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#updateApp, [appId]),
+            Invocation.method(#updateApp, [appId], {#noAutoPrune: noAutoPrune}),
             returnValue: _i5.Stream<_i13.InstallProgress>.empty(),
           )
           as _i5.Stream<_i13.InstallProgress>);
@@ -301,9 +305,17 @@ class MockLinglongCliRepository extends _i1.Mock
           as _i5.Future<bool>);
 
   @override
-  _i5.Future<void> uninstallApp(String? appId, String? version) =>
+  _i5.Future<void> uninstallApp(
+    String? appId,
+    String? version, {
+    bool? noAutoPrune = false,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#uninstallApp, [appId, version]),
+            Invocation.method(
+              #uninstallApp,
+              [appId, version],
+              {#noAutoPrune: noAutoPrune},
+            ),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),
           )

@@ -104,11 +104,13 @@ class AppOperationTaskExecutor {
 
     try {
       final progressStream = _task.kind == InstallTaskKind.update
-          ? _repository.updateApp(_task.appId)
+          ? _repository.updateApp(_task.appId, noAutoPrune: _task.noAutoPrune)
           : _repository.installApp(
               _task.appId,
               version: _task.version,
               force: _task.force,
+              // 参数来自队列快照，执行期间不重新读取设置。
+              noAutoPrune: _task.noAutoPrune,
             );
       await for (final progress in progressStream) {
         if (_disposed) {

@@ -22,6 +22,7 @@ _InstallTask _$InstallTaskFromJson(Map<String, dynamic> json) => _InstallTask(
         ),
   version: json['version'] as String?,
   force: json['force'] as bool? ?? false,
+  noAutoPrune: json['noAutoPrune'] as bool? ?? false,
   status:
       $enumDecodeNullable(_$InstallStatusEnumMap, json['status']) ??
       InstallStatus.pending,
@@ -62,6 +63,7 @@ Map<String, dynamic> _$InstallTaskToJson(_InstallTask instance) =>
       'target': instance.target,
       'version': instance.version,
       'force': instance.force,
+      'noAutoPrune': instance.noAutoPrune,
       'status': _$InstallStatusEnumMap[instance.status]!,
       'progress': instance.progress,
       'message': instance.message,

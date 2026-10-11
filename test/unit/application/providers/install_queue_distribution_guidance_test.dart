@@ -251,6 +251,8 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
     String appId, {
     String? version,
     bool force = false,
+    // 发行版提示替身与新增可选参数保持兼容。
+    bool noAutoPrune = false,
   }) async* {
     for (final event in installEvents) {
       yield event.copyWith(appId: appId);
@@ -270,10 +272,17 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<void> uninstallApp(String appId, String? version) async {}
+  Future<void> uninstallApp(
+    String appId,
+    String? version, {
+    bool noAutoPrune = false,
+  }) async {}
 
   @override
-  Stream<InstallProgress> updateApp(String appId) async* {
+  Stream<InstallProgress> updateApp(
+    String appId, {
+    bool noAutoPrune = false,
+  }) async* {
     for (final event in updateEvents) {
       yield event.copyWith(appId: appId);
     }

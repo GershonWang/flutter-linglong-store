@@ -15,6 +15,7 @@ import '../../../application/providers/api_provider.dart';
 import '../../../application/providers/app_self_update_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/linux_renderer_provider.dart';
+import '../../../application/providers/linglong_cli_capabilities_provider.dart';
 import '../../../application/providers/setting_provider.dart';
 import '../../../application/services/version_check_service.dart';
 import '../../../core/accessibility/a11y_semantics.dart';
@@ -34,6 +35,7 @@ import '../../widgets/app_update_flow.dart';
 import '../../widgets/update_available_dialog.dart';
 import '../../widgets/user_experience_program_dialog.dart';
 import 'widgets/app_language_selector.dart';
+import 'widgets/automatic_dependency_cleanup_tile.dart';
 import 'widgets/password_free_install_tile.dart';
 import 'widgets/renderer_preference_tile.dart';
 
@@ -651,9 +653,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ],
             ),
             onTap: () {
-              ref.read(globalAppProvider.notifier).setJoinUserExperienceProgram(
-                !userPreferences.joinUserExperienceProgram,
-              );
+              ref
+                  .read(globalAppProvider.notifier)
+                  .setJoinUserExperienceProgram(
+                    !userPreferences.joinUserExperienceProgram,
+                  );
             },
           ),
           _buildDivider(context),
@@ -666,6 +670,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ref.read(settingProvider.notifier).setShowBaseService(value);
             },
           ),
+          // 能力只读取启动检测快照，不为设置页面额外启动 CLI。
+          if (ref
+              .watch(linglongCliCapabilitiesProvider)
+              .supportsAutoPruneControl) ...[
+            _buildDivider(context),
+            const AutomaticDependencyCleanupTile(),
+          ],
           _buildDivider(context),
           ListTile(
             // 入口图标统一使用中性灰（onSurfaceVariant），与主题选项等其他列表项保持一致，

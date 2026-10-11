@@ -75,10 +75,10 @@ ParseResult fatalRequest(std::string code, std::string message) {
   return result;
 }
 
-/// 解析 start 消息体（requestId/operation/appId/version/force，§6.3）。
+/// 解析 start 消息体；清理控制是可选布尔字段，不扩大命令白名单。
 ParseResult parseStart(const Json& obj) {
   if (hasExtraKeys(obj, {"v", "type", "requestId", "operation", "appId",
-                         "version", "force"})) {
+                         "version", "force", "noAutoPrune"})) {
     return fatalRequest(kErrorCodeInvalidRequest, "start: unknown field");
   }
   if (!obj.contains("requestId") || !obj["requestId"].is_string() ||
@@ -103,6 +103,14 @@ ParseResult parseStart(const Json& obj) {
     return fatalRequest(kErrorCodeInvalidRequest, "start: unknown operation");
   }
   request.appId = obj["appId"].get<std::string>();
+  if (obj.contains("noAutoPrune")) {
+    // 布尔类型必须显式校验，不能把字符串或数字解释成命令选项。
+    if (!obj["noAutoPrune"].is_boolean()) {
+      return fatalRequest(kErrorCodeInvalidRequest,
+                          "start: noAutoPrune must be boolean");
+    }
+    request.noAutoPrune = obj["noAutoPrune"].get<bool>();
+  }
 
   if (!isValidRequestId(request.requestId)) {
     return fatalRequest(kErrorCodeInvalidRequest, "start: invalid requestId");

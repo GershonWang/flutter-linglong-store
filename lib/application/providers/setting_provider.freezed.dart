@@ -20,7 +20,8 @@ mixin _$SettingState {
  String? get appVersion;/// 是否正在清除缓存
  dynamic get isClearingCache;/// 启动时检履商店版本更新
  bool get checkVersionOnStartup;/// 已安装列表中显示基础运行服务
- bool get showBaseService;/// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
+ bool get showBaseService;/// 新版玲珑操作默认清理未使用依赖；关闭仅影响后续任务。
+ bool get autoPruneDependencies;/// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
  LinuxRendererPreference get rendererPreference;/// 是否正在清理基础服务
  bool get isPruningBaseService;
 /// Create a copy of SettingState
@@ -33,16 +34,16 @@ $SettingStateCopyWith<SettingState> get copyWith => _$SettingStateCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingState&&(identical(other.cacheSize, cacheSize) || other.cacheSize == cacheSize)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&const DeepCollectionEquality().equals(other.isClearingCache, isClearingCache)&&(identical(other.checkVersionOnStartup, checkVersionOnStartup) || other.checkVersionOnStartup == checkVersionOnStartup)&&(identical(other.showBaseService, showBaseService) || other.showBaseService == showBaseService)&&(identical(other.rendererPreference, rendererPreference) || other.rendererPreference == rendererPreference)&&(identical(other.isPruningBaseService, isPruningBaseService) || other.isPruningBaseService == isPruningBaseService));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingState&&(identical(other.cacheSize, cacheSize) || other.cacheSize == cacheSize)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&const DeepCollectionEquality().equals(other.isClearingCache, isClearingCache)&&(identical(other.checkVersionOnStartup, checkVersionOnStartup) || other.checkVersionOnStartup == checkVersionOnStartup)&&(identical(other.showBaseService, showBaseService) || other.showBaseService == showBaseService)&&(identical(other.autoPruneDependencies, autoPruneDependencies) || other.autoPruneDependencies == autoPruneDependencies)&&(identical(other.rendererPreference, rendererPreference) || other.rendererPreference == rendererPreference)&&(identical(other.isPruningBaseService, isPruningBaseService) || other.isPruningBaseService == isPruningBaseService));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,cacheSize,appVersion,const DeepCollectionEquality().hash(isClearingCache),checkVersionOnStartup,showBaseService,rendererPreference,isPruningBaseService);
+int get hashCode => Object.hash(runtimeType,cacheSize,appVersion,const DeepCollectionEquality().hash(isClearingCache),checkVersionOnStartup,showBaseService,autoPruneDependencies,rendererPreference,isPruningBaseService);
 
 @override
 String toString() {
-  return 'SettingState(cacheSize: $cacheSize, appVersion: $appVersion, isClearingCache: $isClearingCache, checkVersionOnStartup: $checkVersionOnStartup, showBaseService: $showBaseService, rendererPreference: $rendererPreference, isPruningBaseService: $isPruningBaseService)';
+  return 'SettingState(cacheSize: $cacheSize, appVersion: $appVersion, isClearingCache: $isClearingCache, checkVersionOnStartup: $checkVersionOnStartup, showBaseService: $showBaseService, autoPruneDependencies: $autoPruneDependencies, rendererPreference: $rendererPreference, isPruningBaseService: $isPruningBaseService)';
 }
 
 
@@ -53,7 +54,7 @@ abstract mixin class $SettingStateCopyWith<$Res>  {
   factory $SettingStateCopyWith(SettingState value, $Res Function(SettingState) _then) = _$SettingStateCopyWithImpl;
 @useResult
 $Res call({
- int cacheSize, String? appVersion, dynamic isClearingCache, bool checkVersionOnStartup, bool showBaseService, LinuxRendererPreference rendererPreference, bool isPruningBaseService
+ int cacheSize, String? appVersion, dynamic isClearingCache, bool checkVersionOnStartup, bool showBaseService, bool autoPruneDependencies, LinuxRendererPreference rendererPreference, bool isPruningBaseService
 });
 
 
@@ -70,13 +71,14 @@ class _$SettingStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? cacheSize = null,Object? appVersion = freezed,Object? isClearingCache = freezed,Object? checkVersionOnStartup = null,Object? showBaseService = null,Object? rendererPreference = null,Object? isPruningBaseService = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? cacheSize = null,Object? appVersion = freezed,Object? isClearingCache = freezed,Object? checkVersionOnStartup = null,Object? showBaseService = null,Object? autoPruneDependencies = null,Object? rendererPreference = null,Object? isPruningBaseService = null,}) {
   return _then(SettingState(
 cacheSize: null == cacheSize ? _self.cacheSize : cacheSize // ignore: cast_nullable_to_non_nullable
 as int,appVersion: freezed == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
 as String?,isClearingCache: freezed == isClearingCache ? _self.isClearingCache : isClearingCache // ignore: cast_nullable_to_non_nullable
 as dynamic,checkVersionOnStartup: null == checkVersionOnStartup ? _self.checkVersionOnStartup : checkVersionOnStartup // ignore: cast_nullable_to_non_nullable
 as bool,showBaseService: null == showBaseService ? _self.showBaseService : showBaseService // ignore: cast_nullable_to_non_nullable
+as bool,autoPruneDependencies: null == autoPruneDependencies ? _self.autoPruneDependencies : autoPruneDependencies // ignore: cast_nullable_to_non_nullable
 as bool,rendererPreference: null == rendererPreference ? _self.rendererPreference : rendererPreference // ignore: cast_nullable_to_non_nullable
 as LinuxRendererPreference,isPruningBaseService: null == isPruningBaseService ? _self.isPruningBaseService : isPruningBaseService // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -161,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  bool autoPruneDependencies,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingState() when $default != null:
-return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.rendererPreference,_that.isPruningBaseService);case _:
+return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.autoPruneDependencies,_that.rendererPreference,_that.isPruningBaseService);case _:
   return orElse();
 
 }
@@ -182,10 +184,10 @@ return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.che
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  bool autoPruneDependencies,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)  $default,) {final _that = this;
 switch (_that) {
 case _SettingState():
-return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.rendererPreference,_that.isPruningBaseService);}
+return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.autoPruneDependencies,_that.rendererPreference,_that.isPruningBaseService);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -199,10 +201,10 @@ return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.che
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int cacheSize,  String? appVersion,  dynamic isClearingCache,  bool checkVersionOnStartup,  bool showBaseService,  bool autoPruneDependencies,  LinuxRendererPreference rendererPreference,  bool isPruningBaseService)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingState() when $default != null:
-return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.rendererPreference,_that.isPruningBaseService);case _:
+return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.checkVersionOnStartup,_that.showBaseService,_that.autoPruneDependencies,_that.rendererPreference,_that.isPruningBaseService);case _:
   return null;
 
 }
@@ -214,7 +216,7 @@ return $default(_that.cacheSize,_that.appVersion,_that.isClearingCache,_that.che
 
 
 class _SettingState implements SettingState {
-  const _SettingState({this.cacheSize = 0, this.appVersion, this.isClearingCache = false, this.checkVersionOnStartup = true, this.showBaseService = false, this.rendererPreference = LinuxRendererPreference.auto, this.isPruningBaseService = false});
+  const _SettingState({this.cacheSize = 0, this.appVersion, this.isClearingCache = false, this.checkVersionOnStartup = true, this.showBaseService = false, this.autoPruneDependencies = true, this.rendererPreference = LinuxRendererPreference.auto, this.isPruningBaseService = false});
   
 
 /// 缓存大小（字节）
@@ -227,6 +229,8 @@ class _SettingState implements SettingState {
 @override@JsonKey() final  bool checkVersionOnStartup;
 /// 已安装列表中显示基础运行服务
 @override@JsonKey() final  bool showBaseService;
+/// 新版玲珑操作默认清理未使用依赖；关闭仅影响后续任务。
+@override@JsonKey() final  bool autoPruneDependencies;
 /// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
 @override@JsonKey() final  LinuxRendererPreference rendererPreference;
 /// 是否正在清理基础服务
@@ -242,16 +246,16 @@ _$SettingStateCopyWith<_SettingState> get copyWith => __$SettingStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingState&&(identical(other.cacheSize, cacheSize) || other.cacheSize == cacheSize)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&const DeepCollectionEquality().equals(other.isClearingCache, isClearingCache)&&(identical(other.checkVersionOnStartup, checkVersionOnStartup) || other.checkVersionOnStartup == checkVersionOnStartup)&&(identical(other.showBaseService, showBaseService) || other.showBaseService == showBaseService)&&(identical(other.rendererPreference, rendererPreference) || other.rendererPreference == rendererPreference)&&(identical(other.isPruningBaseService, isPruningBaseService) || other.isPruningBaseService == isPruningBaseService));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingState&&(identical(other.cacheSize, cacheSize) || other.cacheSize == cacheSize)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&const DeepCollectionEquality().equals(other.isClearingCache, isClearingCache)&&(identical(other.checkVersionOnStartup, checkVersionOnStartup) || other.checkVersionOnStartup == checkVersionOnStartup)&&(identical(other.showBaseService, showBaseService) || other.showBaseService == showBaseService)&&(identical(other.autoPruneDependencies, autoPruneDependencies) || other.autoPruneDependencies == autoPruneDependencies)&&(identical(other.rendererPreference, rendererPreference) || other.rendererPreference == rendererPreference)&&(identical(other.isPruningBaseService, isPruningBaseService) || other.isPruningBaseService == isPruningBaseService));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,cacheSize,appVersion,const DeepCollectionEquality().hash(isClearingCache),checkVersionOnStartup,showBaseService,rendererPreference,isPruningBaseService);
+int get hashCode => Object.hash(runtimeType,cacheSize,appVersion,const DeepCollectionEquality().hash(isClearingCache),checkVersionOnStartup,showBaseService,autoPruneDependencies,rendererPreference,isPruningBaseService);
 
 @override
 String toString() {
-  return 'SettingState(cacheSize: $cacheSize, appVersion: $appVersion, isClearingCache: $isClearingCache, checkVersionOnStartup: $checkVersionOnStartup, showBaseService: $showBaseService, rendererPreference: $rendererPreference, isPruningBaseService: $isPruningBaseService)';
+  return 'SettingState(cacheSize: $cacheSize, appVersion: $appVersion, isClearingCache: $isClearingCache, checkVersionOnStartup: $checkVersionOnStartup, showBaseService: $showBaseService, autoPruneDependencies: $autoPruneDependencies, rendererPreference: $rendererPreference, isPruningBaseService: $isPruningBaseService)';
 }
 
 
@@ -262,7 +266,7 @@ abstract mixin class _$SettingStateCopyWith<$Res> implements $SettingStateCopyWi
   factory _$SettingStateCopyWith(_SettingState value, $Res Function(_SettingState) _then) = __$SettingStateCopyWithImpl;
 @override @useResult
 $Res call({
- int cacheSize, String? appVersion, dynamic isClearingCache, bool checkVersionOnStartup, bool showBaseService, LinuxRendererPreference rendererPreference, bool isPruningBaseService
+ int cacheSize, String? appVersion, dynamic isClearingCache, bool checkVersionOnStartup, bool showBaseService, bool autoPruneDependencies, LinuxRendererPreference rendererPreference, bool isPruningBaseService
 });
 
 
@@ -279,13 +283,14 @@ class __$SettingStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? cacheSize = null,Object? appVersion = freezed,Object? isClearingCache = freezed,Object? checkVersionOnStartup = null,Object? showBaseService = null,Object? rendererPreference = null,Object? isPruningBaseService = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? cacheSize = null,Object? appVersion = freezed,Object? isClearingCache = freezed,Object? checkVersionOnStartup = null,Object? showBaseService = null,Object? autoPruneDependencies = null,Object? rendererPreference = null,Object? isPruningBaseService = null,}) {
   return _then(_SettingState(
 cacheSize: null == cacheSize ? _self.cacheSize : cacheSize // ignore: cast_nullable_to_non_nullable
 as int,appVersion: freezed == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
 as String?,isClearingCache: freezed == isClearingCache ? _self.isClearingCache : isClearingCache // ignore: cast_nullable_to_non_nullable
 as dynamic,checkVersionOnStartup: null == checkVersionOnStartup ? _self.checkVersionOnStartup : checkVersionOnStartup // ignore: cast_nullable_to_non_nullable
 as bool,showBaseService: null == showBaseService ? _self.showBaseService : showBaseService // ignore: cast_nullable_to_non_nullable
+as bool,autoPruneDependencies: null == autoPruneDependencies ? _self.autoPruneDependencies : autoPruneDependencies // ignore: cast_nullable_to_non_nullable
 as bool,rendererPreference: null == rendererPreference ? _self.rendererPreference : rendererPreference // ignore: cast_nullable_to_non_nullable
 as LinuxRendererPreference,isPruningBaseService: null == isPruningBaseService ? _self.isPruningBaseService : isPruningBaseService // ignore: cast_nullable_to_non_nullable
 as bool,

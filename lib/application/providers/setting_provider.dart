@@ -34,6 +34,9 @@ sealed class SettingState with _$SettingState {
     /// 已安装列表中显示基础运行服务
     @Default(false) bool showBaseService,
 
+    /// 新版玲珑操作默认清理未使用依赖；关闭仅影响后续任务。
+    @Default(true) bool autoPruneDependencies,
+
     /// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
     @Default(LinuxRendererPreference.auto)
     LinuxRendererPreference rendererPreference,
@@ -58,6 +61,12 @@ class Setting extends _$Setting {
   SettingState _restorePersistedSettings() {
     try {
       var restoredState = const SettingState();
+
+      // 保留用户偏好，即使当前 CLI 降级；版本门槛决定能否下发参数。
+      restoredState = restoredState.copyWith(
+        autoPruneDependencies:
+            _prefs.getBool('setting_auto_prune_dependencies') ?? true,
+      );
 
       // 加载启动时检查版本更新开关
       final checkVersion = _prefs.getBool('setting_check_version_on_startup');
@@ -166,6 +175,16 @@ class Setting extends _$Setting {
     await _prefs.setBool('setting_show_base_service', value);
     // 切换后刷新已安装列表
     await ref.read(installedAppsProvider.notifier).refresh();
+  }
+
+  /// 保存依赖清理偏好；存储失败保持原值，避免界面与后续任务策略不一致。
+  Future<void> setAutoPruneDependencies(bool value) async {
+    final saved = await _prefs.setBool(
+      'setting_auto_prune_dependencies',
+      value,
+    );
+    if (!saved) throw StateError('无法保存依赖清理偏好');
+    state = state.copyWith(autoPruneDependencies: value);
   }
 
   /// 设置 Linux 软件/硬件渲染偏好。

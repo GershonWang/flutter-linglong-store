@@ -1225,6 +1225,8 @@ class _RecordingInstallQueue extends InstallQueue {
     String? version,
     AppOperationTargetSnapshot? target,
     bool force = false,
+    // 详情页替身接受冻结策略参数，不影响原有入队断言。
+    bool? noAutoPrune,
   }) {
     lastKind = kind;
     lastAppId = appId;

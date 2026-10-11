@@ -21,6 +21,8 @@ import '../services/app_operation_recovery_service.dart';
 import '../services/app_operation_state_store.dart';
 import '../services/app_operation_task_executor.dart';
 import 'application_dependency_providers.dart';
+import 'auto_prune_preference_provider.dart';
+import 'linglong_cli_capabilities_provider.dart';
 import 'global_provider.dart' show currentLocaleProvider;
 
 part 'install_queue_provider.g.dart';
@@ -258,6 +260,7 @@ class InstallQueue extends _$InstallQueue {
     String? version,
     AppOperationTargetSnapshot? target,
     bool force = false,
+    bool? noAutoPrune,
   }) {
     // 用户明确点击安装/更新：解除上一次授权失败留下的运行时暂停（§10.2）。
     _clearAuthorizationGate();
@@ -287,6 +290,8 @@ class InstallQueue extends _$InstallQueue {
       target: effectiveTarget,
       version: effectiveVersion,
       force: force,
+      // 入队冻结偏好；已入队任务和人工重试不随设置变化漂移。
+      noAutoPrune: noAutoPrune ?? ref.read(noAutoPrunePreferenceProvider),
       status: InstallStatus.pending,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
@@ -313,6 +318,8 @@ class InstallQueue extends _$InstallQueue {
     }
 
     final batchId = _generateBatchId();
+    // 整个更新批次共用一次偏好快照，避免成员间策略不一致。
+    final noAutoPrune = ref.read(noAutoPrunePreferenceProvider);
     final taskIds = <String>[];
     final newTasks = <InstallTask>[];
     final targets = <AppOperationTargetSnapshot>[];
@@ -349,6 +356,7 @@ class InstallQueue extends _$InstallQueue {
         target: target,
         version: batchVersion,
         force: params.force,
+        noAutoPrune: noAutoPrune,
         status: InstallStatus.pending,
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
@@ -474,7 +482,12 @@ class InstallQueue extends _$InstallQueue {
     AppLogger.info('Processing task: ${task.id} for app: ${task.appId}');
     final executor = AppOperationTaskExecutor(
       repository: ref.read(linglongCliRepositoryProvider),
-      task: task,
+      // 队列恢复后 CLI 可能已降级，执行前再次保证不下发不支持的参数。
+      task: task.copyWith(
+        noAutoPrune:
+            task.noAutoPrune &&
+            ref.read(linglongCliCapabilitiesProvider).supportsAutoPruneControl,
+      ),
     );
     _activeExecutor?.dispose();
     _activeExecutor = executor;
@@ -982,6 +995,7 @@ class InstallQueue extends _$InstallQueue {
       version: failedTask.version,
       target: failedTask.target,
       force: failedTask.force,
+      noAutoPrune: failedTask.noAutoPrune,
     );
   }
 
