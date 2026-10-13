@@ -1,15 +1,19 @@
+/// 启动与功能入口共用的玲珑环境提示，保留浏览入口及原有安装修复能力。
+library;
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../application/providers/linglong_env_provider.dart';
+import '../../core/accessibility/accessibility.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/install_messages.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/platform/local_path_opener.dart';
-import '../../core/platform/window_service.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/linglong_env_check_result.dart';
@@ -17,66 +21,105 @@ import 'linglong_environment_management/environment_management_localizations.dar
 
 /// 玲珑环境检测对话框
 ///
-/// 在启动时检测玲珑环境，如果环境异常则显示此对话框，
-/// 提供退出、手动安装、自动安装、重新检测等操作
+/// 启动提醒和受限操作共用修复入口；关闭提醒只允许浏览，
+/// 不会把缺失的环境标记为正常，也不会退出商店。
 class LinglongEnvDialog extends ConsumerWidget {
-  const LinglongEnvDialog({super.key});
+  const LinglongEnvDialog({super.key, this.allowBrowse = true});
 
-  /// 显示对话框
+  /// 启动场景使用继续浏览，操作场景使用关闭，均不授权受限操作。
+  final bool allowBrowse;
+
+  /// 根导航器存活期内共享弹窗，避免启动提醒与连续点击叠加。
+  static final Expando<Future<void>> _activeDialogs = Expando();
+
+  /// 显示共享对话框，不执行额外检测；调用方可传入原页面的状态容器。
   ///
-  /// [forceShow] 强制显示，即使环境正常
-  static Future<void> show(BuildContext context, {bool forceShow = false}) {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const LinglongEnvDialog(),
-    );
+  /// 保留 forceShow 参数兼容既有入口，环境健康与否由调用方判断。
+  static Future<void> show(
+    BuildContext context, {
+    bool forceShow = false,
+    bool allowBrowse = true,
+    ProviderContainer? container,
+  }) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final active = _activeDialogs[navigator];
+    if (active != null) {
+      return active;
+    }
+    final dialogContainer =
+        container ?? ProviderScope.containerOf(context, listen: false);
+    late final Future<void> future;
+    future =
+        showDialog<void>(
+          context: navigator.context,
+          barrierDismissible: false,
+          builder: (context) => UncontrolledProviderScope(
+            container: dialogContainer,
+            child: LinglongEnvDialog(allowBrowse: allowBrowse),
+          ),
+        ).whenComplete(() {
+          if (identical(_activeDialogs[navigator], future)) {
+            _activeDialogs[navigator] = null;
+          }
+        });
+    _activeDialogs[navigator] = future;
+    return future;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final envState = ref.watch(linglongEnvProvider);
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.smRadius,
-        side: const BorderSide(color: AppColors.modalBorder),
-      ),
-      elevation: 0,
-      backgroundColor: context.appColors.surface,
-      title: Row(
-        children: [
-          Icon(
-            envState.checkState == LinglongEnvCheckState.checking
-                ? Icons.info_outline
-                : (envState.result?.isOk ?? false
-                      ? Icons.check_circle_outline
-                      : Icons.warning_amber_rounded),
-            color: envState.checkState == LinglongEnvCheckState.checking
-                ? AppColors.info
-                : (envState.result?.isOk ?? false
-                      ? AppColors.success
-                      : AppColors.warning),
-            size: 24,
+    // 特权安装没有真实取消能力；返回键也必须等待安装或服务修复完成。
+    final isBusy =
+        envState.isInstalling || envState.isRestartingPackageManagerService;
+    return PopScope(
+      canPop: !isBusy,
+      child: A11yFocusScope(
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.smRadius,
+            side: const BorderSide(color: AppColors.modalBorder),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            AppLocalizations.of(context)!.envCheckTitle,
-            style: context.appTextStyles.title3.copyWith(
-              color: context.appColors.textPrimary,
+          elevation: 0,
+          backgroundColor: context.appColors.surface,
+          title: Row(
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  envState.checkState == LinglongEnvCheckState.checking
+                      ? Icons.info_outline
+                      : (envState.result?.isOk ?? false
+                            ? Icons.check_circle_outline
+                            : Icons.warning_amber_rounded),
+                  color: envState.checkState == LinglongEnvCheckState.checking
+                      ? AppColors.info
+                      : (envState.result?.isOk ?? false
+                            ? AppColors.success
+                            : AppColors.warning),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.envCheckTitle,
+                  style: context.appTextStyles.title3.copyWith(
+                    color: context.appColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: _buildContent(context, ref, envState),
             ),
           ),
-        ],
-      ),
-      content: SizedBox(
-        width: 420,
-        child: SingleChildScrollView(
-          child: _buildContent(context, ref, envState),
+          actions: isBusy ? null : _buildActions(context, ref, envState),
         ),
       ),
-      actions: envState.isInstalling
-          ? null
-          : _buildActions(context, ref, envState),
     );
   }
 
@@ -151,10 +194,12 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                result.isOk ? Icons.check_circle : Icons.error_outline,
-                color: result.isOk ? AppColors.success : AppColors.warning,
-                size: 20,
+              ExcludeSemantics(
+                child: Icon(
+                  result.isOk ? Icons.check_circle : Icons.error_outline,
+                  color: result.isOk ? AppColors.success : AppColors.warning,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -170,6 +215,17 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
         ),
 
+        if (!result.isOk) ...[
+          const SizedBox(height: AppSpacing.md),
+          // 先解释仍可体验的功能，再展示诊断，避免错误信息形成阻断感。
+          Text(
+            l10n.envBrowseNotice,
+            style: context.appTextStyles.body.copyWith(
+              color: context.appColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
 
         if (distributionGuidance != null) ...[
@@ -181,7 +237,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         _buildDetailItem(
           context,
           AppLocalizations.of(context)!.llCliVersion,
-          AppLocalizations.of(context)!.notDetected,
+          result.llCliVersion ?? AppLocalizations.of(context)!.notDetected,
           result.llCliVersion != null,
         ),
 
@@ -200,19 +256,23 @@ class LinglongEnvDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: AppColors.error,
-                      size: 16,
+                    const ExcludeSemantics(
+                      child: Icon(
+                        Icons.error_outline,
+                        color: AppColors.error,
+                        size: 16,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      result.shouldSuggestPackageManagerRestart
-                          ? l10n.repoShowFailureTitle
-                          : l10n.errorMessage,
-                      style: context.appTextStyles.caption.copyWith(
-                        color: AppColors.error,
-                        fontWeight: context.appFontWeight(FontWeight.w500),
+                    Expanded(
+                      child: Text(
+                        result.shouldSuggestPackageManagerRestart
+                            ? l10n.repoShowFailureTitle
+                            : l10n.errorMessage,
+                        style: context.appTextStyles.caption.copyWith(
+                          color: AppColors.error,
+                          fontWeight: context.appFontWeight(FontWeight.w500),
+                        ),
                       ),
                     ),
                   ],
@@ -226,13 +286,25 @@ class LinglongEnvDialog extends ConsumerWidget {
                 ),
                 if (result.errorDetail != null) ...[
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    result.errorDetail ?? '',
-                    style: context.appTextStyles.tiny.copyWith(
-                      color: context.appColors.textTertiary,
+                  Tooltip(
+                    message: result.errorDetail!,
+                    child: SelectableText(
+                      result.errorDetail ?? '',
+                      style: context.appTextStyles.tiny.copyWith(
+                        color: context.appColors.textTertiary,
+                      ),
                     ),
                   ),
                 ],
+                // 诊断允许键盘操作与复制，便于用户查文档或反馈问题。
+                _accessibleAction(
+                  label: l10n.a11yCopyLinglongEnvironmentDiagnostic,
+                  onPressed: () => _copyDiagnostic(l10n, result),
+                  child: TextButton(
+                    onPressed: () => _copyDiagnostic(l10n, result),
+                    child: Text(l10n.copyErrorMessage),
+                  ),
+                ),
               ],
             ),
           ),
@@ -243,6 +315,18 @@ class LinglongEnvDialog extends ConsumerWidget {
           _buildPackageManagerRestartHint(context, ref, envState, result),
         ],
       ],
+    );
+  }
+
+  /// 将当前语言的状态摘要和原始诊断一起复制，便于准确反馈问题。
+  void _copyDiagnostic(AppLocalizations l10n, LinglongEnvCheckResult result) {
+    Clipboard.setData(
+      ClipboardData(
+        text: [
+          localizeLinglongEnvironmentStatus(l10n, result),
+          if (result.errorDetail != null) result.errorDetail!,
+        ].join('\n'),
+      ),
     );
   }
 
@@ -278,7 +362,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+            child: ExcludeSemantics(
+              child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -329,47 +415,57 @@ class LinglongEnvDialog extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   width: double.infinity,
-                  child: TextButton(
-                    onPressed: isRestarting
-                        ? null
-                        : () =>
-                              _handleRestartPackageManagerService(context, ref),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.info,
-                      // 按钮内容随文本方向镜像
-                      alignment: AlignmentDirectional.centerStart,
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 36),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Row(
-                      children: [
-                        if (isRestarting)
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          const Icon(Icons.restart_alt, size: 16),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Text(
-                            isRestarting
-                                ? l10n.restartingPackageManagerService
-                                : l10n.restartPackageManagerService,
-                            softWrap: true,
-                            style: context.appTextStyles.caption.copyWith(
-                              color: isRestarting
-                                  ? context.appColors.textTertiary
-                                  : AppColors.info,
-                              fontWeight: context.appFontWeight(
-                                FontWeight.w500,
+                  child: _accessibleAction(
+                    label: l10n.a11yRestartLinglongPackageManagerService,
+                    enabled: !isRestarting,
+                    onPressed: () =>
+                        _handleRestartPackageManagerService(context, ref),
+                    child: TextButton(
+                      onPressed: isRestarting
+                          ? null
+                          : () => _handleRestartPackageManagerService(
+                              context,
+                              ref,
+                            ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.info,
+                        // 按钮内容随文本方向镜像
+                        alignment: AlignmentDirectional.centerStart,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 36),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Row(
+                        children: [
+                          if (isRestarting)
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else
+                            const ExcludeSemantics(
+                              child: Icon(Icons.restart_alt, size: 16),
+                            ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Expanded(
+                            child: Text(
+                              isRestarting
+                                  ? l10n.restartingPackageManagerService
+                                  : l10n.restartPackageManagerService,
+                              softWrap: true,
+                              style: context.appTextStyles.caption.copyWith(
+                                color: isRestarting
+                                    ? context.appColors.textTertiary
+                                    : AppColors.info,
+                                fontWeight: context.appFontWeight(
+                                  FontWeight.w500,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -408,7 +504,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+            child: ExcludeSemantics(
+              child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -446,10 +544,12 @@ class LinglongEnvDialog extends ConsumerWidget {
         Expanded(
           child: Row(
             children: [
-              Icon(
-                isOk ? Icons.check : Icons.close,
-                color: isOk ? AppColors.success : AppColors.error,
-                size: 14,
+              ExcludeSemantics(
+                child: Icon(
+                  isOk ? Icons.check : Icons.close,
+                  color: isOk ? AppColors.success : AppColors.error,
+                  size: 14,
+                ),
               ),
               const SizedBox(width: AppSpacing.xs),
               Text(
@@ -497,6 +597,14 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          AppLocalizations.of(context)!.envInstallationInProgressNotice,
+          style: context.appTextStyles.caption.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
         if (envState.installLogFilePath != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -520,89 +628,102 @@ class LinglongEnvDialog extends ConsumerWidget {
     );
   }
 
-  /// 构建操作按钮
+  /// 统一动作语义，沿用原有安装与重检流程。
   List<Widget> _buildActions(
     BuildContext context,
     WidgetRef ref,
     LinglongEnvState envState,
   ) {
-    final result = envState.result;
-    final canSkip = result?.canSkip ?? false;
-
+    final l10n = AppLocalizations.of(context)!;
+    final canRepair = !envState.isChecking;
+    final closeLabel = allowBrowse ? l10n.continueBrowsing : l10n.close;
     return [
-      // 退出商店按钮
-      TextButton(
-        onPressed: () => _handleExit(context),
-        child: Text(
-          AppLocalizations.of(context)!.exitStore,
-          style: TextStyle(color: context.appColors.textSecondary),
+      // 浏览始终允许，关闭提醒不会启动任何需要玲珑环境的操作。
+      _accessibleAction(
+        label: allowBrowse ? l10n.a11yContinueBrowsing : l10n.a11yClose,
+        onPressed: () => _handleContinueBrowsing(context, ref),
+        child: TextButton(
+          onPressed: () => _handleContinueBrowsing(context, ref),
+          child: Text(closeLabel),
         ),
       ),
-
-      // 手动安装按钮
-      TextButton.icon(
+      _accessibleAction(
+        label: l10n.a11yManualLinglongEnvironmentInstallation,
         onPressed: () => _handleManualInstall(context, ref),
-        icon: const Icon(Icons.open_in_new, size: 16),
-        label: Text(AppLocalizations.of(context)!.manualInstall),
-        style: TextButton.styleFrom(foregroundColor: AppColors.info),
+        child: TextButton.icon(
+          onPressed: () => _handleManualInstall(context, ref),
+          icon: const ExcludeSemantics(
+            child: Icon(Icons.open_in_new, size: 16),
+          ),
+          label: Text(l10n.manualInstall),
+          style: TextButton.styleFrom(foregroundColor: AppColors.info),
+        ),
       ),
-
       if (envState.installLogFilePath != null)
         _buildOpenInstallLogButton(context, ref, envState.installLogFilePath!),
-
-      // 自动安装按钮
-      FilledButton.icon(
-        onPressed: result?.isOk == true
-            ? null
-            : () => _handleAutoInstall(context, ref),
-        icon: const Icon(Icons.download, size: 16),
-        label: Text(AppLocalizations.of(context)!.autoInstall),
-      ),
-
-      // 重新检测按钮
-      OutlinedButton.icon(
-        onPressed: () => _handleRecheck(context, ref),
-        icon: const Icon(Icons.refresh, size: 16),
-        label: Text(AppLocalizations.of(context)!.recheck),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: context.appColors.textPrimary,
-          side: BorderSide(color: context.appColors.border),
+      _accessibleAction(
+        label: l10n.a11yConfigureLinglongEnvironment,
+        enabled: canRepair && envState.result?.isOk != true,
+        onPressed: () => _handleAutoInstall(context, ref),
+        child: FilledButton.icon(
+          onPressed: canRepair && envState.result?.isOk != true
+              ? () => _handleAutoInstall(context, ref)
+              : null,
+          icon: const ExcludeSemantics(child: Icon(Icons.download, size: 16)),
+          label: Text(l10n.autoInstall),
         ),
       ),
-
-      // 跳过按钮（仅在部分功能可用时显示）
-      if (canSkip)
-        TextButton(
-          onPressed: () => _handleSkip(context, ref),
-          child: Text(
-            AppLocalizations.of(context)!.skipCheck,
-            style: TextStyle(color: context.appColors.textSecondary),
+      _accessibleAction(
+        label: l10n.a11yRecheckLinglongEnvironment,
+        enabled: canRepair,
+        onPressed: () => _handleRecheck(context, ref),
+        child: OutlinedButton.icon(
+          onPressed: canRepair ? () => _handleRecheck(context, ref) : null,
+          icon: const ExcludeSemantics(child: Icon(Icons.refresh, size: 16)),
+          label: Text(l10n.recheck),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: context.appColors.textPrimary,
+            side: BorderSide(color: context.appColors.border),
           ),
         ),
+      ),
     ];
   }
 
+  /// 按钮语义统一使用项目封装，避免各场景遗漏禁用状态。
+  Widget _accessibleAction({
+    required String label,
+    required VoidCallback onPressed,
+    required Widget child,
+    bool enabled = true,
+  }) => A11yButton(
+    semanticsLabel: label,
+    onTap: onPressed,
+    enabled: enabled,
+    child: child,
+  );
+
+  /// 安装期间保留日志入口，便于查看进度和诊断，但不提供虚假的取消。
   Widget _buildOpenInstallLogButton(
     BuildContext context,
     WidgetRef ref,
     String logFilePath,
   ) {
-    return OutlinedButton.icon(
-      onPressed: () =>
-          _handleOpenInstallLogDirectory(context, ref, logFilePath),
-      icon: const Icon(Icons.folder_open, size: 16),
-      label: Text(AppLocalizations.of(context)!.openInstallLogDirectory),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.info,
-        side: const BorderSide(color: AppColors.info),
+    final l10n = AppLocalizations.of(context)!;
+    void openLog() => _handleOpenInstallLogDirectory(context, ref, logFilePath);
+    return _accessibleAction(
+      label: l10n.a11yOpenLinglongInstallLogDirectory,
+      onPressed: openLog,
+      child: OutlinedButton.icon(
+        onPressed: openLog,
+        icon: const ExcludeSemantics(child: Icon(Icons.folder_open, size: 16)),
+        label: Text(l10n.openInstallLogDirectory),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.info,
+          side: const BorderSide(color: AppColors.info),
+        ),
       ),
     );
-  }
-
-  /// 处理退出
-  void _handleExit(BuildContext context) {
-    Navigator.of(context).pop();
-    WindowService.close();
   }
 
   /// 处理手动安装
@@ -663,6 +784,7 @@ class LinglongEnvDialog extends ConsumerWidget {
   /// 处理重新检测
   Future<void> _handleRecheck(BuildContext context, WidgetRef ref) async {
     await ref.read(linglongEnvProvider.notifier).recheck();
+    if (!context.mounted) return;
     // 重新检测后如果环境正常，关闭对话框
     final envState = ref.read(linglongEnvProvider);
     if (envState.result?.isOk ?? false) {
@@ -708,13 +830,13 @@ class LinglongEnvDialog extends ConsumerWidget {
     showAppWarning(context, l10n.packageManagerServiceRestartStillFailed);
   }
 
-  /// 处理跳过
+  /// 关闭环境提醒并继续浏览；真实检测结果保持不变。
   ///
-  /// 跳过环境检测，允许用户继续使用应用
-  /// 注意：跳过后部分功能可能不可用
-  void _handleSkip(BuildContext context, WidgetRef ref) {
-    // 标记环境为"跳过"状态，允许继续启动
-    ref.read(linglongEnvProvider.notifier).skipCheck();
+  /// 仅启动提醒记住本次已浏览，操作提示关闭也不能授权安装或更新。
+  void _handleContinueBrowsing(BuildContext context, WidgetRef ref) {
+    if (allowBrowse) {
+      ref.read(linglongEnvProvider.notifier).skipCheck();
+    }
     Navigator.of(context).pop();
   }
 }

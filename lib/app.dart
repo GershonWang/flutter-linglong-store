@@ -15,6 +15,7 @@ import 'core/platform/native_menu_theme_sync.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
 import 'core/utils/app_notification_helpers.dart';
+import 'presentation/helpers/linglong_environment_access.dart';
 
 /// 玲珑应用商店 MaterialApp 配置
 class LinglongStoreApp extends ConsumerWidget {
@@ -264,6 +265,11 @@ class _OgProtocolInstallBootstrapState
         break;
       case OgInstallEventType.environmentUnavailable:
         showAppWarning(context, l10n.ogInstallEnvironmentUnavailable);
+        // 桥接组件在 Router 外层，借根 Overlay 的上下文展示同一环境引导。
+        final dialogContext = rootNavigatorKey.currentState?.overlay?.context;
+        if (dialogContext != null) {
+          unawaited(ensureLinglongEnvironment(dialogContext, ref));
+        }
         break;
       case OgInstallEventType.duplicate:
         showAppNotification(context, l10n.ogInstallDuplicate(displayName));

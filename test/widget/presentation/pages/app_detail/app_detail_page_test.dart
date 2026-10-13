@@ -8,6 +8,7 @@ import 'package:linglong_store/application/providers/app_uninstall_provider.dart
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
+import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/application/services/app_uninstall_service.dart';
 import 'package:linglong_store/core/config/theme.dart';
@@ -20,6 +21,7 @@ import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/models/uninstall_result.dart';
 import 'package:linglong_store/presentation/pages/app_detail/app_detail_page.dart';
@@ -1086,6 +1088,13 @@ Widget _buildTestApp({
       updateAppsProvider.overrideWith(() => _StaticUpdateApps(updateAppsState)),
       installQueueProvider.overrideWith(() => effectiveInstallQueue),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
+      // 版本操作测试聚焦健康环境的确认与队列规则，环境缺失另有独立回归覆盖。
+      linglongEnvProvider.overrideWithValue(
+        const LinglongEnvState(
+          checkState: LinglongEnvCheckState.success,
+          result: LinglongEnvCheckResult(isOk: true, checkedAt: 1),
+        ),
+      ),
       globalAppProvider.overrideWith(_ChineseGlobalApp.new),
     ],
     child: MaterialApp(

@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:linglong_store/application/providers/app_uninstall_provider.dart';
 import 'package:linglong_store/application/providers/application_card_state_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
+import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/application/providers/running_process_provider.dart';
 import 'package:linglong_store/application/services/app_uninstall_service.dart';
 import 'package:linglong_store/core/config/shell_branch_visibility.dart';
@@ -14,13 +15,46 @@ import 'package:linglong_store/core/config/shell_primary_route.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/models/uninstall_result.dart';
 import 'package:linglong_store/presentation/pages/my_apps/my_apps_page.dart';
 import 'package:linglong_store/presentation/widgets/app_card.dart';
+import 'package:linglong_store/presentation/widgets/linglong_environment_required_view.dart';
+import 'package:linglong_store/presentation/widgets/linglong_process_panel.dart';
 
 void main() {
   group('MyAppsPage app list layout', () {
+    testWidgets('缺环境展示配置入口，切换进程标签仍不挂载本机进程面板', (tester) async {
+      final installedApps = _StaticInstalledApps(apps: const []);
+      await tester.pumpWidget(
+        _buildTestApp(
+          overrides: [
+            linglongEnvProvider.overrideWithValue(
+              const LinglongEnvState(
+                checkState: LinglongEnvCheckState.success,
+                result: LinglongEnvCheckResult(isOk: false, checkedAt: 1),
+              ),
+            ),
+            installedAppsProvider.overrideWith(() => installedApps),
+            runningProcessProvider.overrideWith(_StaticRunningProcess.new),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinglongEnvironmentRequiredView), findsOneWidget);
+      expect(find.text('暂无已安装应用'), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+      expect(installedApps.refreshCalls, 0);
+
+      await tester.tap(find.text('玲珑进程'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LinglongEnvironmentRequiredView), findsOneWidget);
+      expect(find.byType(LinglongProcessPanel), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('keeps vertical spacing between installed app cards', (
       tester,
     ) async {
@@ -184,13 +218,19 @@ class _StaticInstalledApps extends InstalledApps {
 
   final List<InstalledApp> apps;
 
+  /// 缺环境页不得触发本机刷新，即便仓储替身始终成功。
+  int refreshCalls = 0;
+
   @override
   InstalledAppsState build() {
     return InstalledAppsState(apps: apps);
   }
 
   @override
-  Future<bool> refresh() async => true;
+  Future<bool> refresh() async {
+    refreshCalls++;
+    return true;
+  }
 }
 
 class _StaticRunningProcess extends RunningProcess {

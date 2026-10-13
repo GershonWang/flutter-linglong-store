@@ -2611,4 +2611,48 @@ class AppLocalizationsKo extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return '실행 시간 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '스토어 둘러보기, 앱 검색 및 상세 정보 확인은 계속 이용할 수 있습니다. 로컬 앱을 설치, 실행, 관리하거나 업데이트하려면 정상적인 Linglong 환경이 필요합니다.';
+
+  @override
+  String get continueBrowsing => '계속 둘러보기';
+
+  @override
+  String get envRequiredTitle => 'Linglong 환경 필요';
+
+  @override
+  String get envRequiredDescription =>
+      '이 기능에는 로컬 Linglong 환경이 필요합니다. 환경을 설치하거나 복구하면 설치된 앱과 앱 업데이트를 관리할 수 있습니다. 스토어 둘러보기, 앱 검색 및 상세 정보 확인은 계속 이용할 수 있습니다.';
+
+  @override
+  String get configureLinglongEnvironment => '환경 설치 또는 복구';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      '설치 중입니다. 완료될 때까지 기다려 주세요. 설치 중에는 이 알림을 닫을 수 없습니다.';
+
+  @override
+  String get a11yContinueBrowsing => '환경 알림을 닫고 스토어 계속 둘러보기';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => 'Linglong 환경 설치 또는 복구';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Linglong 수동 설치 안내 열기';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => 'Linglong 환경 다시 확인';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => 'Linglong 환경 진단 정보 복사';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => 'Linglong 설치 로그 폴더 열기';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Linglong 패키지 관리자 서비스 다시 시작';
 }

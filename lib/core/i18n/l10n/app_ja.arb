@@ -1413,5 +1413,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "ストアの閲覧、アプリの検索、詳細の確認は引き続き利用できます。ローカルアプリのインストール、実行、管理、更新には、正常な Linglong 環境が必要です。",
+  "continueBrowsing": "閲覧を続ける",
+  "envRequiredTitle": "Linglong 環境が必要です",
+  "envRequiredDescription": "この機能にはローカルの Linglong 環境が必要です。環境をインストールまたは修復すると、インストール済みアプリとアプリ更新を管理できます。ストアの閲覧、アプリの検索、詳細の確認は引き続き利用できます。",
+  "configureLinglongEnvironment": "環境をインストール・修復",
+  "envInstallationInProgressNotice": "インストール中です。完了するまでお待ちください。インストール中はこの通知を閉じられません。",
+  "a11yContinueBrowsing": "環境の通知を閉じてストアの閲覧を続ける",
+  "a11yConfigureLinglongEnvironment": "Linglong 環境をインストールまたは修復",
+  "a11yManualLinglongEnvironmentInstallation": "Linglong の手動インストールガイドを開く",
+  "a11yRecheckLinglongEnvironment": "Linglong 環境を再確認",
+  "a11yCopyLinglongEnvironmentDiagnostic": "Linglong 環境の診断情報をコピー",
+  "a11yOpenLinglongInstallLogDirectory": "Linglong インストールログのフォルダーを開く",
+  "a11yRestartLinglongPackageManagerService": "Linglong パッケージマネージャーサービスを再起動"
 }

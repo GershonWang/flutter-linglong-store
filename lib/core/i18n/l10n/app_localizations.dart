@@ -4657,6 +4657,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已运行 {elapsed}'**
   String repairElapsedTime(String elapsed);
+
+  /// No description provided for @envBrowseNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'你可以继续浏览商店、搜索应用和查看详情。安装、运行、管理本机应用及应用更新需要先安装或修复玲珑环境。'**
+  String get envBrowseNotice;
+
+  /// No description provided for @continueBrowsing.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续浏览'**
+  String get continueBrowsing;
+
+  /// No description provided for @envRequiredTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要玲珑环境'**
+  String get envRequiredTitle;
+
+  /// No description provided for @envRequiredDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'此功能需要本机玲珑环境。安装或修复环境后，即可管理已安装应用和应用更新；你现在仍可浏览商店、搜索应用及查看详情。'**
+  String get envRequiredDescription;
+
+  /// No description provided for @configureLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装或修复环境'**
+  String get configureLinglongEnvironment;
+
+  /// No description provided for @envInstallationInProgressNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装正在进行，请等待完成。安装过程中无法关闭此提示。'**
+  String get envInstallationInProgressNotice;
+
+  /// No description provided for @a11yContinueBrowsing.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭环境提醒并继续浏览商店'**
+  String get a11yContinueBrowsing;
+
+  /// No description provided for @a11yConfigureLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装或修复玲珑环境'**
+  String get a11yConfigureLinglongEnvironment;
+
+  /// No description provided for @a11yManualLinglongEnvironmentInstallation.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开玲珑环境手动安装指南'**
+  String get a11yManualLinglongEnvironmentInstallation;
+
+  /// No description provided for @a11yRecheckLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新检测玲珑环境'**
+  String get a11yRecheckLinglongEnvironment;
+
+  /// No description provided for @a11yCopyLinglongEnvironmentDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制玲珑环境诊断信息'**
+  String get a11yCopyLinglongEnvironmentDiagnostic;
+
+  /// No description provided for @a11yOpenLinglongInstallLogDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开玲珑环境安装日志目录'**
+  String get a11yOpenLinglongInstallLogDirectory;
+
+  /// No description provided for @a11yRestartLinglongPackageManagerService.
+  ///
+  /// In zh, this message translates to:
+  /// **'重启玲珑包管理器服务'**
+  String get a11yRestartLinglongPackageManagerService;
 }
 
 class _AppLocalizationsDelegate

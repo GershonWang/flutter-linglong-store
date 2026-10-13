@@ -1,8 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import 'application_dependency_providers.dart';
+import 'linglong_env_provider.dart';
 import 'setting_provider.dart';
 
 part 'installed_apps_provider.g.dart';
@@ -52,6 +54,16 @@ class InstalledApps extends _$InstalledApps {
 
   @override
   InstalledAppsState build() {
+    // 环境失效后旧快照不能继续影响商店的「已安装」按钮，且在途 CLI 响应须作废。
+    ref.listen(linglongEnvProvider.select((env) => env.isUnavailable), (
+      previous,
+      unavailable,
+    ) {
+      if (unavailable) {
+        _latestRequestId++;
+        state = const InstalledAppsState();
+      }
+    });
     return const InstalledAppsState();
   }
 
@@ -62,6 +74,10 @@ class InstalledApps extends _$InstalledApps {
   /// 失败（含被更新的请求取代）时保留调用前的 `apps`，只更新 loading/error，
   /// 调用方仍能读到"最后一次成功快照"，但不会被误导为最新事实。
   Future<bool> refresh() async {
+    // 检测未完成时保留既有行为；已明确缺环境时不重复启动注定失败的 CLI。
+    if (ref.read(linglongEnvProvider).isUnavailable) {
+      return false;
+    }
     final requestId = ++_latestRequestId;
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -71,18 +87,23 @@ class InstalledApps extends _$InstalledApps {
       final showBase = ref.read(settingProvider).showBaseService;
       final apps = await repo.getInstalledApps(includeBaseService: showBase);
 
+      // 环境可能在 CLI 等待期间失效，避免继续详情富化及落入过期快照。
+      if (!_canApplyRequest(requestId)) {
+        return false;
+      }
+
       // 通过 API 获取应用详情（图标、中文名等），富化已安装应用列表
       final appRepo = ref.read(appRepositoryProvider);
       final enrichedApps = await appRepo.enrichInstalledAppsWithDetails(apps);
 
-      if (requestId != _latestRequestId) {
+      if (!_canApplyRequest(requestId)) {
         return false;
       }
 
       state = InstalledAppsState(apps: enrichedApps, isLoading: false);
       return true;
     } catch (e) {
-      if (requestId != _latestRequestId) {
+      if (!_canApplyRequest(requestId)) {
         return false;
       }
 
@@ -90,6 +111,12 @@ class InstalledApps extends _$InstalledApps {
       return false;
     }
   }
+
+  /// 环境切换与并发刷新共同决定结果是否仍属于当前可用的本机快照。
+  bool _canApplyRequest(int requestId) =>
+      ref.mounted &&
+      requestId == _latestRequestId &&
+      !ref.read(linglongEnvProvider).isUnavailable;
 
   /// 从列表中移除应用（卸载后调用）。
   ///

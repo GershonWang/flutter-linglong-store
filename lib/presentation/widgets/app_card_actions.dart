@@ -6,6 +6,7 @@ import '../../application/providers/application_dependency_providers.dart'
 import '../../application/providers/app_operation_queue_provider.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_task.dart';
+import '../helpers/linglong_environment_access.dart';
 import 'install_to_download_flyout.dart';
 import 'install_button.dart';
 
@@ -19,6 +20,15 @@ Future<void> handleAppCardPrimaryAction({
   required GlobalKey sourceIconKey,
   String? icon,
 }) async {
+  // 点击时统一读取环境快照；浏览卡片不会触发额外订阅或 CLI 检测。
+  if (buttonState == InstallButtonState.notInstalled ||
+      buttonState == InstallButtonState.update ||
+      buttonState == InstallButtonState.installed ||
+      buttonState == InstallButtonState.open) {
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
+  }
   final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
 
   switch (buttonState) {

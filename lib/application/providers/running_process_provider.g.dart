@@ -65,7 +65,7 @@ final class RunningProcessProvider
   }
 }
 
-String _$runningProcessHash() => r'6fdcb40a01259d7ca2ee2b2ad9d10860a27b80d7';
+String _$runningProcessHash() => r'ba08dd8ee763f7e0d89e2af805b7dc5c72b19050';
 
 /// 运行中进程 Provider
 ///

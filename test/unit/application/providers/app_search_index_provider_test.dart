@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -180,14 +181,16 @@ void main() {
       ]);
       // 带 TTL 写入模拟真实路径：新鲜期内 get 不会过期
       await Hive.lazyBox('cache').put('search_index_compact_v1', compactJson);
-      await Hive.lazyBox('cache').put('search_index_compact_v1_ttl',
-          DateTime.now().millisecondsSinceEpoch + 3600 * 1000);
+      await Hive.lazyBox('cache').put(
+        'search_index_compact_v1_ttl',
+        DateTime.now().millisecondsSinceEpoch + 3600 * 1000,
+      );
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      // 缓存读取是异步磁盘 IO，需要等事件队列跑完再断言水合结果。
+      // 等待真实水合通知，避免并行测试负载导致固定事件队列次数不够。
       container.listen(appSearchIndexProvider, (_, _) {});
-      await pumpEventQueue();
+      await _waitForIndexData(container);
 
       final state = container.read(appSearchIndexProvider);
 
@@ -213,7 +216,7 @@ void main() {
       addTearDown(container.dispose);
 
       container.listen(appSearchIndexProvider, (_, _) {});
-      await pumpEventQueue();
+      await _waitForIndexData(container);
 
       final state = container.read(appSearchIndexProvider);
       expect(state, isA<AsyncData<List<SearchSuggestionEntry>>>());
@@ -224,4 +227,19 @@ void main() {
       expect(await Hive.lazyBox('cache').get('search_index_json'), isNull);
     });
   });
+}
+
+/// 磁盘 IO 和 isolate 启动耗时随测试负载变化，等待结果并设置明确超时。
+Future<void> _waitForIndexData(ProviderContainer container) async {
+  final hydrated = Completer<void>();
+  final subscription = container.listen(appSearchIndexProvider, (_, next) {
+    if (next.hasValue && !hydrated.isCompleted) {
+      hydrated.complete();
+    }
+  }, fireImmediately: true);
+  try {
+    await hydrated.future.timeout(const Duration(seconds: 5));
+  } finally {
+    subscription.close();
+  }
 }

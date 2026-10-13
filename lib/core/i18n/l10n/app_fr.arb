@@ -1413,5 +1413,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "Vous pouvez continuer à parcourir la boutique, rechercher des applications et consulter leurs détails. Un environnement Linglong opérationnel est nécessaire pour installer, exécuter et gérer les applications locales ou leurs mises à jour.",
+  "continueBrowsing": "Continuer à parcourir",
+  "envRequiredTitle": "Environnement Linglong requis",
+  "envRequiredDescription": "Cette fonction nécessite un environnement Linglong local. Installez-le ou réparez-le pour gérer les applications installées et leurs mises à jour. Vous pouvez toujours parcourir la boutique, rechercher des applications et consulter leurs détails.",
+  "configureLinglongEnvironment": "Installer ou réparer l’environnement",
+  "envInstallationInProgressNotice": "L’installation est en cours. Veuillez attendre la fin. Cet avis ne peut pas être fermé pendant l’installation.",
+  "a11yContinueBrowsing": "Fermer l’avis sur l’environnement et continuer à parcourir la boutique",
+  "a11yConfigureLinglongEnvironment": "Installer ou réparer l’environnement Linglong",
+  "a11yManualLinglongEnvironmentInstallation": "Ouvrir le guide d’installation manuelle de Linglong",
+  "a11yRecheckLinglongEnvironment": "Vérifier à nouveau l’environnement Linglong",
+  "a11yCopyLinglongEnvironmentDiagnostic": "Copier le diagnostic de l’environnement Linglong",
+  "a11yOpenLinglongInstallLogDirectory": "Ouvrir le dossier des journaux d’installation de Linglong",
+  "a11yRestartLinglongPackageManagerService": "Redémarrer le service du gestionnaire de paquets Linglong"
 }

@@ -43,7 +43,7 @@ final class SettingProvider extends $NotifierProvider<Setting, SettingState> {
   }
 }
 
-String _$settingHash() => r'9fa748a3c955d3889c44e250c214c648bb8fbb65';
+String _$settingHash() => r'd23ac81c5d3c0f3f9e8a065eda8b977219487010';
 
 /// 设置页面状态管理 Provider
 

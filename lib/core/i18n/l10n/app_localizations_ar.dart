@@ -2876,4 +2876,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'مضى ⁨$elapsed⁩';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'يمكنك متابعة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها. يتطلب تثبيت التطبيقات المحلية وتشغيلها وإدارتها أو تحديثها بيئة ⁨Linglong⁩ سليمة.';
+
+  @override
+  String get continueBrowsing => 'متابعة التصفح';
+
+  @override
+  String get envRequiredTitle => 'بيئة ⁨Linglong⁩ مطلوبة';
+
+  @override
+  String get envRequiredDescription =>
+      'تتطلب هذه الميزة بيئة ⁨Linglong⁩ محلية. ثبّتها أو أصلحها لإدارة التطبيقات المثبتة وتحديثاتها. يمكنك مواصلة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها.';
+
+  @override
+  String get configureLinglongEnvironment => 'تثبيت البيئة أو إصلاحها';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'التثبيت جارٍ. يرجى الانتظار حتى اكتماله. لا يمكن إغلاق هذا الإشعار أثناء التثبيت.';
+
+  @override
+  String get a11yContinueBrowsing => 'إغلاق إشعار البيئة ومتابعة تصفح المتجر';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'تثبيت بيئة ⁨Linglong⁩ أو إصلاحها';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'فتح دليل التثبيت اليدوي لبيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => 'إعادة فحص بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'نسخ معلومات تشخيص بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'فتح مجلد سجل تثبيت بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'إعادة تشغيل خدمة مدير حزم ⁨Linglong⁩';
 }

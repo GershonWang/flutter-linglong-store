@@ -23,6 +23,8 @@ import '../services/app_operation_task_executor.dart';
 import 'application_dependency_providers.dart';
 import 'auto_prune_preference_provider.dart';
 import 'linglong_cli_capabilities_provider.dart';
+import 'linglong_env_provider.dart';
+import 'launch_provider.dart';
 import 'global_provider.dart' show currentLocaleProvider;
 
 part 'install_queue_provider.g.dart';
@@ -55,6 +57,13 @@ InstallMessages installMessages(Ref ref) {
 /// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
 @Riverpod(keepAlive: true)
 class InstallQueue extends _$InstallQueue {
+  /// 环境刚修复时仍需等待本机快照与旧任务核验，不能提前启动新任务。
+  bool get _isEnvironmentPaused {
+    final env = ref.read(linglongEnvProvider);
+    return env.isUnavailable ||
+        (env.isReady && ref.read(launchSequenceProvider).isBrowseOnly);
+  }
+
   @override
   InstallQueueState build() {
     ref.onDispose(_disposeResources);
@@ -91,6 +100,9 @@ class InstallQueue extends _$InstallQueue {
 
   /// 当前唯一活动的 CLI 单任务执行器。
   AppOperationTaskExecutor? _activeExecutor;
+
+  /// 标记已在本进程出队但尚在等待落盘的任务，避免被环境恢复当作崩溃任务。
+  String? _preparingTaskId;
 
   /// 终态提交后的下一任务延迟调度器。
   Timer? _nextTaskTimer;
@@ -262,6 +274,8 @@ class InstallQueue extends _$InstallQueue {
     bool force = false,
     bool? noAutoPrune,
   }) {
+    // UI 之外的协议、历史重试与批次入口也必须尊重已知环境故障。
+    if (_isEnvironmentPaused) return '';
     // 用户明确点击安装/更新：解除上一次授权失败留下的运行时暂停（§10.2）。
     _clearAuthorizationGate();
     // 检查是否已在队列中
@@ -310,6 +324,7 @@ class InstallQueue extends _$InstallQueue {
 
   /// 批量入队安装/更新任务。
   List<String> enqueueBatchOperations(List<EnqueueTaskParams> tasksParams) {
+    if (_isEnvironmentPaused) return const [];
     // 批量更新同样是用户明确发起的动作，先解除授权门闩。
     _clearAuthorizationGate();
     if (tasksParams.any((params) => params.kind != InstallTaskKind.update)) {
@@ -399,13 +414,16 @@ class InstallQueue extends _$InstallQueue {
   ///
   /// 严格串行安装：同一时间只处理一个任务
   Future<void> startProcessing() async {
-    // 队列完成后会延迟调度下一轮处理；页面/测试容器释放后不能再访问 ref。
     if (!ref.mounted) return;
+    // 保留等待任务，环境恢复并完成事实核验后再消费，不能制造失败记录。
+    if (_isEnvironmentPaused) return;
+    // 队列完成后会延迟调度下一轮处理；页面/测试容器释放后不能再访问 ref。
     await processQueue();
   }
 
   /// 处理队列
   Future<void> processQueue() async {
+    if (!ref.mounted || _isEnvironmentPaused) return;
     // 授权门闩：授权被取消或授权组件不可用时，pending 任务保留但不自动消费，
     // 避免故障时连续弹出授权窗口；用户明确入队/重试时在入队入口解除（§10.2）。
     if (_authorizationGatePaused) {
@@ -429,6 +447,9 @@ class InstallQueue extends _$InstallQueue {
       return;
     }
 
+    // 落盘等待期间环境可能失效，任务仍应保留在 pending 队列。
+    if (!ref.mounted || _isEnvironmentPaused) return;
+
     // 如果已经在处理中，或者有当前任务，直接返回
     if (state.isProcessing || state.currentTask != null) {
       AppLogger.info('Already processing or has current task, skipping');
@@ -449,7 +470,9 @@ class InstallQueue extends _$InstallQueue {
   ///
   /// 从队列中取出任务并执行，更新进度状态
   Future<void> processInstallTask(InstallTask task) async {
+    if (!ref.mounted || _isEnvironmentPaused) return;
     final previousState = state;
+    _preparingTaskId = task.id;
 
     // 更新状态为安装中
     final installingTask = task.copyWith(
@@ -473,9 +496,23 @@ class InstallQueue extends _$InstallQueue {
       if (state.currentTask?.id == task.id) {
         state = previousState;
       }
+      _preparingTaskId = null;
       return;
     }
     if (!ref.mounted || state.currentTask?.id != task.id) {
+      _preparingTaskId = null;
+      return;
+    }
+    if (_isEnvironmentPaused) {
+      // 尚未创建执行器时回到等待态；保留等待期间新加入的任务，不能回写旧快照。
+      _commitState(
+        state.copyWith(
+          queue: [task, ...state.queue.where((item) => item.id != task.id)],
+          clearCurrentTask: true,
+          isProcessing: false,
+        ),
+      );
+      _preparingTaskId = null;
       return;
     }
 
@@ -491,6 +528,7 @@ class InstallQueue extends _$InstallQueue {
     );
     _activeExecutor?.dispose();
     _activeExecutor = executor;
+    _preparingTaskId = null;
     try {
       await executor.execute(_handleExecutionEvent);
     } finally {
@@ -902,6 +940,14 @@ class InstallQueue extends _$InstallQueue {
   ///
   /// 在应用启动时调用，检查是否有未完成的任务
   Future<void> checkRecovery(List<InstalledApp> installedApps) async {
+    // 浏览模式没有可信本机快照，不能把未核验的恢复任务判为成功或失败。
+    if (ref.read(linglongEnvProvider).isUnavailable) return;
+    // 只核验上次进程遗留的任务，环境修复不能打断本进程仍活着的传输或落盘。
+    if (_activeExecutor != null ||
+        (_preparingTaskId != null &&
+            _preparingTaskId == state.currentTask?.id)) {
+      return;
+    }
     final persistedTask = state.currentTask;
     if (persistedTask == null) {
       AppLogger.info('No persisted task to recover');
@@ -968,6 +1014,8 @@ class InstallQueue extends _$InstallQueue {
 
   /// 按任务 ID 重试失败记录，并保留原始 install/update 类型与版本参数。
   void retryFailedTask(String taskId) {
+    // 缺环境时保留原历史记录，避免先删除失败任务再发现无法入队。
+    if (_isEnvironmentPaused) return;
     final failedTask = state.history
         .where((task) => task.id == taskId)
         .firstOrNull;

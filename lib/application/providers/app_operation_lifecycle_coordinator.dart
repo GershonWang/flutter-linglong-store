@@ -21,6 +21,7 @@ import 'application_dependency_providers.dart';
 import 'app_collection_sync_provider.dart';
 import 'global_provider.dart';
 import 'install_queue_provider.dart';
+import 'linglong_env_provider.dart';
 import 'update_apps_provider.dart';
 
 /// 一键更新通知内容策略 Provider。
@@ -49,8 +50,17 @@ class AppOperationLifecycleCoordinator {
   /// 防止 Provider 连续变更时启动多个并发消费者。
   bool _isDraining = false;
 
+  /// 环境修复及本机事实核验完成后唤醒原有消费者，不重复注册监听。
+  void resumePendingEffects() => _scheduleDrain();
+
   /// 启动队列 Outbox 监听。
   void start() {
+    _ref.listen<bool>(linglongEnvProvider.select((state) => state.isReady), (
+      previous,
+      next,
+    ) {
+      if (next && previous == false) resumePendingEffects();
+    });
     _ref.listen<InstallQueueState>(installQueueProvider, (previous, next) {
       if (next.outbox.isNotEmpty) {
         _scheduleDrain();
@@ -60,7 +70,7 @@ class AppOperationLifecycleCoordinator {
 
   /// 把消费延迟到当前 Provider 更新完成后，避免在监听回调中同步改写源状态。
   void _scheduleDrain() {
-    if (_isDraining) {
+    if (!_ref.mounted || _isDraining) {
       return;
     }
     Future.microtask(_drain);
@@ -68,16 +78,23 @@ class AppOperationLifecycleCoordinator {
 
   /// 严格按 Journal 顺序消费事件；单条失败不得阻断后续批次通知。
   Future<void> _drain() async {
-    if (_isDraining) {
+    if (!_ref.mounted ||
+        _isDraining ||
+        _ref.read(linglongEnvProvider).isUnavailable) {
       return;
     }
     _isDraining = true;
     try {
       while (true) {
+        // 保留 Outbox 直到本机能力恢复，不能在浏览模式自动启动历史应用。
+        if (_ref.read(linglongEnvProvider).isUnavailable) break;
         final queueNotifier = _ref.read(installQueueProvider.notifier);
         // Outbox 事件、上一次确认结果和等待期间产生的更新必须先成为 durable
         // state，再决定是否执行下一个不可逆副作用。
         await queueNotifier.waitForPendingPersistence();
+        if (!_ref.mounted || _ref.read(linglongEnvProvider).isUnavailable) {
+          break;
+        }
         final queueState = _ref.read(installQueueProvider);
         if (queueState.outbox.isEmpty) {
           break;
@@ -87,6 +104,9 @@ class AppOperationLifecycleCoordinator {
         queueNotifier.markEffectAttempt(effect.id);
         // 尝试次数与事件本身属于同一 Journal 协议；记录成功后才允许对外执行。
         await queueNotifier.waitForPendingPersistence();
+        if (!_ref.mounted || _ref.read(linglongEnvProvider).isUnavailable) {
+          break;
+        }
 
         switch (effect.type) {
           case AppOperationEffectType.taskSucceeded:
@@ -131,6 +151,9 @@ class AppOperationLifecycleCoordinator {
         updateTargets: _updateTargetsOf(task),
       );
     }
+
+    // 集合同步可能等待网络，此时环境失效应保留事件，不能继续自动启动。
+    if (!_ref.mounted || _ref.read(linglongEnvProvider).isUnavailable) return;
 
     final preferences = _ref.read(globalAppProvider).userPreferences;
     if (preferences.autoRunAfterInstall &&

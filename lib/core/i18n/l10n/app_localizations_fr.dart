@@ -2821,4 +2821,54 @@ class AppLocalizationsFr extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Temps d\'exécution $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'Vous pouvez continuer à parcourir la boutique, rechercher des applications et consulter leurs détails. Un environnement Linglong opérationnel est nécessaire pour installer, exécuter et gérer les applications locales ou leurs mises à jour.';
+
+  @override
+  String get continueBrowsing => 'Continuer à parcourir';
+
+  @override
+  String get envRequiredTitle => 'Environnement Linglong requis';
+
+  @override
+  String get envRequiredDescription =>
+      'Cette fonction nécessite un environnement Linglong local. Installez-le ou réparez-le pour gérer les applications installées et leurs mises à jour. Vous pouvez toujours parcourir la boutique, rechercher des applications et consulter leurs détails.';
+
+  @override
+  String get configureLinglongEnvironment =>
+      'Installer ou réparer l’environnement';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'L’installation est en cours. Veuillez attendre la fin. Cet avis ne peut pas être fermé pendant l’installation.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Fermer l’avis sur l’environnement et continuer à parcourir la boutique';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Installer ou réparer l’environnement Linglong';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Ouvrir le guide d’installation manuelle de Linglong';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Vérifier à nouveau l’environnement Linglong';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Copier le diagnostic de l’environnement Linglong';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Ouvrir le dossier des journaux d’installation de Linglong';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Redémarrer le service du gestionnaire de paquets Linglong';
 }

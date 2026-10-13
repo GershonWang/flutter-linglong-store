@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
@@ -6,6 +7,7 @@ import '../../domain/models/installed_app.dart';
 import 'application_dependency_providers.dart';
 import 'ignored_updates_provider.dart';
 import 'installed_apps_provider.dart';
+import 'linglong_env_provider.dart';
 
 part 'update_apps_provider.g.dart';
 
@@ -94,6 +96,16 @@ class UpdateApps extends _$UpdateApps {
 
   @override
   UpdateAppsState build() {
+    // 缺环境时清掉本机更新结论，不能把空列表解释为「全部为最新版本」。
+    ref.listen(linglongEnvProvider.select((env) => env.isUnavailable), (
+      previous,
+      unavailable,
+    ) {
+      if (unavailable) {
+        _latestRequestId++;
+        state = const UpdateAppsState();
+      }
+    });
     return const UpdateAppsState();
   }
 
@@ -101,6 +113,10 @@ class UpdateApps extends _$UpdateApps {
   ///
   /// 比较已安装应用与远程最新版本，返回可更新列表
   Future<void> checkUpdates() async {
+    // 未配置玲珑时无可信本机版本可比较，跳过 CLI 与远端更新检查。
+    if (ref.read(linglongEnvProvider).isUnavailable) {
+      return;
+    }
     final requestId = ++_latestRequestId;
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -112,6 +128,11 @@ class UpdateApps extends _$UpdateApps {
         // 如果没有已安装应用，先刷新
         await ref.read(installedAppsProvider.notifier).refresh();
         installedApps = ref.read(installedAppsProvider).apps;
+      }
+
+      // 本机刷新等待期间的环境变更使整个比较失效，避免产生无效网络请求。
+      if (!_canApplyRequest(requestId)) {
+        return;
       }
 
       final latestInstalledApps = _retainLatestInstalledApps(installedApps);
@@ -131,7 +152,7 @@ class UpdateApps extends _$UpdateApps {
           .toList();
 
       // 只允许最新一次检查落状态，避免旧请求覆盖新结果。
-      if (requestId != _latestRequestId) {
+      if (!_canApplyRequest(requestId)) {
         return;
       }
 
@@ -142,7 +163,7 @@ class UpdateApps extends _$UpdateApps {
       );
     } catch (e, s) {
       AppLogger.error('检查更新失败', e, s);
-      if (requestId != _latestRequestId) {
+      if (!_canApplyRequest(requestId)) {
         return;
       }
       state = state.copyWith(
@@ -152,6 +173,12 @@ class UpdateApps extends _$UpdateApps {
       );
     }
   }
+
+  /// 防止环境恢复后仍被上一次不可用环境的更新响应覆盖。
+  bool _canApplyRequest(int requestId) =>
+      ref.mounted &&
+      requestId == _latestRequestId &&
+      !ref.read(linglongEnvProvider).isUnavailable;
 
   /// 从远程检查更新
   Future<List<UpdatableApp>> _checkUpdatesFromRemote(

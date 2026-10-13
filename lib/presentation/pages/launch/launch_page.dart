@@ -1,3 +1,11 @@
+/// 启动进度展示与首页导航。
+///
+/// 环境提醒在首页路由稳定后展示，使未安装玲珑的用户仍能进入商店，
+/// 并避免启动页销毁时弹窗被旧路由带走。
+library;
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,7 +18,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
-import '../../widgets/linglong_env_dialog.dart';
+import '../../helpers/linglong_environment_access.dart';
 
 /// 启动页面
 ///
@@ -37,8 +45,8 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// Logo 透明度动画
   late final Animation<double> _logoOpacityAnimation;
 
-  /// 环境对话框是否已显示
-  bool _envDialogShown = false;
+  /// 本次启动只安排一次首页导航和提醒，恢复本机能力时不重复打断用户。
+  bool _navigationScheduled = false;
 
   /// 应用版本号（动态获取）
   String _appVersion = AppConfig.appVersion;
@@ -101,13 +109,36 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 启动初始化序列
   Future<void> _startLaunchSequence() async {
     await ref.read(launchSequenceProvider.notifier).runSequence();
+    if (mounted && ref.read(launchSequenceProvider).isCompleted) {
+      _scheduleHomeNavigation();
+    }
   }
 
-  /// 导航到主页
+  /// 在首个完成帧导航，移除额外等待并兼容已经完成的 Provider 状态。
+  void _scheduleHomeNavigation() {
+    if (_navigationScheduled) return;
+    _navigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _navigateToHome();
+    });
+  }
+
+  /// 先进入首页，再使用稳定的根导航上下文展示本次启动的环境提醒。
   void _navigateToHome() {
-    if (mounted) {
-      context.go(AppRoutes.recommend);
-    }
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final container = ProviderScope.containerOf(context);
+    context.go(AppRoutes.recommend);
+
+    // 启动页会随 go() 销毁；持有根 Navigator 与应用容器，而非使用旧页面的 ref/context。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!navigator.mounted ||
+          !container.read(linglongEnvProvider).shouldShowDialog) {
+        return;
+      }
+      unawaited(
+        showLinglongEnvironmentDialog(navigator.context, allowBrowse: true),
+      );
+    });
   }
 
   @override
@@ -117,21 +148,10 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
     // 监听启动完成
     ref.listen<LaunchState>(launchSequenceProvider, (previous, next) {
-      if (next.isCompleted && !next.hasError) {
-        // 延迟一小段时间后跳转，让用户看到完成状态
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            _navigateToHome();
-          }
-        });
-      }
-    });
-
-    // 监听环境检测状态，显示对话框
-    ref.listen<LinglongEnvState>(linglongEnvProvider, (previous, next) {
-      if (next.shouldShowDialog && !_envDialogShown) {
-        _envDialogShown = true;
-        _showEnvDialog();
+      if (next.isCompleted &&
+          !next.hasError &&
+          !(previous?.isCompleted ?? false)) {
+        _scheduleHomeNavigation();
       }
     });
 
@@ -153,17 +173,6 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
         ),
       ),
     );
-  }
-
-  /// 显示环境检测对话框
-  Future<void> _showEnvDialog() async {
-    await LinglongEnvDialog.show(context);
-    // 对话框关闭后，如果环境正常或用户跳过则继续启动
-    final envState = ref.read(linglongEnvProvider);
-    if (envState.canContinue) {
-      ref.read(launchSequenceProvider.notifier).continueAfterEnvCheck();
-    }
-    _envDialogShown = false;
   }
 
   /// 构建内容

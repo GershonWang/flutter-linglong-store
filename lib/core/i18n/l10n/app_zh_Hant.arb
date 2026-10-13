@@ -1668,5 +1668,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "你可以繼續瀏覽商店、搜尋應用程式及查看詳情。安裝、執行、管理本機應用程式及應用程式更新需要先安裝或修復玲瓏環境。",
+  "continueBrowsing": "繼續瀏覽",
+  "envRequiredTitle": "需要玲瓏環境",
+  "envRequiredDescription": "此功能需要本機玲瓏環境。安裝或修復環境後，即可管理已安裝應用程式及應用程式更新；你現在仍可瀏覽商店、搜尋應用程式及查看詳情。",
+  "configureLinglongEnvironment": "安裝或修復環境",
+  "envInstallationInProgressNotice": "安裝正在進行，請等待完成。安裝過程中無法關閉此提示。",
+  "a11yContinueBrowsing": "關閉環境提醒並繼續瀏覽商店",
+  "a11yConfigureLinglongEnvironment": "安裝或修復玲瓏環境",
+  "a11yManualLinglongEnvironmentInstallation": "開啟玲瓏環境手動安裝指南",
+  "a11yRecheckLinglongEnvironment": "重新偵測玲瓏環境",
+  "a11yCopyLinglongEnvironmentDiagnostic": "複製玲瓏環境診斷資訊",
+  "a11yOpenLinglongInstallLogDirectory": "開啟玲瓏環境安裝記錄目錄",
+  "a11yRestartLinglongPackageManagerService": "重新啟動玲瓏套件管理員服務"
 }

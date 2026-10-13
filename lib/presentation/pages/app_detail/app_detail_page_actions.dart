@@ -25,6 +25,7 @@ import '../../../domain/models/install_button_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../helpers/app_uninstall_flow.dart';
+import '../../helpers/linglong_environment_access.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/install_to_download_flyout.dart';
 import 'app_detail_page_logic.dart';
@@ -70,12 +71,19 @@ class AppDetailPageActions {
   }
 
   /// 根据头部按钮状态执行默认安装、更新或打开应用。
-  void handlePrimaryAction(
+  Future<void> handlePrimaryAction(
     BuildContext context, {
     required InstalledApp app,
     required InstallButtonState buttonState,
     required GlobalKey installSourceKey,
-  }) {
+  }) async {
+    // 安装与更新在入队前检查环境，避免体验模式产生注定失败的任务。
+    if (buttonState == InstallButtonState.notInstalled ||
+        buttonState == InstallButtonState.update) {
+      if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+        return;
+      }
+    }
     switch (buttonState) {
       case InstallButtonState.notInstalled:
         final taskId = ref
@@ -128,6 +136,10 @@ class AppDetailPageActions {
 
   /// 通过仓库端口打开应用并展示启动反馈。
   Future<void> openApp(BuildContext context, InstalledApp app) async {
+    // 已安装快照可能来自之前的环境，不能据此绕过当前运行环境检查。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     try {
       await ref.read(linglongCliRepositoryProvider).runApp(app.appId);
       if (context.mounted) {
@@ -147,6 +159,10 @@ class AppDetailPageActions {
     required String version,
     required GlobalKey installSourceKey,
   }) async {
+    // 先提示环境缺失，再处理版本确认，减少无效确认与队列写入。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final installedVersions = ref
         .read(installedAppsListProvider)
         .where((candidate) => candidate.appId == app.appId)
@@ -202,6 +218,10 @@ class AppDetailPageActions {
     required dm.AppDetail? detail,
     required String version,
   }) async {
+    // 浏览模式下本地快照为空，优先解释环境要求而不是误报目标版本丢失。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final targetApp = _resolveInstalledVersionTarget(
       currentApp: currentApp,
       detail: detail,
@@ -225,6 +245,10 @@ class AppDetailPageActions {
     BuildContext context,
     InstalledApp app,
   ) async {
+    // 环境提示应先于安装实例解析，避免缺环境时出现误导性的卸载错误。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final target = _resolvePrimaryInstalledInstance(app);
     if (target == null) {
       if (!context.mounted) return;
@@ -286,6 +310,10 @@ class AppDetailPageActions {
 
   /// 创建符合 XDG 目录规则的桌面快捷方式并展示结果。
   Future<void> createShortcut(BuildContext context, InstalledApp app) async {
+    // 快捷方式依赖本机玲珑导出文件，体验模式只允许查看远端详情。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     try {
       await ref
@@ -418,6 +446,7 @@ class AppDetailPageActions {
       context,
       app,
       service,
+      ref: ref,
       includeVersion: includeVersion,
     );
     if (!context.mounted) return;

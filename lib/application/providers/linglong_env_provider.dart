@@ -89,6 +89,12 @@ class LinglongEnvState {
   /// 是否允许继续启动（环境正常或用户跳过）
   bool get canContinue => (result?.isOk ?? false) || wasSkipped;
 
+  /// 仅真实检测通过才能执行本机操作；继续浏览不会赋予环境能力。
+  bool get isReady => result?.isOk ?? false;
+
+  /// 区分尚未检测与已知不可用，避免重新检测期间短暂放行本机操作。
+  bool get isUnavailable => result != null && !result!.isOk;
+
   LinglongEnvState copyWith({
     LinglongEnvCheckState? checkState,
     LinglongEnvCheckResult? result,
@@ -160,19 +166,26 @@ final linglongInstallLogServiceProvider = Provider<LinglongInstallLogService>((
 /// 负责检测和管理玲珑运行环境状态
 @Riverpod(keepAlive: true)
 class LinglongEnv extends _$LinglongEnv {
+  /// 合并同时发起的检测；列表和多次点击不能重复启动 CLI 探测。
+  Future<LinglongEnvCheckResult>? _checkInFlight;
+
   @override
   LinglongEnvState build() {
     return const LinglongEnvState();
   }
 
   /// 检测玲珑环境
-  Future<LinglongEnvCheckResult> checkEnvironment() async {
+  Future<LinglongEnvCheckResult> checkEnvironment() {
+    return _checkInFlight ??= _performEnvironmentCheck().whenComplete(() {
+      _checkInFlight = null;
+    });
+  }
+
+  /// 重新检测时保留上一次能力快照，结果发布后再切换页面和后台任务。
+  Future<LinglongEnvCheckResult> _performEnvironmentCheck() async {
     AppLogger.info('开始检测玲珑环境...');
 
-    state = state.copyWith(
-      checkState: LinglongEnvCheckState.checking,
-      clearResult: true,
-    );
+    state = state.copyWith(checkState: LinglongEnvCheckState.checking);
 
     try {
       final result = await ref
@@ -284,6 +297,8 @@ class LinglongEnv extends _$LinglongEnv {
   /// 通过执行安装脚本安装玲珑环境
   /// 返回是否成功
   Future<bool> performAutoInstall() async {
+    // 防止不同入口同时运行安装脚本；禁用按钮之外仍需业务层保护。
+    if (state.isInstalling) return false;
     AppLogger.info('开始自动安装玲珑环境...');
 
     state = state.copyWith(

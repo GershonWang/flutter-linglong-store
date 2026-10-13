@@ -1383,5 +1383,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "You can continue browsing the store, searching for apps, and viewing details. Installing, running, and managing local apps or app updates requires a working Linglong environment.",
+  "continueBrowsing": "Continue browsing",
+  "envRequiredTitle": "Linglong environment required",
+  "envRequiredDescription": "This feature requires a local Linglong environment. Install or repair it to manage installed apps and app updates. You can still browse the store, search for apps, and view details.",
+  "configureLinglongEnvironment": "Install or repair environment",
+  "envInstallationInProgressNotice": "Installation is in progress. Please wait until it finishes. This notice cannot be closed during installation.",
+  "a11yContinueBrowsing": "Close the environment notice and continue browsing the store",
+  "a11yConfigureLinglongEnvironment": "Install or repair the Linglong environment",
+  "a11yManualLinglongEnvironmentInstallation": "Open the manual Linglong installation guide",
+  "a11yRecheckLinglongEnvironment": "Check the Linglong environment again",
+  "a11yCopyLinglongEnvironmentDiagnostic": "Copy Linglong environment diagnostics",
+  "a11yOpenLinglongInstallLogDirectory": "Open the Linglong installation log folder",
+  "a11yRestartLinglongPackageManagerService": "Restart the Linglong package manager service"
 }

@@ -14,6 +14,7 @@ import '../../../../core/i18n/l10n/app_localizations.dart';
 import '../../../../core/utils/app_notification_helpers.dart';
 import '../../../widgets/confirm_dialog.dart';
 import '../../../widgets/copyable_command_block.dart';
+import '../../../helpers/linglong_environment_access.dart';
 
 /// 免密安装开关列表项。
 class PasswordFreeInstallTile extends ConsumerWidget {
@@ -57,6 +58,10 @@ class PasswordFreeInstallTile extends ConsumerWidget {
     WidgetRef ref,
     bool value,
   ) async {
+    // 环境缺失时不修改系统授权规则；启动提醒的“继续浏览”不授权此操作。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     // 提前取到 notifier：页面离开后仍要让控制器正确收尾。
     final controller = ref.read(polkitRuleProvider.notifier);
@@ -142,10 +147,7 @@ class PasswordFreeInstallTile extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Tooltip(
-                  message: diagnostic,
-                  child: Text(summary),
-                ),
+                Tooltip(message: diagnostic, child: Text(summary)),
                 const SizedBox(height: 16),
                 CopyableCommandBlock(
                   command: diagnostic,

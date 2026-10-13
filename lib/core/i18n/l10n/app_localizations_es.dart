@@ -2735,4 +2735,53 @@ class AppLocalizationsEs extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Tiempo transcurrido: $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'Puedes seguir explorando la tienda, buscando aplicaciones y viendo sus detalles. Para instalar, ejecutar y gestionar aplicaciones locales o sus actualizaciones se necesita un entorno Linglong operativo.';
+
+  @override
+  String get continueBrowsing => 'Seguir explorando';
+
+  @override
+  String get envRequiredTitle => 'Se necesita el entorno Linglong';
+
+  @override
+  String get envRequiredDescription =>
+      'Esta función requiere un entorno Linglong local. Instálalo o repáralo para gestionar las aplicaciones instaladas y sus actualizaciones. Puedes seguir explorando la tienda, buscar aplicaciones y ver sus detalles.';
+
+  @override
+  String get configureLinglongEnvironment => 'Instalar o reparar el entorno';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'La instalación está en curso. Espera a que termine. Este aviso no se puede cerrar durante la instalación.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Cerrar el aviso del entorno y seguir explorando la tienda';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Instalar o reparar el entorno Linglong';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Abrir la guía de instalación manual de Linglong';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Comprobar de nuevo el entorno Linglong';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Copiar el diagnóstico del entorno Linglong';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Abrir la carpeta de registros de instalación de Linglong';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Reiniciar el servicio del gestor de paquetes de Linglong';
 }

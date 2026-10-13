@@ -1,3 +1,11 @@
+/// 商店启动及玲珑环境恢复编排。
+///
+/// 网络浏览所需的上下文与本机玲珑能力分开准备；环境缺失时先进入商店，
+/// 环境修复后只补做一次本机初始化，避免启动页阻塞及重复 CLI 请求。
+library;
+
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -81,6 +89,7 @@ class LaunchState {
       message: '正在检测环境...',
     ),
     this.isCompleted = false,
+    this.isBrowseOnly = false,
     this.hasError = false,
     this.errorMessage,
     this.installedAppsCount = 0,
@@ -98,6 +107,11 @@ class LaunchState {
 
   /// 是否完成
   final bool isCompleted;
+
+  /// 已完成启动，但本机玲珑能力尚未初始化。
+  ///
+  /// 此状态仍允许进入所有在线浏览页面；恢复后由同一个启动编排器清除。
+  final bool isBrowseOnly;
 
   /// 是否有错误
   final bool hasError;
@@ -145,6 +159,7 @@ class LaunchState {
     double? progress,
     LaunchStepInfo? stepInfo,
     bool? isCompleted,
+    bool? isBrowseOnly,
     bool? hasError,
     String? errorMessage,
     int? installedAppsCount,
@@ -156,6 +171,7 @@ class LaunchState {
       progress: progress ?? this.progress,
       stepInfo: stepInfo ?? this.stepInfo,
       isCompleted: isCompleted ?? this.isCompleted,
+      isBrowseOnly: isBrowseOnly ?? this.isBrowseOnly,
       hasError: clearError ? false : (hasError ?? this.hasError),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       installedAppsCount: installedAppsCount ?? this.installedAppsCount,
@@ -168,16 +184,46 @@ class LaunchState {
 ///
 /// 管理应用启动时的初始化序列：
 /// 1. 环境检测 - 检查 ll-cli 是否可用
-/// 2. 已安装应用初始化 - 加载已安装应用列表
-/// 3. 更新检查 - 检查应用更新
-/// 4. 安装队列恢复 - 恢复未完成的安装任务
+/// 2. 网络浏览上下文 - 缺少环境也准备架构、版本与用户允许的统计上下文
+/// 3. 环境可用时加载本机列表、检查更新及恢复安装队列
 /// 5. 完成后跳转到主页
 @Riverpod(keepAlive: true)
 class LaunchSequence extends _$LaunchSequence {
   @override
   LaunchState build() {
+    // 环境安装可能发生在设置页或功能门禁弹窗，恢复不能依赖已销毁的启动页。
+    ref.listen<LinglongEnvState>(linglongEnvProvider, (previous, next) {
+      if (state.isCompleted && next.isUnavailable) {
+        // 运行中环境再次失效时保留首页，只作废本机初始化；修复后重建被清理的快照。
+        _runtimeInitialized = false;
+        if (!state.isBrowseOnly) {
+          state = state.copyWith(isBrowseOnly: true);
+        }
+      }
+      if (state.isCompleted &&
+          state.isBrowseOnly &&
+          (next.result?.isOk ?? false) &&
+          !(previous?.result?.isOk ?? false)) {
+        unawaited(continueAfterEnvCheck());
+      }
+    });
     return const LaunchState();
   }
+
+  /// 合并重复启动请求，避免页面回调与重试并发执行系统命令。
+  Future<void>? _sequenceFuture;
+
+  /// 合并安装完成、重新检测和手动继续产生的环境恢复请求。
+  Future<void>? _environmentInitializationFuture;
+
+  /// 本次进程是否已完成本机快照、更新及队列恢复。
+  bool _runtimeInitialized = false;
+
+  /// 全局后台协调器及差量轮询只挂载一次。
+  bool _environmentSideEffectsStarted = false;
+
+  /// 浏览模式升级为完整模式时不得重复记录一次启动访问。
+  bool _startupVisitReported = false;
 
   /// 环境检测状态
   LinglongEnvCheckState _envCheckState = LinglongEnvCheckState.initial;
@@ -192,41 +238,47 @@ class LaunchSequence extends _$LaunchSequence {
   LinglongEnvCheckState get envCheckState => _envCheckState;
 
   /// 执行启动序列
-  Future<void> runSequence() async {
+  Future<void> runSequence() {
+    if (_sequenceFuture case final pending?) {
+      return pending;
+    }
+    if (state.isCompleted) {
+      return Future<void>.value();
+    }
+    // 延迟至微任务启动，先保存共享 Future，防止检测状态同步发布导致重入。
+    return _sequenceFuture = Future<void>.microtask(
+      _runSequence,
+    ).whenComplete(() => _sequenceFuture = null);
+  }
+
+  /// 启动网络体验，不把玲珑环境异常当作整个应用的启动失败。
+  Future<void> _runSequence() async {
     AppLogger.info('Starting launch sequence...');
 
     try {
       // Step 1: 环境检测
       final envOk = await _checkEnvironment();
 
-      // 如果环境异常，停止启动序列，由 UI 显示对话框
-      if (!envOk) {
-        AppLogger.warning('Environment check failed, waiting for user action');
-        return;
-      }
-
-      _warmSearchIndex();
       final analyticsPreparation = _prepareStartupAnalyticsContext();
-
-      // Step 2: 已安装应用初始化
-      await _initInstalledApps();
-
-      // Step 3: 更新检查
-      await _checkUpdates();
-
-      // Step 4: 安装队列恢复
-      await _recoverQueue();
+      var runtimeReady = false;
+      if (envOk) {
+        runtimeReady = await _initializeEnvironmentRuntime();
+      } else {
+        // 本机列表、CLI 搜索预热和队列恢复均延后，避免无环境时反复报错或执行旧任务。
+        AppLogger.info('Environment unavailable, entering browse mode');
+      }
 
       await analyticsPreparation;
 
       // 完成
-      _complete();
+      _complete(isBrowseOnly: !runtimeReady);
     } catch (e, s) {
       AppLogger.error('Launch sequence failed', e, s);
       _setError(e.toString());
     }
   }
 
+  /// 仅在玲珑可用时后台预热候选索引，不阻塞首页显示。
   void _warmSearchIndex() {
     try {
       // 搜索候选索引不阻塞启动；有缓存时同步可用，无缓存时后台执行 ll-cli。
@@ -247,6 +299,7 @@ class LaunchSequence extends _$LaunchSequence {
         message: '正在检测环境...',
       ),
       progress: 0.0,
+      clearError: true,
     );
 
     _envCheckState = LinglongEnvCheckState.checking;
@@ -263,8 +316,11 @@ class LaunchSequence extends _$LaunchSequence {
           ? LinglongEnvCheckState.success
           : LinglongEnvCheckState.failed;
 
+      // 检测失败仍会采集架构与系统画像；浏览请求不能因此退回错误架构。
+      await _fetchEnvironmentInfo();
+
       if (!envResult.isOk) {
-        // 环境异常，设置错误状态但允许 UI 处理
+        // 环境异常只影响本机能力，启动完成后再提醒，允许用户继续在线浏览。
         state = state.copyWith(
           progress: 1.0,
           stepInfo: LaunchStepInfo(
@@ -272,8 +328,7 @@ class LaunchSequence extends _$LaunchSequence {
             message: envResult.errorMessage ?? '环境检测失败',
             error: envResult.errorDetail,
           ),
-          hasError: true,
-          errorMessage: envResult.errorMessage,
+          clearError: true,
         );
         return false;
       }
@@ -291,54 +346,72 @@ class LaunchSequence extends _$LaunchSequence {
         ),
       );
 
-      // 获取更多环境信息
-      await _fetchEnvironmentInfo();
-
       state = state.copyWith(progress: 1.0);
       AppLogger.info('Environment check completed');
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       _envCheckState = LinglongEnvCheckState.failed;
-      throw Exception('环境检测失败: ${e.toString()}');
+      AppLogger.warning(
+        'Environment check failed, retaining browse access',
+        e,
+        stack,
+      );
+      state = state.copyWith(progress: 1.0, clearError: true);
+      return false;
     }
   }
 
-  /// 继续启动序列（环境问题解决后）
+  /// 环境修复后补齐本机能力，不要求返回启动页或重启应用。
   ///
   /// 在用户处理环境问题后继续启动流程
   Future<void> continueAfterEnvCheck() async {
-    if (_envCheckState != LinglongEnvCheckState.success) {
-      // 重新检测环境
-      final envOk = await _checkEnvironment();
-      if (!envOk) {
-        return;
-      }
+    // 启动未结束时等待同一轮编排，避免检测成功通知抢先重复恢复队列。
+    if (_sequenceFuture case final pending?) {
+      await pending;
     }
+    if (_runtimeInitialized) return;
+    if (_environmentInitializationFuture case final pending?) {
+      return pending;
+    }
+    return _environmentInitializationFuture = Future<void>.microtask(
+      _resumeEnvironmentInitialization,
+    ).whenComplete(() => _environmentInitializationFuture = null);
+  }
 
-    // 清除错误状态
-    state = state.copyWith(hasError: false, clearError: true);
-
-    final analyticsPreparation = _prepareStartupAnalyticsContext();
-
-    // 继续后续步骤
+  /// 复用修复后的检测结果，以单次初始化恢复本机能力。
+  Future<void> _resumeEnvironmentInitialization() async {
     try {
-      // Step 2: 已安装应用初始化
-      await _initInstalledApps();
-
-      // Step 3: 更新检查
-      await _checkUpdates();
-
-      // Step 4: 安装队列恢复
-      await _recoverQueue();
-
-      await analyticsPreparation;
-
-      // 完成
-      _complete();
+      final envResult = ref.read(linglongEnvProvider).result;
+      if (!(envResult?.isOk ?? false)) {
+        if (!await _checkEnvironment()) return;
+      } else {
+        _lastEnvResult = envResult;
+        _envCheckState = LinglongEnvCheckState.success;
+        await _fetchEnvironmentInfo();
+      }
+      if (await _initializeEnvironmentRuntime()) {
+        _complete(isBrowseOnly: false);
+      }
     } catch (e, s) {
-      AppLogger.error('Launch sequence failed', e, s);
-      _setError(e.toString());
+      // 恢复失败不能重新锁住首页，用户仍能浏览并在下次操作时重试修复。
+      AppLogger.error('Failed to restore Linglong capabilities', e, s);
     }
+  }
+
+  /// 所有依赖本机环境的启动阶段共用一个入口及已初始化标记。
+  Future<bool> _initializeEnvironmentRuntime() async {
+    if (_runtimeInitialized) return true;
+    if (!ref.read(linglongEnvProvider).isReady) return false;
+    _warmSearchIndex();
+    await _initInstalledApps();
+    // 用户可在后台初始化期间重新检测；每阶段读取缓存，失效后不继续执行系统操作。
+    if (!ref.read(linglongEnvProvider).isReady) return false;
+    await _checkUpdates();
+    if (!ref.read(linglongEnvProvider).isReady) return false;
+    await _recoverQueue();
+    if (!ref.read(linglongEnvProvider).isReady) return false;
+    _runtimeInitialized = true;
+    return true;
   }
 
   /// 获取环境信息
@@ -531,10 +604,12 @@ class LaunchSequence extends _$LaunchSequence {
   }
 
   /// 完成启动序列
-  void _complete() {
+  void _complete({required bool isBrowseOnly}) {
     state = state.copyWith(
       currentStep: LaunchStep.completed,
       isCompleted: true,
+      isBrowseOnly: isBrowseOnly,
+      clearError: true,
       progress: 1.0,
       stepInfo: const LaunchStepInfo(
         step: LaunchStep.completed,
@@ -544,16 +619,37 @@ class LaunchSequence extends _$LaunchSequence {
 
     AppLogger.info('Launch sequence completed');
 
+    if (!isBrowseOnly) {
+      _startEnvironmentSideEffects();
+      // 环境故障期间自动出队已暂停；事实核验结束后再唤醒现有 pending 任务。
+      if (ref.read(installQueueProvider).queue.isNotEmpty) {
+        unawaited(ref.read(installQueueProvider.notifier).startProcessing());
+      }
+    }
+
+    if (!_startupVisitReported) {
+      _startupVisitReported = true;
+      _reportStartupVisit();
+    }
+
+    // 修复结果可能在浏览上下文准备期间到达，完成后再补做，避免漏掉状态转换。
+    if (isBrowseOnly && (ref.read(linglongEnvProvider).result?.isOk ?? false)) {
+      unawaited(continueAfterEnvCheck());
+    }
+  }
+
+  /// 只有本机初始化完成后才允许后台消费副作用及执行差量 CLI 轮询。
+  void _startEnvironmentSideEffects() {
+    // 后续环境故障恢复复用原协调器，唤醒之前暂停的 Outbox，避免重新注册监听。
+    ref.read(appOperationLifecycleCoordinatorProvider).resumePendingEffects();
+    if (_environmentSideEffectsStarted) return;
+    _environmentSideEffectsStarted = true;
+
     // 本地任务、批次和 Outbox 恢复完成后再启动全局副作用协调器，
     // 避免系统通知或列表刷新抢在启动事实核验之前执行。
-    ref.read(appOperationLifecycleCoordinatorProvider);
-
     // 启动已安装列表差量检测：首轮检测即旧版对齐的启动全量基线上报。
     // 放在统计上下文预热完成之后，确保上报时 visitorId/clientIp 已就绪。
     ref.read(installedAppDiffReportServiceProvider).start();
-
-    // 异步上报启动访问记录（fire-and-forget，失败不影响应用）
-    _reportStartupVisit();
   }
 
   /// 上报启动访问记录（携带设备/环境信息）
@@ -604,6 +700,11 @@ class LaunchSequence extends _$LaunchSequence {
 
   /// 跳过当前步骤（仅用于错误恢复）
   void skipCurrentStep() {
+    if (!ref.read(linglongEnvProvider).isReady) {
+      // 手动跳过只恢复浏览能力，不能让历史错误恢复入口绕过本机环境门禁。
+      _complete(isBrowseOnly: true);
+      return;
+    }
     final nextSteps = {
       LaunchStep.environmentCheck: LaunchStep.installedAppsInit,
       LaunchStep.installedAppsInit: LaunchStep.updateCheck,
@@ -643,6 +744,9 @@ class LaunchSequence extends _$LaunchSequence {
         await _recoverQueue();
         break;
       case LaunchStep.completed:
+        _runtimeInitialized = true;
+        _complete(isBrowseOnly: false);
+        break;
       case LaunchStep.error:
         break;
     }

@@ -50,7 +50,7 @@ final class LinglongEnvProvider
   }
 }
 
-String _$linglongEnvHash() => r'fc697533f86bd8d7be44ad0ed9fe601de8d60b7d';
+String _$linglongEnvHash() => r'4be1c9bd9065ac7d6abdf67666a90170e5428186';
 
 /// 玲珑环境检测 Provider
 ///

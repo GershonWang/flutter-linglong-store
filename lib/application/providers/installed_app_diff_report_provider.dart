@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/installed_app_diff_report_service.dart';
 import 'application_dependency_providers.dart';
 import 'global_provider.dart';
+import 'linglong_env_provider.dart';
 
 /// 已安装列表差量检测上报服务 Provider。
 ///
@@ -19,13 +20,29 @@ final installedAppDiffReportServiceProvider =
         cliRepository: ref.watch(linglongCliRepositoryProvider),
         analyticsRepository: ref.watch(analyticsRepositoryProvider),
       );
+      // 缺环境时暂停本机轮询；体验计划设置不因浏览模式发生改变。
+      void syncReportingAvailability() {
+        service.setReportingEnabled(
+          ref
+                  .read(globalAppProvider)
+                  .userPreferences
+                  .joinUserExperienceProgram &&
+              !ref.read(linglongEnvProvider).isUnavailable,
+        );
+      }
+
+      syncReportingAvailability();
       ref.listen<bool>(
         globalAppProvider.select(
           (state) => state.userPreferences.joinUserExperienceProgram,
         ),
         (previous, next) {
-          service.setReportingEnabled(next);
+          syncReportingAvailability();
         },
+      );
+      ref.listen<bool>(
+        linglongEnvProvider.select((state) => state.isUnavailable),
+        (previous, next) => syncReportingAvailability(),
       );
       ref.onDispose(service.dispose);
       return service;

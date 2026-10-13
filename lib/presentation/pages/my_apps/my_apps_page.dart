@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/linglong_env_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/shell_primary_route.dart';
@@ -16,6 +17,7 @@ import '../../../domain/models/installed_app.dart';
 import '../../helpers/app_uninstall_flow.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/linglong_process_panel.dart';
+import '../../widgets/linglong_environment_required_view.dart';
 import '../../widgets/widgets.dart';
 
 enum _MyAppsTab { app, process }
@@ -51,6 +53,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     _installedAppsNotifier = ref.read(installedAppsProvider.notifier);
     _runningProcessNotifier = ref.read(runningProcessProvider.notifier);
     Future.microtask(() {
+      // 缺环境页无需请求本机应用；环境修复后的初始化统一由启动流程负责。
+      if (!mounted || ref.read(linglongEnvProvider).isUnavailable) return;
       _installedAppsNotifier.refresh();
     });
   }
@@ -116,7 +120,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   /// 卸载应用（使用统一的卸载流程）
   Future<void> _uninstallApp(InstalledApp app) async {
     final service = ref.read(appUninstallServiceProvider);
-    final success = await AppUninstallFlow.run(context, app, service);
+    final success = await AppUninstallFlow.run(context, app, service, ref: ref);
     if (!mounted) return;
 
     if (success) {
@@ -129,6 +133,25 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
 
   @override
   Widget build(BuildContext context) {
+    // 缺环境仍保留页面与标签导航，避免订阅本机卡片状态或挂载进程轮询面板。
+    final unavailable = ref.watch(
+      linglongEnvProvider.select((env) => env.isUnavailable),
+    );
+    if (unavailable) {
+      final l10n = AppLocalizations.of(context)!;
+      return Column(
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: LinglongEnvironmentRequiredView(
+              featureName: _activeTab == _MyAppsTab.app
+                  ? l10n.myApps
+                  : l10n.linglongProcess,
+            ),
+          ),
+        ],
+      );
+    }
     final state = ref.watch(installedAppsProvider);
     final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
     final filteredApps = _filterApps(_mergeApps(state.apps));

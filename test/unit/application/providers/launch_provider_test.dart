@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
+import 'package:linglong_store/application/providers/app_operation_lifecycle_coordinator.dart';
 import 'package:linglong_store/application/providers/app_search_index_provider.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
@@ -447,58 +450,200 @@ void main() {
       expect(searchIndexBuilds, equals(1));
     });
 
+    test('enters browse mode when environment result is unavailable', () async {
+      final container = ProviderContainer(
+        overrides: [
+          installedAppDiffReportServiceProvider.overrideWithValue(
+            _RecordingDiffReportService(),
+          ),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(
+              const GlobalAppState(
+                userPreferences: UserPreferences(autoCheckUpdate: true),
+              ),
+            ),
+          ),
+          linglongEnvProvider.overrideWith(
+            () => _TestLinglongEnv(
+              const LinglongEnvCheckResult(
+                isOk: false,
+                errorMessage: '未检测到玲珑仓库配置，请检查环境',
+                repoStatus: RepoStatus.notConfigured,
+                checkedAt: 1,
+              ),
+            ),
+          ),
+          installedAppsProvider.overrideWith(
+            () => _TestInstalledApps(
+              apps: const [
+                InstalledApp(
+                  appId: 'org.example.demo',
+                  name: 'Demo',
+                  version: '1.0.0',
+                ),
+              ],
+            ),
+          ),
+          updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+          installQueueProvider.overrideWith(() => _TestInstallQueue()),
+          analyticsRepositoryProvider.overrideWithValue(
+            const _NoopAnalyticsRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(launchSequenceProvider.notifier).runSequence();
+
+      final state = container.read(launchSequenceProvider);
+      expect(state.isCompleted, isTrue);
+      expect(state.isBrowseOnly, isTrue);
+      expect(state.hasError, isFalse);
+      expect(state.currentStep, LaunchStep.completed);
+      expect(state.errorMessage, isNull);
+    });
+
     test(
-      'stops startup when environment result is a blocking failure',
+      'browse startup preserves context without initializing CLI work',
       () async {
-        final container = ProviderContainer(
-          overrides: [
-            installedAppDiffReportServiceProvider.overrideWithValue(
-              _RecordingDiffReportService(),
-            ),
-            globalAppProvider.overrideWith(
-              () => _TestGlobalApp(
-                const GlobalAppState(
-                  userPreferences: UserPreferences(autoCheckUpdate: true),
-                ),
-              ),
-            ),
-            linglongEnvProvider.overrideWith(
-              () => _TestLinglongEnv(
-                const LinglongEnvCheckResult(
-                  isOk: false,
-                  errorMessage: '未检测到玲珑仓库配置，请检查环境',
-                  repoStatus: RepoStatus.notConfigured,
-                  checkedAt: 1,
-                ),
-              ),
-            ),
-            installedAppsProvider.overrideWith(
-              () => _TestInstalledApps(
-                apps: const [
-                  InstalledApp(
-                    appId: 'org.example.demo',
-                    name: 'Demo',
-                    version: '1.0.0',
-                  ),
-                ],
-              ),
-            ),
-            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
-            installQueueProvider.overrideWith(() => _TestInstallQueue()),
-            analyticsRepositoryProvider.overrideWithValue(
-              const _NoopAnalyticsRepository(),
-            ),
-          ],
+        final harness = _BrowseLaunchHarness();
+        addTearDown(harness.container.dispose);
+
+        await harness.launch.runSequence();
+
+        final state = harness.container.read(launchSequenceProvider);
+        final global = harness.container.read(globalAppProvider);
+        expect(state.isCompleted, isTrue);
+        expect(state.isBrowseOnly, isTrue);
+        expect(state.hasError, isFalse);
+        expect(global.arch, 'aarch64');
+        expect(global.osName, 'Test Linux');
+        expect(global.appVersion, '3.2.1');
+        expect(harness.installed.refreshCalls, 0);
+        expect(harness.updates.checkCalls, 0);
+        expect(harness.queue.recoveryCalls, 0);
+        expect(harness.searchBuilds, 0);
+        expect(harness.diffService.startCalls, 0);
+        expect(
+          harness.container.exists(appOperationLifecycleCoordinatorProvider),
+          isFalse,
         );
-        addTearDown(container.dispose);
+        expect(harness.analytics.initializeSessionCalls, 1);
+        expect(harness.analytics.visitReports.single.arch, 'aarch64');
+      },
+    );
 
-        await container.read(launchSequenceProvider.notifier).runSequence();
+    test('browse startup respects disabled analytics preference', () async {
+      final harness = _BrowseLaunchHarness(joinUserExperienceProgram: false);
+      addTearDown(harness.container.dispose);
 
-        final state = container.read(launchSequenceProvider);
-        expect(state.isCompleted, isFalse);
-        expect(state.hasError, isTrue);
-        expect(state.currentStep, LaunchStep.environmentCheck);
-        expect(state.errorMessage, '未检测到玲珑仓库配置，请检查环境');
+      await harness.launch.runSequence();
+
+      expect(
+        harness.container.read(launchSequenceProvider).isCompleted,
+        isTrue,
+      );
+      expect(harness.analytics.initializeSessionCalls, 0);
+      expect(harness.analytics.visitReports, isEmpty);
+      expect(harness.container.read(globalAppProvider).appVersion, '3.2.1');
+    });
+
+    test(
+      'restores local capabilities once after environment becomes ready',
+      () async {
+        final harness = _BrowseLaunchHarness();
+        addTearDown(harness.container.dispose);
+        await harness.launch.runSequence();
+        final refreshCompletion = Completer<void>();
+        harness.installed.refreshCompletion = refreshCompletion;
+
+        // 安装修复与手动重检可能同时到达，初始化必须共用一轮本机快照。
+        harness.environment.publishReadyResult();
+        final first = harness.launch.continueAfterEnvCheck();
+        final second = harness.launch.continueAfterEnvCheck();
+        await Future<void>.delayed(Duration.zero);
+        expect(harness.installed.refreshCalls, 1);
+        expect(harness.queue.recoveryCalls, 0);
+        expect(
+          harness.container.read(launchSequenceProvider).isBrowseOnly,
+          isTrue,
+        );
+        refreshCompletion.complete();
+        await Future.wait([first, second]);
+
+        expect(
+          harness.container.read(launchSequenceProvider).isCompleted,
+          isTrue,
+        );
+        expect(
+          harness.container.read(launchSequenceProvider).isBrowseOnly,
+          isFalse,
+        );
+        expect(harness.updates.checkCalls, 1);
+        expect(harness.queue.recoveryCalls, 1);
+        expect(harness.diffService.startCalls, 1);
+        expect(harness.searchBuilds, 1);
+        expect(harness.analytics.visitReports, hasLength(1));
+
+        await harness.launch.continueAfterEnvCheck();
+        await harness.launch.runSequence();
+        expect(harness.installed.refreshCalls, 1);
+        expect(harness.queue.recoveryCalls, 1);
+        expect(harness.diffService.startCalls, 1);
+      },
+    );
+
+    test('failed environment recheck retains usable browse mode', () async {
+      final harness = _BrowseLaunchHarness();
+      addTearDown(harness.container.dispose);
+      await harness.launch.runSequence();
+
+      await harness.launch.continueAfterEnvCheck();
+
+      expect(
+        harness.container.read(launchSequenceProvider).isBrowseOnly,
+        isTrue,
+      );
+      expect(
+        harness.container.read(launchSequenceProvider).isCompleted,
+        isTrue,
+      );
+      expect(harness.container.read(launchSequenceProvider).hasError, isFalse);
+      expect(harness.installed.refreshCalls, 0);
+      expect(harness.analytics.visitReports, hasLength(1));
+    });
+
+    test(
+      'rebuilds local capabilities after a later environment outage',
+      () async {
+        final harness = _BrowseLaunchHarness();
+        addTearDown(harness.container.dispose);
+        await harness.launch.runSequence();
+        harness.environment.publishReadyResult();
+        await harness.launch.continueAfterEnvCheck();
+        expect(harness.installed.refreshCalls, 1);
+
+        harness.environment.publishUnavailableResult();
+        expect(
+          harness.container.read(launchSequenceProvider).isCompleted,
+          isTrue,
+        );
+        expect(
+          harness.container.read(launchSequenceProvider).isBrowseOnly,
+          isTrue,
+        );
+        harness.environment.publishReadyResult();
+        await harness.launch.continueAfterEnvCheck();
+
+        expect(harness.installed.refreshCalls, 2);
+        expect(harness.updates.checkCalls, 2);
+        expect(harness.queue.recoveryCalls, 2);
+        expect(
+          harness.container.read(launchSequenceProvider).isBrowseOnly,
+          isFalse,
+        );
+        expect(harness.diffService.startCalls, 1);
+        expect(harness.analytics.visitReports, hasLength(1));
       },
     );
 
@@ -619,60 +764,59 @@ void main() {
 
         await container.read(launchSequenceProvider.notifier).runSequence();
 
-        expect(container.read(globalAppProvider).osName,
-            equals('Fedora Linux 42 (Evernight Edition)'));
+        expect(
+          container.read(globalAppProvider).osName,
+          equals('Fedora Linux 42 (Evernight Edition)'),
+        );
       },
     );
 
-    test(
-      'keeps osName null when distribution display name is empty',
-      () async {
-        final container = ProviderContainer(
-          overrides: [
-            installedAppDiffReportServiceProvider.overrideWithValue(
-              _RecordingDiffReportService(),
-            ),
-            launchAppVersionResolverProvider.overrideWithValue(
-              () async => '3.2.1',
-            ),
-            globalAppProvider.overrideWith(
-              // 初始 osName 为空，模拟从未采集到系统名称的状态。
-              () => _TestGlobalApp(const GlobalAppState()),
-            ),
-            linglongEnvProvider.overrideWith(
-              () => _TestLinglongEnv(
-                // 未携带 distribution 时画像为 unknown，displayName 为空串。
-                const LinglongEnvCheckResult(
-                  isOk: true,
-                  llCliVersion: '1.9.0',
-                  arch: 'x86_64',
-                  repoStatus: RepoStatus.ok,
-                  checkedAt: 1,
-                ),
+    test('keeps osName null when distribution display name is empty', () async {
+      final container = ProviderContainer(
+        overrides: [
+          installedAppDiffReportServiceProvider.overrideWithValue(
+            _RecordingDiffReportService(),
+          ),
+          launchAppVersionResolverProvider.overrideWithValue(
+            () async => '3.2.1',
+          ),
+          globalAppProvider.overrideWith(
+            // 初始 osName 为空，模拟从未采集到系统名称的状态。
+            () => _TestGlobalApp(const GlobalAppState()),
+          ),
+          linglongEnvProvider.overrideWith(
+            () => _TestLinglongEnv(
+              // 未携带 distribution 时画像为 unknown，displayName 为空串。
+              const LinglongEnvCheckResult(
+                isOk: true,
+                llCliVersion: '1.9.0',
+                arch: 'x86_64',
+                repoStatus: RepoStatus.ok,
+                checkedAt: 1,
               ),
             ),
-            installedAppsProvider.overrideWith(
-              () => _TestInstalledApps(apps: const []),
-            ),
-            appSearchIndexProvider.overrideWith(
-              () => _RecordingSearchIndex(() {}),
-            ),
-            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
-            installQueueProvider.overrideWith(() => _TestInstallQueue()),
-            analyticsRepositoryProvider.overrideWithValue(
-              const _NoopAnalyticsRepository(),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
+          ),
+          installedAppsProvider.overrideWith(
+            () => _TestInstalledApps(apps: const []),
+          ),
+          appSearchIndexProvider.overrideWith(
+            () => _RecordingSearchIndex(() {}),
+          ),
+          updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+          installQueueProvider.overrideWith(() => _TestInstallQueue()),
+          analyticsRepositoryProvider.overrideWithValue(
+            const _NoopAnalyticsRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        await container.read(launchSequenceProvider.notifier).runSequence();
+      await container.read(launchSequenceProvider.notifier).runSequence();
 
-        // 发行版画像无名称（读不到 /etc/os-release）时不得写入空字符串，
-        // 关于卡片据此回落到「未知」占位。
-        expect(container.read(globalAppProvider).osName, isNull);
-      },
-    );
+      // 发行版画像无名称（读不到 /etc/os-release）时不得写入空字符串，
+      // 关于卡片据此回落到「未知」占位。
+      expect(container.read(globalAppProvider).osName, isNull);
+    });
 
     test(
       'skips all analytics when user experience program is disabled',
@@ -859,7 +1003,25 @@ class _RecordingAnalyticsRepository implements AnalyticsRepository {
 class _TestLinglongEnv extends LinglongEnv {
   _TestLinglongEnv(this._result);
 
-  final LinglongEnvCheckResult _result;
+  LinglongEnvCheckResult _result;
+
+  /// 模拟在浏览过程中安装成功，验证全局恢复入口而非启动页回调。
+  void publishReadyResult() {
+    _result = _result.copyWith(isOk: true, llCliVersion: '1.9.0');
+    state = state.copyWith(
+      checkState: LinglongEnvCheckState.success,
+      result: _result,
+    );
+  }
+
+  /// 模拟启动后外部卸载环境或服务再次不可用，旧本机快照应失效。
+  void publishUnavailableResult() {
+    _result = _result.copyWith(isOk: false);
+    state = state.copyWith(
+      checkState: LinglongEnvCheckState.success,
+      result: _result,
+    );
+  }
 
   @override
   LinglongEnvState build() => const LinglongEnvState();
@@ -888,22 +1050,32 @@ class _TestInstalledApps extends InstalledApps {
 
   final List<InstalledApp> apps;
 
+  /// 记录刷新轮数和可控等待，验证缺环境时无副作用及修复后并发合并。
+  int refreshCalls = 0;
+  Completer<void>? refreshCompletion;
+
   @override
   InstalledAppsState build() => const InstalledAppsState();
 
   @override
   Future<bool> refresh() async {
+    refreshCalls += 1;
+    await refreshCompletion?.future;
     state = InstalledAppsState(apps: apps);
     return true;
   }
 }
 
 class _TestUpdateApps extends UpdateApps {
+  /// 记录更新查询次数，避免浏览模式启动浪费 CLI 与网络请求。
+  int checkCalls = 0;
+
   @override
   UpdateAppsState build() => const UpdateAppsState();
 
   @override
   Future<void> checkUpdates() async {
+    checkCalls += 1;
     state = const UpdateAppsState();
   }
 }
@@ -921,11 +1093,68 @@ class _RecordingSearchIndex extends AppSearchIndex {
 }
 
 class _TestInstallQueue extends InstallQueue {
+  /// 记录恢复次数，确保缺环境时持久化任务不会被误执行。
+  int recoveryCalls = 0;
+
   @override
   InstallQueueState build() => const InstallQueueState();
 
   @override
-  Future<void> checkRecovery(List<InstalledApp> installedApps) async {}
+  Future<void> checkRecovery(List<InstalledApp> installedApps) async {
+    recoveryCalls += 1;
+  }
+}
+
+/// 集中提供浏览与环境恢复场景的依赖替身，所有系统操作均只计数。
+class _BrowseLaunchHarness {
+  _BrowseLaunchHarness({bool joinUserExperienceProgram = true}) {
+    container = ProviderContainer(
+      overrides: [
+        globalAppProvider.overrideWith(
+          () => _TestGlobalApp(
+            GlobalAppState(
+              userPreferences: UserPreferences(
+                joinUserExperienceProgram: joinUserExperienceProgram,
+              ),
+            ),
+          ),
+        ),
+        linglongEnvProvider.overrideWith(() => environment),
+        installedAppsProvider.overrideWith(() => installed),
+        updateAppsProvider.overrideWith(() => updates),
+        installQueueProvider.overrideWith(() => queue),
+        appSearchIndexProvider.overrideWith(
+          () => _RecordingSearchIndex(() => searchBuilds += 1),
+        ),
+        launchAppVersionResolverProvider.overrideWithValue(() async => '3.2.1'),
+        analyticsRepositoryProvider.overrideWithValue(analytics),
+        installedAppDiffReportServiceProvider.overrideWithValue(diffService),
+      ],
+    );
+  }
+
+  /// 模拟无 CLI 的 ARM 设备，检查浏览查询仍使用正确架构。
+  final environment = _TestLinglongEnv(
+    const LinglongEnvCheckResult(
+      isOk: false,
+      arch: 'aarch64',
+      osVersion: 'OS: Test Linux',
+      distribution: LinuxDistribution(displayName: 'Test Linux'),
+      errorMessage: 'll-cli 未安装或不可用',
+      checkedAt: 1,
+    ),
+  );
+
+  final installed = _TestInstalledApps(apps: const []);
+  final updates = _TestUpdateApps();
+  final queue = _TestInstallQueue();
+  final analytics = _RecordingAnalyticsRepository();
+  final diffService = _RecordingDiffReportService();
+  int searchBuilds = 0;
+  late final ProviderContainer container;
+
+  /// 读取实际编排器，以覆盖环境监听和一次性初始化约束。
+  LaunchSequence get launch => container.read(launchSequenceProvider.notifier);
 }
 
 class _NoopAnalyticsRepository implements AnalyticsRepository {

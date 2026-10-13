@@ -13,8 +13,10 @@ import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/linglong_env_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
+import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/models/linux_distribution.dart';
+import '../helpers/linglong_environment_access.dart';
 import 'download_manager/download_manager_footer.dart';
 import 'download_manager/download_manager_header.dart';
 import 'download_manager/download_manager_overview.dart';
@@ -124,12 +126,32 @@ class DownloadManagerDialog extends ConsumerWidget {
                               .read(installQueueProvider.notifier)
                               .removeQueuedTask(task.id);
                         },
-                        onOpenHistory: (task) {
-                          ref
-                              .read(linglongCliRepositoryProvider)
-                              .runApp(task.appId);
+                        onOpenHistory: (task) async {
+                          // 历史成功记录不保证当前机器仍具备运行环境。
+                          if (!await ensureLinglongEnvironment(context, ref) ||
+                              !context.mounted) {
+                            return;
+                          }
+                          try {
+                            await ref
+                                .read(linglongCliRepositoryProvider)
+                                .runApp(task.appId);
+                            if (context.mounted) {
+                              showAppLaunching(context, task.appName);
+                            }
+                          } catch (error) {
+                            // 环境检测与进程启动之间仍可能发生系统变化，统一反馈失败。
+                            if (context.mounted) {
+                              showAppLaunchFailed(context, error.toString());
+                            }
+                          }
                         },
-                        onRetryHistory: (task) {
+                        onRetryHistory: (task) async {
+                          // 缺环境时保留失败历史，不先删除记录或生成重试任务。
+                          if (!await ensureLinglongEnvironment(context, ref) ||
+                              !context.mounted) {
+                            return;
+                          }
                           ref
                               .read(installQueueProvider.notifier)
                               .retryFailedTask(task.id);

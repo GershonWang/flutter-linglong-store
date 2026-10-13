@@ -10,6 +10,9 @@ import 'package:linglong_store/application/providers/ignored_updates_provider.da
 import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
+import 'package:linglong_store/application/providers/linglong_env_provider.dart';
+import 'package:linglong_store/application/providers/launch_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
@@ -24,11 +27,13 @@ import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
 import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 import 'package:linglong_store/presentation/widgets/install_button.dart';
+import 'package:linglong_store/presentation/widgets/linglong_environment_required_view.dart';
 
 void main() {
   setUpAll(() async {
@@ -37,6 +42,94 @@ void main() {
   });
 
   group('UpdateAppPage', () {
+    testWidgets('关闭自动更新检查后，在更新页修复环境仍会主动检查且不重复查询本机列表', (tester) async {
+      final events = <String>[];
+      final environment = _RecoveryEnvironment();
+      final launch = _RecoveryLaunchSequence();
+      final updates = _RecoveryUpdateApps(events: events);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            linglongEnvProvider.overrideWith(() => environment),
+            launchSequenceProvider.overrideWith(() => launch),
+            globalAppProvider.overrideWith(_ManualUpdateGlobalApp.new),
+            installQueueProvider.overrideWith(
+              () => TestInstallQueue(initialState: const InstallQueueState()),
+            ),
+            ignoredUpdatesCountProvider.overrideWithValue(0),
+            installedAppsProvider.overrideWith(
+              () => TestInstalledApps(events: events),
+            ),
+            updateAppsProvider.overrideWith(() => updates),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(events, isEmpty);
+
+      environment.setReady();
+      await tester.pump();
+      // 恢复还没完成时缺环境占位已离开，但不能提前宣称本机全部最新。
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(UpdateAppPage)),
+      )!;
+      expect(find.text(l10n.allAppsUpToDate), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      launch.finishRecovery();
+      await tester.pumpAndSettle();
+      expect(updates.checkUpdatesCalls, 1);
+      expect(events, ['updates:check']);
+      expect(find.text(l10n.allAppsUpToDate), findsOneWidget);
+
+      // 重复完成通知不能造成第二次请求；已安装快照由启动恢复提供。
+      launch.finishRecovery();
+      await tester.pumpAndSettle();
+      expect(updates.checkUpdatesCalls, 1);
+      expect(events, ['updates:check']);
+    });
+
+    testWidgets('缺环境页不宣称全部最新，也不会进行本机更新同步', (tester) async {
+      final events = <String>[];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            linglongEnvProvider.overrideWithValue(
+              const LinglongEnvState(
+                checkState: LinglongEnvCheckState.success,
+                result: LinglongEnvCheckResult(isOk: false, checkedAt: 1),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => TestInstalledApps(events: events),
+            ),
+            updateAppsProvider.overrideWith(
+              () => TestUpdateApps(events: events),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinglongEnvironmentRequiredView), findsOneWidget);
+      expect(find.text('所有应用已是最新版本'), findsNothing);
+      expect(find.byIcon(Icons.refresh), findsNothing);
+      expect(events, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'renders installing update row in Row layout without infinite width exception',
       (tester) async {
@@ -1152,6 +1245,50 @@ class TestUpdateApps extends UpdateApps {
   }
 }
 
+/// 初次缺环境、安装完成后环境可用的受控状态。
+class _RecoveryEnvironment extends LinglongEnv {
+  @override
+  LinglongEnvState build() => const LinglongEnvState(
+    checkState: LinglongEnvCheckState.success,
+    result: LinglongEnvCheckResult(isOk: false, checkedAt: 1),
+  );
+
+  /// 模拟自动安装完成，启动流程仍需恢复本机能力。
+  void setReady() => state = const LinglongEnvState(
+    checkState: LinglongEnvCheckState.success,
+    result: LinglongEnvCheckResult(isOk: true, checkedAt: 2),
+  );
+}
+
+/// 不执行真实本机初始化，仅发送启动恢复的最终通知。
+class _RecoveryLaunchSequence extends LaunchSequence {
+  @override
+  LaunchState build() =>
+      const LaunchState(isCompleted: true, isBrowseOnly: true);
+
+  /// 启动恢复提供最新安装快照，但用户设置要求跳过自动更新检查。
+  void finishRecovery() => state = const LaunchState(isCompleted: true);
+}
+
+/// 显式关闭启动自动检查以验证主动打开更新页的语义不受偏好影响。
+class _ManualUpdateGlobalApp extends GlobalApp {
+  @override
+  GlobalAppState build() => const GlobalAppState(
+    userPreferences: UserPreferences(autoCheckUpdate: false),
+  );
+}
+
+/// 一次成功主动检查会结束等待状态，便于确认页面不会提前展示最新结论。
+class _RecoveryUpdateApps extends TestUpdateApps {
+  _RecoveryUpdateApps({super.events});
+
+  @override
+  Future<void> checkUpdates() async {
+    await super.checkUpdates();
+    state = const UpdateAppsState(hasLoadedOnce: true);
+  }
+}
+
 class RecordingAppOperationQueueController extends AppOperationQueueController {
   RecordingAppOperationQueueController(
     super.ref, {
@@ -1202,7 +1339,6 @@ class _MemoryIgnoredUpdateStorage implements IgnoredUpdateStorage {
     return true;
   }
 }
-
 
 /// 固定收敛结论的替身：用于覆盖"更新成功但快照未收敛"的窗口期。
 class _FixedConvergenceVerifier implements UpdateConvergenceVerifier {

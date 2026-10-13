@@ -1419,5 +1419,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "Вы можете продолжать просматривать магазин, искать приложения и читать их описания. Для установки, запуска и управления локальными приложениями и их обновлениями нужна рабочая среда Linglong.",
+  "continueBrowsing": "Продолжить просмотр",
+  "envRequiredTitle": "Требуется среда Linglong",
+  "envRequiredDescription": "Для этой функции требуется локальная среда Linglong. Установите или восстановите её, чтобы управлять установленными приложениями и их обновлениями. Вы по-прежнему можете просматривать магазин, искать приложения и читать их описания.",
+  "configureLinglongEnvironment": "Установить или восстановить среду",
+  "envInstallationInProgressNotice": "Идёт установка. Дождитесь её завершения. Во время установки это уведомление нельзя закрыть.",
+  "a11yContinueBrowsing": "Закрыть уведомление о среде и продолжить просмотр магазина",
+  "a11yConfigureLinglongEnvironment": "Установить или восстановить среду Linglong",
+  "a11yManualLinglongEnvironmentInstallation": "Открыть руководство по ручной установке Linglong",
+  "a11yRecheckLinglongEnvironment": "Проверить среду Linglong ещё раз",
+  "a11yCopyLinglongEnvironmentDiagnostic": "Скопировать диагностику среды Linglong",
+  "a11yOpenLinglongInstallLogDirectory": "Открыть папку журналов установки Linglong",
+  "a11yRestartLinglongPackageManagerService": "Перезапустить службу менеджера пакетов Linglong"
 }

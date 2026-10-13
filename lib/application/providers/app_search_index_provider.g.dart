@@ -67,7 +67,7 @@ final class AppSearchIndexProvider
   }
 }
 
-String _$appSearchIndexHash() => r'dee5d4d0916b0090cf56bd279ca07e48aa7aea24';
+String _$appSearchIndexHash() => r'e77cf3d59295bdee5771a252f85d7cee3a394fdb';
 
 /// 应用搜索索引 Provider。
 ///

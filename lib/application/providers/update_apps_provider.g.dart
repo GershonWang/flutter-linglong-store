@@ -50,7 +50,7 @@ final class UpdateAppsProvider
   }
 }
 
-String _$updateAppsHash() => r'461759a5508239358d076a033149cc965bad5ad1';
+String _$updateAppsHash() => r'3633f16f1c5fd93fe93b03f22a0d115d6b58503f';
 
 /// 可更新应用 Provider
 ///

@@ -2809,4 +2809,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Прошло $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'Вы можете продолжать просматривать магазин, искать приложения и читать их описания. Для установки, запуска и управления локальными приложениями и их обновлениями нужна рабочая среда Linglong.';
+
+  @override
+  String get continueBrowsing => 'Продолжить просмотр';
+
+  @override
+  String get envRequiredTitle => 'Требуется среда Linglong';
+
+  @override
+  String get envRequiredDescription =>
+      'Для этой функции требуется локальная среда Linglong. Установите или восстановите её, чтобы управлять установленными приложениями и их обновлениями. Вы по-прежнему можете просматривать магазин, искать приложения и читать их описания.';
+
+  @override
+  String get configureLinglongEnvironment =>
+      'Установить или восстановить среду';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'Идёт установка. Дождитесь её завершения. Во время установки это уведомление нельзя закрыть.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Закрыть уведомление о среде и продолжить просмотр магазина';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Установить или восстановить среду Linglong';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Открыть руководство по ручной установке Linglong';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Проверить среду Linglong ещё раз';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Скопировать диагностику среды Linglong';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Открыть папку журналов установки Linglong';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Перезапустить службу менеджера пакетов Linglong';
 }

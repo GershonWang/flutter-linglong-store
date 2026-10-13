@@ -25,6 +25,7 @@ import '../../../core/i18n/app_locale.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/platform/linux_renderer_service.dart';
+import '../../helpers/linglong_environment_access.dart';
 import '../../../core/utils/app_notification_helpers.dart';
 import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
@@ -721,6 +722,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 执行清理废弃基础服务
   Future<void> _pruneBaseService(BuildContext context) async {
+    // 清理会修改本机玲珑数据，浏览模式先引导安装环境，避免无效授权。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await ConfirmDialog.show(
       context,

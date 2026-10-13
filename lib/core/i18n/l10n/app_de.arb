@@ -1413,5 +1413,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "Du kannst den Store weiter durchsuchen, nach Apps suchen und Details ansehen. Zum Installieren, Ausführen und Verwalten lokaler Apps sowie für App-Updates wird eine funktionierende Linglong-Umgebung benötigt.",
+  "continueBrowsing": "Weiter stöbern",
+  "envRequiredTitle": "Linglong-Umgebung erforderlich",
+  "envRequiredDescription": "Diese Funktion benötigt eine lokale Linglong-Umgebung. Installiere oder repariere sie, um installierte Apps und App-Updates zu verwalten. Du kannst weiterhin im Store stöbern, nach Apps suchen und Details ansehen.",
+  "configureLinglongEnvironment": "Umgebung installieren oder reparieren",
+  "envInstallationInProgressNotice": "Die Installation läuft. Bitte warte bis zum Abschluss. Dieser Hinweis kann während der Installation nicht geschlossen werden.",
+  "a11yContinueBrowsing": "Umgebungshinweis schließen und weiter im Store stöbern",
+  "a11yConfigureLinglongEnvironment": "Linglong-Umgebung installieren oder reparieren",
+  "a11yManualLinglongEnvironmentInstallation": "Anleitung zur manuellen Linglong-Installation öffnen",
+  "a11yRecheckLinglongEnvironment": "Linglong-Umgebung erneut prüfen",
+  "a11yCopyLinglongEnvironmentDiagnostic": "Diagnose der Linglong-Umgebung kopieren",
+  "a11yOpenLinglongInstallLogDirectory": "Ordner mit Linglong-Installationsprotokollen öffnen",
+  "a11yRestartLinglongPackageManagerService": "Linglong-Paketmanagerdienst neu starten"
 }

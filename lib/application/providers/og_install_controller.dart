@@ -80,7 +80,13 @@ final initialOgProtocolUrlsProvider = Provider<List<String>>((ref) {
 /// 再加载应用详情，最后通过 [AppOperationQueueController] 入队安装。
 final ogInstallControllerProvider = Provider<OgInstallController>((ref) {
   final controller = OgInstallController(
-    isLaunchCompleted: () => ref.read(launchSequenceProvider).isCompleted,
+    isLaunchCompleted: () {
+      final launch = ref.read(launchSequenceProvider);
+      // 环境刚恢复时必须等待本机队列核验；缺环境的浏览启动仍应发出安装引导。
+      final environmentReady =
+          ref.read(linglongEnvProvider).result?.isOk == true;
+      return launch.isCompleted && (!launch.isBrowseOnly || !environmentReady);
+    },
     isLinglongEnvOk: () => ref.read(linglongEnvProvider).result?.isOk ?? false,
     loadAppDetail: (appId) {
       return ref.read(appRepositoryProvider).getAppDetail(appId);
@@ -102,7 +108,11 @@ final ogInstallControllerProvider = Provider<OgInstallController>((ref) {
   );
 
   ref.listen(launchSequenceProvider, (previous, next) {
-    if (next.isCompleted && previous?.isCompleted != true) {
+    // 浏览模式安装环境后，等本机快照与队列恢复完成再消费网页安装请求。
+    final recoveredEnvironment =
+        previous?.isBrowseOnly == true && !next.isBrowseOnly;
+    if (next.isCompleted &&
+        (previous?.isCompleted != true || recoveredEnvironment)) {
       unawaited(controller.processPending());
     }
   });

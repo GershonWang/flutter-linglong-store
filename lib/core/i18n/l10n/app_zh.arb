@@ -1467,5 +1467,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "你可以继续浏览商店、搜索应用和查看详情。安装、运行、管理本机应用及应用更新需要先安装或修复玲珑环境。",
+  "continueBrowsing": "继续浏览",
+  "envRequiredTitle": "需要玲珑环境",
+  "envRequiredDescription": "此功能需要本机玲珑环境。安装或修复环境后，即可管理已安装应用和应用更新；你现在仍可浏览商店、搜索应用及查看详情。",
+  "configureLinglongEnvironment": "安装或修复环境",
+  "envInstallationInProgressNotice": "安装正在进行，请等待完成。安装过程中无法关闭此提示。",
+  "a11yContinueBrowsing": "关闭环境提醒并继续浏览商店",
+  "a11yConfigureLinglongEnvironment": "安装或修复玲珑环境",
+  "a11yManualLinglongEnvironmentInstallation": "打开玲珑环境手动安装指南",
+  "a11yRecheckLinglongEnvironment": "重新检测玲珑环境",
+  "a11yCopyLinglongEnvironmentDiagnostic": "复制玲珑环境诊断信息",
+  "a11yOpenLinglongInstallLogDirectory": "打开玲珑环境安装日志目录",
+  "a11yRestartLinglongPackageManagerService": "重启玲珑包管理器服务"
 }

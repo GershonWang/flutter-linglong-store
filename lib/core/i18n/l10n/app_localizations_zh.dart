@@ -2573,6 +2573,47 @@ class AppLocalizationsZh extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return '已运行 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '你可以继续浏览商店、搜索应用和查看详情。安装、运行、管理本机应用及应用更新需要先安装或修复玲珑环境。';
+
+  @override
+  String get continueBrowsing => '继续浏览';
+
+  @override
+  String get envRequiredTitle => '需要玲珑环境';
+
+  @override
+  String get envRequiredDescription =>
+      '此功能需要本机玲珑环境。安装或修复环境后，即可管理已安装应用和应用更新；你现在仍可浏览商店、搜索应用及查看详情。';
+
+  @override
+  String get configureLinglongEnvironment => '安装或修复环境';
+
+  @override
+  String get envInstallationInProgressNotice => '安装正在进行，请等待完成。安装过程中无法关闭此提示。';
+
+  @override
+  String get a11yContinueBrowsing => '关闭环境提醒并继续浏览商店';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => '安装或修复玲珑环境';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation => '打开玲珑环境手动安装指南';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => '重新检测玲珑环境';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => '复制玲珑环境诊断信息';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => '打开玲珑环境安装日志目录';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService => '重启玲珑包管理器服务';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -5143,4 +5184,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String repairElapsedTime(String elapsed) {
     return '已執行 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '你可以繼續瀏覽商店、搜尋應用程式及查看詳情。安裝、執行、管理本機應用程式及應用程式更新需要先安裝或修復玲瓏環境。';
+
+  @override
+  String get continueBrowsing => '繼續瀏覽';
+
+  @override
+  String get envRequiredTitle => '需要玲瓏環境';
+
+  @override
+  String get envRequiredDescription =>
+      '此功能需要本機玲瓏環境。安裝或修復環境後，即可管理已安裝應用程式及應用程式更新；你現在仍可瀏覽商店、搜尋應用程式及查看詳情。';
+
+  @override
+  String get configureLinglongEnvironment => '安裝或修復環境';
+
+  @override
+  String get envInstallationInProgressNotice => '安裝正在進行，請等待完成。安裝過程中無法關閉此提示。';
+
+  @override
+  String get a11yContinueBrowsing => '關閉環境提醒並繼續瀏覽商店';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => '安裝或修復玲瓏環境';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation => '開啟玲瓏環境手動安裝指南';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => '重新偵測玲瓏環境';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => '複製玲瓏環境診斷資訊';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => '開啟玲瓏環境安裝記錄目錄';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService => '重新啟動玲瓏套件管理員服務';
 }

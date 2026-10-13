@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_exceptions.dart';
@@ -8,6 +9,7 @@ import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/repositories/app_repository.dart';
 import 'application_dependency_providers.dart';
+import 'linglong_env_provider.dart';
 
 part 'running_process_provider.g.dart';
 
@@ -126,6 +128,9 @@ class RunningProcess extends _$RunningProcess {
   bool _isProcessTabActive = false;
   bool _isPageVisible = true;
 
+  /// 环境切换时作废旧进程快照，避免恢复后旧请求覆盖新环境状态。
+  int _latestRequestId = 0;
+
   /// 默认刷新间隔（3 秒）
   static const Duration defaultRefreshInterval = Duration(seconds: 3);
 
@@ -135,10 +140,30 @@ class RunningProcess extends _$RunningProcess {
       _refreshTimer?.cancel();
     });
 
+    // 仅订阅可用性边界，安装进度不会重建进程列表或触发额外轮询。
+    ref.listen(linglongEnvProvider.select((env) => env.isUnavailable), (
+      previous,
+      unavailable,
+    ) {
+      if (unavailable) {
+        _latestRequestId++;
+        _failureCount = 0;
+        _cancelTimer();
+        state = const RunningProcessState();
+      } else if (previous == true) {
+        _syncPolling(immediateRefresh: true);
+      }
+    });
+
     return const RunningProcessState();
   }
 
-  bool get _shouldPoll => _isProcessTabActive && _isPageVisible;
+  /// 无环境时保留 Tab/可见性意图，但暂停所有自动 CLI 请求。
+  bool get _shouldPoll =>
+      ref.mounted &&
+      _isProcessTabActive &&
+      _isPageVisible &&
+      !ref.read(linglongEnvProvider).isUnavailable;
 
   /// 当前是否正在自动刷新
   bool get isAutoRefreshing => _refreshTimer != null;
@@ -166,10 +191,11 @@ class RunningProcess extends _$RunningProcess {
   }
 
   Future<void> _fetchOnce({required bool silent}) async {
-    if (_isFetching) {
+    if (_isFetching || ref.read(linglongEnvProvider).isUnavailable) {
       return;
     }
 
+    final requestId = ++_latestRequestId;
     _isFetching = true;
     final hasData = state.hasData;
 
@@ -182,11 +208,19 @@ class RunningProcess extends _$RunningProcess {
     try {
       final repo = ref.read(linglongCliRepositoryProvider);
       final rawApps = await repo.getRunningApps();
+      // 缺环境时停止详情富化，同时防止晚到的 CLI 响应重新填回本机数据。
+      if (!_canApplyRequest(requestId)) {
+        return;
+      }
       final appRepository = ref.read(appRepositoryProvider);
       final apps = await enrichRunningAppsWithDetails(
         appRepository: appRepository,
         apps: rawApps,
       );
+
+      if (!_canApplyRequest(requestId)) {
+        return;
+      }
 
       _failureCount = 0;
       state = state.copyWith(
@@ -197,6 +231,9 @@ class RunningProcess extends _$RunningProcess {
         lastRefreshedAt: DateTime.now(),
       );
     } catch (e) {
+      if (!_canApplyRequest(requestId)) {
+        return;
+      }
       _failureCount += 1;
       state = state.copyWith(
         isInitialLoading: false,
@@ -207,6 +244,12 @@ class RunningProcess extends _$RunningProcess {
       _isFetching = false;
     }
   }
+
+  /// 只接收当前环境下尚未被作废的进程查询结果。
+  bool _canApplyRequest(int requestId) =>
+      ref.mounted &&
+      requestId == _latestRequestId &&
+      !ref.read(linglongEnvProvider).isUnavailable;
 
   void _syncPolling({required bool immediateRefresh}) {
     if (!_shouldPoll) {
@@ -255,6 +298,10 @@ class RunningProcess extends _$RunningProcess {
 
   /// 停止指定应用。
   Future<bool> killApp(RunningApp app) async {
+    // 即使调用方持有旧行快照，也不能在已确认缺环境后继续执行停止命令。
+    if (ref.read(linglongEnvProvider).isUnavailable) {
+      return false;
+    }
     final nextLoadingIds = Set<String>.from(state.killLoadingIds)..add(app.id);
     state = state.copyWith(killLoadingIds: nextLoadingIds);
 

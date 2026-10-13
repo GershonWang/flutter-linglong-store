@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/services/app_uninstall_service.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
@@ -8,6 +9,7 @@ import '../../../domain/models/uninstall_result.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/download_manager_dialog.dart';
 import '../widgets/uninstall_blocked_dialog.dart';
+import 'linglong_environment_access.dart';
 
 /// 统一的卸载流程辅助类
 ///
@@ -31,9 +33,15 @@ class AppUninstallFlow {
     BuildContext context,
     InstalledApp app,
     AppUninstallService service, {
+    required WidgetRef ref,
     bool includeVersion = true,
   }) async {
     if (!context.mounted) return false;
+
+    // 所有卸载入口共享环境检查，跳过启动提醒仅允许浏览，不能授权本机操作。
+    if (!await ensureLinglongEnvironment(context, ref) || !context.mounted) {
+      return false;
+    }
 
     // 1. 检查活跃任务拦截
     final blockingTask = service.getActiveBlockingTask();

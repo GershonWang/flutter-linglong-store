@@ -1686,5 +1686,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envBrowseNotice": "يمكنك متابعة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها. يتطلب تثبيت التطبيقات المحلية وتشغيلها وإدارتها أو تحديثها بيئة ⁨Linglong⁩ سليمة.",
+  "continueBrowsing": "متابعة التصفح",
+  "envRequiredTitle": "بيئة ⁨Linglong⁩ مطلوبة",
+  "envRequiredDescription": "تتطلب هذه الميزة بيئة ⁨Linglong⁩ محلية. ثبّتها أو أصلحها لإدارة التطبيقات المثبتة وتحديثاتها. يمكنك مواصلة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها.",
+  "configureLinglongEnvironment": "تثبيت البيئة أو إصلاحها",
+  "envInstallationInProgressNotice": "التثبيت جارٍ. يرجى الانتظار حتى اكتماله. لا يمكن إغلاق هذا الإشعار أثناء التثبيت.",
+  "a11yContinueBrowsing": "إغلاق إشعار البيئة ومتابعة تصفح المتجر",
+  "a11yConfigureLinglongEnvironment": "تثبيت بيئة ⁨Linglong⁩ أو إصلاحها",
+  "a11yManualLinglongEnvironmentInstallation": "فتح دليل التثبيت اليدوي لبيئة ⁨Linglong⁩",
+  "a11yRecheckLinglongEnvironment": "إعادة فحص بيئة ⁨Linglong⁩",
+  "a11yCopyLinglongEnvironmentDiagnostic": "نسخ معلومات تشخيص بيئة ⁨Linglong⁩",
+  "a11yOpenLinglongInstallLogDirectory": "فتح مجلد سجل تثبيت بيئة ⁨Linglong⁩",
+  "a11yRestartLinglongPackageManagerService": "إعادة تشغيل خدمة مدير حزم ⁨Linglong⁩"
 }

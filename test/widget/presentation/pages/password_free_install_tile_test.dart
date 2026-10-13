@@ -24,6 +24,7 @@ import 'package:linglong_store/domain/models/polkit_rule_state.dart';
 import 'package:linglong_store/domain/repositories/polkit_rule_gateway.dart';
 import 'package:linglong_store/presentation/pages/setting/widgets/password_free_install_tile.dart';
 import 'package:linglong_store/presentation/widgets/copyable_command_block.dart';
+import 'package:linglong_store/presentation/widgets/linglong_env_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/memory_app_operation_journal_repository.dart';
@@ -76,6 +77,7 @@ PolkitRuleTransactionResult _appliedResult({required bool requested}) {
 Future<ProviderContainer> _pumpTile(
   WidgetTester tester, {
   required _FakePolkitRuleGateway gateway,
+  bool environmentAvailable = true,
   Map<String, Object> initialPreferences = const <String, Object>{},
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 700));
@@ -90,10 +92,10 @@ Future<ProviderContainer> _pumpTile(
         MemoryAppOperationJournalRepository(),
       ),
       linglongEnvProvider.overrideWithValue(
-        const LinglongEnvState(
+        LinglongEnvState(
           checkState: LinglongEnvCheckState.success,
           result: LinglongEnvCheckResult(
-            isOk: true,
+            isOk: environmentAvailable,
             distribution: LinuxDistribution.uos,
             checkedAt: 1,
           ),
@@ -129,13 +131,33 @@ void main() {
     await _pumpTile(tester, gateway: _FakePolkitRuleGateway());
 
     expect(find.text('安装时免密码确认'), findsOneWidget);
-    expect(
-      find.text('安装和更新应用时免输密码；卸载等操作沿用系统授权设置。'),
-      findsOneWidget,
-    );
+    expect(find.text('安装和更新应用时免输密码；卸载等操作沿用系统授权设置。'), findsOneWidget);
     final tile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
     expect(tile.value, isFalse);
     expect(tile.onChanged, isNotNull);
+  });
+
+  testWidgets('缺环境时免密开关只提示，不进入风险确认或修改系统规则', (tester) async {
+    final gateway = _FakePolkitRuleGateway();
+    final container = await _pumpTile(
+      tester,
+      gateway: gateway,
+      environmentAvailable: false,
+    );
+
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    expect(find.byType(LinglongEnvDialog), findsOneWidget);
+    expect(find.text('开启免密码确认？'), findsNothing);
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.requests, isEmpty);
+    expect(container.read(polkitRuleProvider).enabled, isFalse);
+    expect(
+      container.read(polkitRuleProvider).phase,
+      PasswordFreeInstallPhase.ready,
+    );
   });
 
   testWidgets('待同步时补充提示行且开关可交互', (tester) async {
@@ -147,10 +169,7 @@ void main() {
       },
     );
 
-    expect(
-      find.text('显示的是上次保存的状态，修改时将同步系统设置。'),
-      findsOneWidget,
-    );
+    expect(find.text('显示的是上次保存的状态，修改时将同步系统设置。'), findsOneWidget);
     expect(
       tester.widget<SwitchListTile>(find.byType(SwitchListTile)).onChanged,
       isNotNull,
@@ -264,10 +283,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(CopyableCommandBlock), findsOneWidget);
-    expect(
-      find.text('事务脚本输出不符合版本化契约: boom'),
-      findsOneWidget,
-    );
+    expect(find.text('事务脚本输出不符合版本化契约: boom'), findsOneWidget);
     expect(find.text('安装时免密码确认'), findsWidgets);
 
     await tester.tap(find.byType(FilledButton));
