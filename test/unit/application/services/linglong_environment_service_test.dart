@@ -3,9 +3,52 @@ import 'package:linglong_store/application/services/linglong_environment_service
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
 import 'package:linglong_store/domain/models/linux_distribution.dart';
 import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
+import 'package:linglong_store/domain/models/linglong_cli_capabilities.dart';
 
 void main() {
   group('LinglongEnvironmentService', () {
+    // 文本回退必须保留预发布后缀，诊断中的版本数字不构成可信版本。
+    test('能力判断使用完整可信版本，拒绝诊断数字', () async {
+      for (final fixture in <(String, String?, bool)>[
+        ('linyaps CLI version 1.14.0-rc1\n', '1.14.0-rc1', false),
+        ('linyaps CLI version 1.14.0\n', '1.14.0', true),
+        ('failure: expected version 1.14.0', null, false),
+      ]) {
+        final service = LinglongEnvironmentService(
+          executor: ShellCommandExecutor(
+            runner: _FakeShellCommandRunner.fromCommands({
+              'll-cli --help': const ShellCommandResult(
+                stdout: 'Usage: ll-cli',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --json repo show': const ShellCommandResult(
+                stdout:
+                    '{"defaultRepo":"stable","repos":[{"name":"stable","url":"https://repo.example"}]}',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --json --version': ShellCommandResult(
+                stdout: fixture.$1,
+                stderr: '',
+                exitCode: 0,
+              ),
+            }),
+          ),
+          osReleaseReader: () async => null,
+          environmentReader: (_) => null,
+        );
+        final result = await service.checkEnvironment();
+        expect(result.llCliVersion, fixture.$2);
+        expect(
+          LinglongCliCapabilities.fromVersion(
+            result.llCliVersion,
+          ).supportsDiskAnalysis,
+          fixture.$3,
+        );
+      }
+    });
+
     test('returns failure when ll-cli help cannot run', () async {
       final service = LinglongEnvironmentService(
         executor: ShellCommandExecutor(

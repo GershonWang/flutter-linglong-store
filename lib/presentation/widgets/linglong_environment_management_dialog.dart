@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers/linglong_environment_management_provider.dart';
+import '../../application/providers/linglong_cli_capabilities_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import 'linglong_environment_management/environment_analysis_tab.dart';
@@ -15,6 +16,7 @@ import 'linglong_environment_management/environment_management_components.dart';
 import 'linglong_environment_management/environment_management_dialog_actions.dart';
 import 'linglong_environment_management/repository_management_tab.dart';
 import 'linglong_environment_management/storage_management_tab.dart';
+import 'linglong_environment_management/disk_analysis_tab.dart';
 
 /// 展示玲珑环境管理模态对话框。
 Future<void> showLinglongEnvironmentManagementDialog(BuildContext context) {
@@ -61,9 +63,16 @@ class _LinglongEnvironmentManagementDialogState
   Widget build(BuildContext context) {
     final state = ref.watch(linglongEnvironmentManagementProvider);
     final l10n = AppLocalizations.of(context)!;
+    final showDiskAnalysis = ref
+        .watch(linglongCliCapabilitiesProvider)
+        .supportsDiskAnalysis;
+    // 地区能力和分析能力共享启动快照，未知版本不会创建新交互入口。
+    final supportsMirrorRegion = ref
+        .watch(linglongCliCapabilitiesProvider)
+        .supportsMirrorRegion;
 
     return DefaultTabController(
-      length: 3,
+      length: showDiskAnalysis ? 4 : 3,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
         titlePadding: const EdgeInsetsDirectional.fromSTEB(24, 20, 16, 0),
@@ -88,6 +97,7 @@ class _LinglongEnvironmentManagementDialogState
             children: [
               EnvironmentManagementSegmentedTabBar(
                 isBusy: state.isBusy,
+                showDiskAnalysis: showDiskAnalysis,
                 onRefresh: () => ref
                     .read(linglongEnvironmentManagementProvider.notifier)
                     .load(),
@@ -115,6 +125,19 @@ class _LinglongEnvironmentManagementDialogState
                         ),
                         RepositoryManagementTab(
                           state: state,
+                          supportsMirrorRegion: supportsMirrorRegion,
+                          onSetMirrorRegion: (repo, region) {
+                            _actions.setRepositoryMirror(
+                              context,
+                              repo,
+                              enabled: true,
+                              region: region,
+                              preserveRegion: false,
+                            );
+                          },
+                          onCustomMirrorRegion: (repo) {
+                            _actions.showMirrorRegionDialog(context, repo);
+                          },
                           onAddRepository: () {
                             _actions.showAddRepositoryDialog(context);
                           },
@@ -151,6 +174,21 @@ class _LinglongEnvironmentManagementDialogState
                             _actions.openLogDirectory(context, logFilePath);
                           },
                         ),
+                        // 邻页预创建时 active 为 false，不会提前扫描整个仓库。
+                        if (showDiskAnalysis)
+                          Builder(
+                            builder: (context) {
+                              final controller = DefaultTabController.of(
+                                context,
+                              );
+                              return AnimatedBuilder(
+                                animation: controller,
+                                builder: (context, _) => DiskAnalysisTab(
+                                  active: controller.index == 3,
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ),
                     if (state.status ==

@@ -142,11 +142,14 @@ def github_request(
     data: bytes | None = None,
     parse_json: bool = True,
 ) -> Any:
+    # 目标仓库为公开仓库，GitHub 侧接口支持匿名访问；仅当显式提供
+    # GITHUB_TOKEN 时才附带认证头（例如 CI 注入 Actions token 以获得更高配额）。
     merged_headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {config.github_token}",
         "User-Agent": USER_AGENT,
     }
+    if config.github_token:
+        merged_headers["Authorization"] = f"Bearer {config.github_token}"
     if headers:
         merged_headers.update(headers)
     url = resolve_api_url("https://api.github.com", endpoint)
@@ -248,7 +251,9 @@ def download_asset(config: SyncConfig, asset: dict[str, Any], destination: Path)
         "Accept": "application/octet-stream",
         "User-Agent": USER_AGENT,
     }
-    if "api.github.com" in download_url:
+    # browser_download_url 形式的资产地址本就无需认证；仅当资产地址落在
+    # api.github.com 且提供了 token 时才附带认证头（匿名下载公开资产同样可行）。
+    if "api.github.com" in download_url and config.github_token:
         headers["Authorization"] = f"Bearer {config.github_token}"
 
     last_error: Exception | None = None
@@ -359,15 +364,13 @@ def sync_release(
 
 
 def build_config(args: argparse.Namespace) -> SyncConfig:
+    # GITHUB_TOKEN 对公开仓库是可选的：不设置时按匿名方式访问 GitHub API。
+    # 注意本机 gh CLI 会持续轮换自身 token，把某次 `gh auth token` 的输出固化到
+    # 环境文件里会很快失效并引发 401，因此本地同步推荐直接走匿名访问。
     github_token = os.environ.get("GITHUB_TOKEN", "").strip()
     gitee_token = os.environ.get("GITEE_TOKEN", "").strip()
-    if not github_token or not gitee_token:
-        missing = []
-        if not github_token:
-            missing.append("GITHUB_TOKEN")
-        if not gitee_token:
-            missing.append("GITEE_TOKEN")
-        raise SystemExit(f"Missing required environment variables: {', '.join(missing)}")
+    if not gitee_token:
+        raise SystemExit("Missing required environment variables: GITEE_TOKEN")
 
     github_repo = (args.github_repo or os.environ.get("GITHUB_REPO") or DEFAULT_GITHUB_REPO).strip()
     gitee_repo = normalize_gitee_repo(

@@ -88,6 +88,9 @@ sealed class LinglongEnvCheckResult with _$LinglongEnvCheckResult {
       _$LinglongEnvCheckResultFromJson(json);
 }
 
+/// 仓库配置的只读快照，供环境检测和管理界面共用。
+///
+/// 镜像字段缺省时保留未知值；旧版文本输出不能证明镜像已关闭。
 @freezed
 sealed class LinglongRepoInfo with _$LinglongRepoInfo {
   const factory LinglongRepoInfo({
@@ -95,10 +98,20 @@ sealed class LinglongRepoInfo with _$LinglongRepoInfo {
     required String url,
     String? alias,
     String? priority,
+
+    /// 上游镜像开关；缺字段时不能推断为 false。
+    @JsonKey(name: 'mirror_enabled') bool? isMirrorEnabled,
+
+    /// 已保存的镜像地区，关闭镜像后仍可能保留此配置。
+    String? region,
   }) = _LinglongRepoInfo;
 
   factory LinglongRepoInfo.fromJson(Map<String, dynamic> json) =>
       _$LinglongRepoInfoFromJson(json);
+
+  /// 上游直接拼接查询参数，因此只允许不会改变 URL 结构的代码字符。
+  static bool isSafeMirrorRegion(String region) =>
+      RegExp(r'^[A-Za-z0-9][A-Za-z0-9_-]*$').hasMatch(region);
 }
 
 /// Repo 状态枚举

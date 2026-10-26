@@ -13,6 +13,7 @@ import '../../domain/repositories/app_operation_journal_repository.dart';
 import '../../domain/repositories/app_repository.dart';
 import '../../domain/repositories/error_solution_repository.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
+import '../../domain/repositories/linglong_app_analysis_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../domain/repositories/legacy_app_operation_state_repository.dart';
 import '../../domain/repositories/polkit_rule_gateway.dart';
@@ -48,6 +49,12 @@ final errorSolutionRepositoryProvider = Provider<ErrorSolutionRepository>((
 final linglongCliRepositoryProvider = Provider<LinglongCliRepository>((ref) {
   return _missingDependency('linglongCliRepositoryProvider');
 });
+
+/// 只读空间与依赖分析端口，按需由组合根装配。
+final linglongAppAnalysisRepositoryProvider =
+    Provider<LinglongAppAnalysisRepository>((ref) {
+      return _missingDependency('linglongAppAnalysisRepositoryProvider');
+    });
 
 /// 玲珑仓库配置管理端口。
 final linglongRepositoryManagementRepositoryProvider =

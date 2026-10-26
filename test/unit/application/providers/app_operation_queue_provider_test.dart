@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/linglong_cli_capabilities_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_operation_batch.dart';
 import 'package:linglong_store/domain/models/app_operation_failure.dart';
@@ -15,6 +16,7 @@ import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/linglong_cli_failure.dart';
+import 'package:linglong_store/domain/models/linglong_cli_capabilities.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/app_operation_journal_repository.dart';
@@ -25,6 +27,9 @@ import '../../../helpers/memory_app_operation_journal_repository.dart';
 class _FakeLinglongCliRepository implements LinglongCliRepository {
   int installCallCount = 0;
   int updateCallCount = 0;
+
+  /// 捕获执行前最终策略，用于验证恢复任务遭遇 CLI 降级。
+  final firstInstallStrategy = Completer<bool>();
   List<InstallProgress> installEvents = const [
     InstallProgress(
       appId: 'ignored',
@@ -76,8 +81,13 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
     String appId, {
     String? version,
     bool force = false,
+    // 测试替身遵循生产接口，清理策略由独立用例验证。
+    bool noAutoPrune = false,
   }) async* {
     installCallCount += 1;
+    if (!firstInstallStrategy.isCompleted) {
+      firstInstallStrategy.complete(noAutoPrune);
+    }
     for (final event in installEvents) {
       yield event.copyWith(appId: appId);
     }
@@ -96,10 +106,17 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<void> uninstallApp(String appId, String? version) async {}
+  Future<void> uninstallApp(
+    String appId,
+    String? version, {
+    bool noAutoPrune = false,
+  }) async {}
 
   @override
-  Stream<InstallProgress> updateApp(String appId) async* {
+  Stream<InstallProgress> updateApp(
+    String appId, {
+    bool noAutoPrune = false,
+  }) async* {
     updateCallCount += 1;
     for (final event in updateEvents) {
       yield event.copyWith(appId: appId);
@@ -134,6 +151,7 @@ class _FakeAnalyticsRepository implements AnalyticsRepository {
 Future<ProviderContainer> _createTestContainer(
   _FakeLinglongCliRepository fakeRepo, {
   AppOperationJournalRepository? journal,
+  LinglongCliCapabilities? capabilities,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -149,6 +167,8 @@ Future<ProviderContainer> _createTestContainer(
         const _FakeAnalyticsRepository(),
       ),
       linglongCliRepositoryProvider.overrideWith((ref) => fakeRepo),
+      if (capabilities != null)
+        linglongCliCapabilitiesProvider.overrideWithValue(capabilities),
     ],
   );
 }
@@ -159,6 +179,32 @@ void main() {
   });
 
   group('AppOperationQueueController', () {
+    // Journal 中的保留策略不能绕过当前版本，执行前还需重新检查能力。
+    test('冻结为保留依赖的任务遇到旧版或未知 CLI 时不发送新参数', () async {
+      for (final version in ['1.14.0', '1.13.0', 'unknown']) {
+        final fake = _FakeLinglongCliRepository();
+        final container = await _createTestContainer(
+          fake,
+          capabilities: LinglongCliCapabilities.fromVersion(version),
+        );
+        addTearDown(container.dispose);
+        container
+            .read(installQueueProvider.notifier)
+            .enqueueOperation(
+              kind: InstallTaskKind.install,
+              appId: 'org.policy',
+              appName: 'policy',
+              noAutoPrune: true,
+            );
+        expect(
+          await fake.firstInstallStrategy.future.timeout(
+            const Duration(seconds: 2),
+          ),
+          version == '1.14.0',
+        );
+      }
+    });
+
     test('does not start ll-cli before the queued task is durable', () async {
       final fakeRepo = _FakeLinglongCliRepository();
       final journal = _BlockingJournalRepository();

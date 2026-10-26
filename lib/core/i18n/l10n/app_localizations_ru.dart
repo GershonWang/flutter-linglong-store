@@ -11,6 +11,142 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Добавить репозиторий';
+
+  @override
+  String get a11yMirrorActions => 'Действия с репозиторием';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Копировать сообщение об ошибке';
+
+  @override
+  String get a11yMirrorConfirm => 'Подтвердить';
+
+  @override
+  String get a11yMirrorCancel => 'Отмена';
+
+  @override
+  String get a11yMirrorRepositories => 'Список настроек зеркал репозиториев';
+
+  @override
+  String get mirrorRegionTitle => 'Регион зеркала';
+
+  @override
+  String get mirrorRegionAuto => 'Автоматически';
+
+  @override
+  String get mirrorRegionChina => 'Китай (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'США (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Европа (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Другой регион';
+
+  @override
+  String get mirrorRegionCode => 'Код региона';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Используйте буквы, цифры, дефисы и подчёркивания; начните с буквы или цифры.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Настройки отправлены; состояние ещё не подтверждено';
+
+  @override
+  String get mirrorStatusUnknown => 'Состояние зеркала неизвестно';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Выбрать регион зеркала';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Переключатель зеркала для $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Регион зеркала для $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Диагностика настроек зеркала';
+
+  @override
+  String get a11yAnalysisRefresh => 'Обновить';
+
+  @override
+  String get a11yAnalysisRetry => 'Повторить попытку';
+
+  @override
+  String get a11yAnalysisCopy => 'Копировать';
+
+  @override
+  String get a11yAnalysisSort => 'Сортировка модулей';
+
+  @override
+  String get a11yAnalysisVersion => 'Установленная версия';
+
+  @override
+  String get analysisSpace => 'Анализ места';
+
+  @override
+  String get analysisApp => 'Место и зависимости';
+
+  @override
+  String get analysisRepository => 'Размер репозитория';
+
+  @override
+  String get analysisModulesTotal => 'Всего установленных модулей';
+
+  @override
+  String get analysisActual => 'Распределённая оценка';
+
+  @override
+  String get analysisExclusive => 'Исключительное';
+
+  @override
+  String get analysisShared => 'Общее';
+
+  @override
+  String get analysisLogical => 'Логическое';
+
+  @override
+  String get analysisDependencies => 'Окружения приложения';
+
+  @override
+  String get analysisEmpty => 'Нет данных анализа';
+
+  @override
+  String get analysisSearch => 'Поиск модулей';
+
+  @override
+  String get analysisSort => 'Сортировка модулей';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Общие блоки распределяются между модулями. Эти значения не показывают место, освобождаемое при удалении.';
+
+  @override
+  String get analysisInstalledVersion => 'Установленная версия';
+
+  @override
+  String get analysisNoMatches => 'Нет подходящих модулей';
+
+  @override
+  String get analysisDescending => 'Сначала большие';
+
+  @override
+  String get a11yAnalysisArea => 'Анализ места';
+
+  @override
+  String get a11yAnalysisApp => 'Место и зависимости';
+
+  @override
   String get appTitle => 'Магазин Linyaps — версия сообщества';
 
   @override
@@ -599,6 +735,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Показать базовые службы времени выполнения';
+
+  @override
+  String get autoPruneDependencies =>
+      'Автоматически удалять неиспользуемые зависимости';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps очищает зависимости после обновления или удаления. Отключение сохраняет зависимости, но не гарантирует сохранение старых версий приложений.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Автоматически удалять неиспользуемые зависимости';
 
   @override
   String get showBaseServicesDesc =>
@@ -2665,4 +2813,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Прошло $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'Вы можете продолжать просматривать магазин, искать приложения и читать их описания. Для установки, запуска и управления локальными приложениями и их обновлениями нужна рабочая среда Linglong.';
+
+  @override
+  String get continueBrowsing => 'Продолжить просмотр';
+
+  @override
+  String get envRequiredTitle => 'Требуется среда Linglong';
+
+  @override
+  String get envRequiredDescription =>
+      'Для этой функции требуется локальная среда Linglong. Установите или восстановите её, чтобы управлять установленными приложениями и их обновлениями. Вы по-прежнему можете просматривать магазин, искать приложения и читать их описания.';
+
+  @override
+  String get configureLinglongEnvironment =>
+      'Установить или восстановить среду';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'Идёт установка. Дождитесь её завершения. Во время установки это уведомление нельзя закрыть.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Закрыть уведомление о среде и продолжить просмотр магазина';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Установить или восстановить среду Linglong';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Открыть руководство по ручной установке Linglong';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Проверить среду Linglong ещё раз';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Скопировать диагностику среды Linglong';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Открыть папку журналов установки Linglong';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Перезапустить службу менеджера пакетов Linglong';
 }

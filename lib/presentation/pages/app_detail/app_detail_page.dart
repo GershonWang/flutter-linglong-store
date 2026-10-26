@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/providers/app_detail_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/linglong_cli_capabilities_provider.dart';
+import '../../widgets/linglong_app_analysis_dialog.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/linglong_env_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
@@ -256,7 +258,27 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             },
           ),
           const Divider(height: 1),
-          AppDetailMetadataSection(app: app, detail: detailState.appDetail),
+          AppDetailMetadataSection(
+            app: app,
+            detail: detailState.appDetail,
+            // 查询时从本地安装列表取全部真实版本，不复用远端详情身份。
+            onShowAnalysis:
+                hasInstalledInstance &&
+                    ref
+                        .watch(linglongCliCapabilitiesProvider)
+                        .supportsDiskAnalysis
+                ? () {
+                    final localApps = ref
+                        .read(installedAppsProvider)
+                        .apps
+                        .where((installed) => installed.appId == app.appId)
+                        .toList();
+                    if (localApps.isNotEmpty) {
+                      showLinglongAppAnalysisDialog(context, localApps);
+                    }
+                  }
+                : null,
+          ),
           const Divider(height: 1),
           AppDetailCommentsPanel(
             comments: detailState.comments,

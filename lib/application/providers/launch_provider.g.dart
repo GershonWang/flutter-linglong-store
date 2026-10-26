@@ -12,9 +12,8 @@ part of 'launch_provider.dart';
 ///
 /// 管理应用启动时的初始化序列：
 /// 1. 环境检测 - 检查 ll-cli 是否可用
-/// 2. 已安装应用初始化 - 加载已安装应用列表
-/// 3. 更新检查 - 检查应用更新
-/// 4. 安装队列恢复 - 恢复未完成的安装任务
+/// 2. 网络浏览上下文 - 缺少环境也准备架构、版本与用户允许的统计上下文
+/// 3. 环境可用时加载本机列表、检查更新及恢复安装队列
 /// 5. 完成后跳转到主页
 
 @ProviderFor(LaunchSequence)
@@ -24,9 +23,8 @@ final launchSequenceProvider = LaunchSequenceProvider._();
 ///
 /// 管理应用启动时的初始化序列：
 /// 1. 环境检测 - 检查 ll-cli 是否可用
-/// 2. 已安装应用初始化 - 加载已安装应用列表
-/// 3. 更新检查 - 检查应用更新
-/// 4. 安装队列恢复 - 恢复未完成的安装任务
+/// 2. 网络浏览上下文 - 缺少环境也准备架构、版本与用户允许的统计上下文
+/// 3. 环境可用时加载本机列表、检查更新及恢复安装队列
 /// 5. 完成后跳转到主页
 final class LaunchSequenceProvider
     extends $NotifierProvider<LaunchSequence, LaunchState> {
@@ -34,9 +32,8 @@ final class LaunchSequenceProvider
   ///
   /// 管理应用启动时的初始化序列：
   /// 1. 环境检测 - 检查 ll-cli 是否可用
-  /// 2. 已安装应用初始化 - 加载已安装应用列表
-  /// 3. 更新检查 - 检查应用更新
-  /// 4. 安装队列恢复 - 恢复未完成的安装任务
+  /// 2. 网络浏览上下文 - 缺少环境也准备架构、版本与用户允许的统计上下文
+  /// 3. 环境可用时加载本机列表、检查更新及恢复安装队列
   /// 5. 完成后跳转到主页
   LaunchSequenceProvider._()
     : super(
@@ -65,15 +62,14 @@ final class LaunchSequenceProvider
   }
 }
 
-String _$launchSequenceHash() => r'f1b7cd431d20d2c799a1b0f1b024271d432b997d';
+String _$launchSequenceHash() => r'22f6a0b6fa8d22b4d60ad9765248a2c60a078a91';
 
 /// 启动序列 Provider
 ///
 /// 管理应用启动时的初始化序列：
 /// 1. 环境检测 - 检查 ll-cli 是否可用
-/// 2. 已安装应用初始化 - 加载已安装应用列表
-/// 3. 更新检查 - 检查应用更新
-/// 4. 安装队列恢复 - 恢复未完成的安装任务
+/// 2. 网络浏览上下文 - 缺少环境也准备架构、版本与用户允许的统计上下文
+/// 3. 环境可用时加载本机列表、检查更新及恢复安装队列
 /// 5. 完成后跳转到主页
 
 abstract class _$LaunchSequence extends $Notifier<LaunchState> {

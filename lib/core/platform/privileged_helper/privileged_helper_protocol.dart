@@ -97,6 +97,7 @@ class PrivilegedHelperStartRequest extends PrivilegedHelperRequest {
     required this.appId,
     this.version,
     required this.force,
+    this.noAutoPrune = false,
   });
 
   final String requestId;
@@ -105,11 +106,16 @@ class PrivilegedHelperStartRequest extends PrivilegedHelperRequest {
   final String? version;
   final bool force;
 
+  /// 可选清理策略，false 不编码以兼容现有协议请求。
+  final bool noAutoPrune;
+
   @override
   String encode() {
     // 本地校验与 helper 端保持一致：任何非法字段在发送前直接失败。
     if (!isValidPrivilegedHelperRequestId(requestId)) {
-      throw const PrivilegedHelperProtocolException('invalid requestId for helper');
+      throw const PrivilegedHelperProtocolException(
+        'invalid requestId for helper',
+      );
     }
     if (!isValidPrivilegedHelperAppId(appId)) {
       throw const PrivilegedHelperProtocolException('invalid appId for helper');
@@ -124,7 +130,9 @@ class PrivilegedHelperStartRequest extends PrivilegedHelperRequest {
     final effectiveVersion = version;
     if (effectiveVersion != null &&
         !isValidPrivilegedHelperVersion(effectiveVersion)) {
-      throw const PrivilegedHelperProtocolException('invalid version for helper');
+      throw const PrivilegedHelperProtocolException(
+        'invalid version for helper',
+      );
     }
     final line = jsonEncode(<String, Object?>{
       'v': kPrivilegedHelperProtocolVersion,
@@ -134,6 +142,8 @@ class PrivilegedHelperStartRequest extends PrivilegedHelperRequest {
           ? 'install'
           : 'update',
       'appId': appId,
+      // 新旧请求都保持类型白名单；不开放任意命令参数。
+      if (noAutoPrune) 'noAutoPrune': true,
       if (operation == PrivilegedHelperOperation.install) ...<String, Object?>{
         // install 必带 force；update 的 force 由 helper 端拒绝。
         'force': force,
@@ -153,7 +163,9 @@ class PrivilegedHelperCancelRequest extends PrivilegedHelperRequest {
   @override
   String encode() {
     if (!isValidPrivilegedHelperRequestId(requestId)) {
-      throw const PrivilegedHelperProtocolException('invalid requestId for helper');
+      throw const PrivilegedHelperProtocolException(
+        'invalid requestId for helper',
+      );
     }
     return _terminateFrame(
       jsonEncode(<String, Object?>{

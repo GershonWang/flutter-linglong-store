@@ -10,6 +10,8 @@ import '../../core/platform/linux_renderer_service.dart';
 import 'application_dependency_providers.dart'
     show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import 'installed_apps_provider.dart';
+import 'app_collection_sync_provider.dart';
+import 'linglong_app_analysis_provider.dart';
 import 'linux_renderer_provider.dart';
 
 part 'setting_provider.freezed.dart';
@@ -33,6 +35,9 @@ sealed class SettingState with _$SettingState {
 
     /// 已安装列表中显示基础运行服务
     @Default(false) bool showBaseService,
+
+    /// 新版玲珑操作默认清理未使用依赖；关闭仅影响后续任务。
+    @Default(true) bool autoPruneDependencies,
 
     /// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
     @Default(LinuxRendererPreference.auto)
@@ -58,6 +63,12 @@ class Setting extends _$Setting {
   SettingState _restorePersistedSettings() {
     try {
       var restoredState = const SettingState();
+
+      // 保留用户偏好，即使当前 CLI 降级；版本门槛决定能否下发参数。
+      restoredState = restoredState.copyWith(
+        autoPruneDependencies:
+            _prefs.getBool('setting_auto_prune_dependencies') ?? true,
+      );
 
       // 加载启动时检查版本更新开关
       final checkVersion = _prefs.getBool('setting_check_version_on_startup');
@@ -168,6 +179,16 @@ class Setting extends _$Setting {
     await ref.read(installedAppsProvider.notifier).refresh();
   }
 
+  /// 保存依赖清理偏好；存储失败保持原值，避免界面与后续任务策略不一致。
+  Future<void> setAutoPruneDependencies(bool value) async {
+    final saved = await _prefs.setBool(
+      'setting_auto_prune_dependencies',
+      value,
+    );
+    if (!saved) throw StateError('无法保存依赖清理偏好');
+    state = state.copyWith(autoPruneDependencies: value);
+  }
+
   /// 设置 Linux 软件/硬件渲染偏好。
   ///
   /// 该偏好只会在下次启动时由 Linux runner 读取并生效，
@@ -196,10 +217,22 @@ class Setting extends _$Setting {
   ///
   /// 调用 `ll-cli prune` 移除已不再使用的基础运行时。
   Future<bool> pruneBaseService() async {
+    // 多入口共享同一事务，重复点击不得启动第二次清理。
+    if (state.isPruningBaseService) return false;
     state = state.copyWith(isPruningBaseService: true);
     try {
       final cliRepo = ref.read(linglongCliRepositoryProvider);
       await cliRepo.pruneApps();
+      // 清理成功即使分析过期，不在操作回调内启动昂贵磁盘扫描。
+      invalidateLinglongAppAnalysis(ref);
+      try {
+        await ref
+            .read(appCollectionSyncServiceProvider)
+            .syncAfterSuccessfulOperation();
+      } catch (error, stackTrace) {
+        // 列表刷新失败不能把已完成的清理报告为失败，后续手动刷新可重试。
+        AppLogger.error('清理成功后的列表同步失败', error, stackTrace);
+      }
       state = state.copyWith(isPruningBaseService: false);
       AppLogger.info('Base service pruned');
       return true;

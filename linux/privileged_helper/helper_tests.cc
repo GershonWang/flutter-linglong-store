@@ -88,12 +88,23 @@ void testValidRequests() {
   expectTrue(req.force, "install force=true");
   expectTrue(req.version.empty(), "install version omitted");
 
+  // 清理控制同时用于安装和升级；必须仍拒绝非布尔值。
+  expectTrue(parseOk(
+      R"({"v":1,"type":"start","requestId":"task-prune","operation":"install","appId":"org.deepin.demo","force":false,"noAutoPrune":true})", &req),
+      "install accepts noAutoPrune");
+  expectTrue(req.noAutoPrune, "install preserves noAutoPrune");
+  expectTrue(parseOk(
+      R"({"v":1,"type":"start","requestId":"task-prune","operation":"update","appId":"org.deepin.demo","noAutoPrune":true})", &req),
+      "update accepts noAutoPrune");
+  expectTrue(req.noAutoPrune, "update preserves noAutoPrune");
+
   expectTrue(parseOk(
       R"({"v":1,"type":"start","requestId":"task-125","operation":"update","appId":"org.deepin.demo"})",
       &req),
              "valid update");
   expectTrue(req.operation == helper::HelperOperation::kUpdate,
              "update operation");
+  expectTrue(!req.noAutoPrune, "old request defaults auto prune");
 
   expectTrue(parseOk(R"({"v":1,"type":"cancel","requestId":"task-125"})", &req),
              "valid cancel");
@@ -104,6 +115,10 @@ void testValidRequests() {
 }
 
 void testInvalidRequests() {
+  // 不允许客户端借清理配置字段夹带文本选项。
+  expectEq(parseFatalCode(
+      R"({"v":1,"type":"start","requestId":"t","operation":"update","appId":"a.b","noAutoPrune":"--force"})"),
+      helper::kErrorCodeInvalidRequest, "noAutoPrune rejects string");
   // 空行同样是致命协议错误：issue #25 中客户端曾因 writeln 双重换行把
   // 空行送进协议通道，导致任务执行中会话被终止。此断言锁定 helper 端
   // 的严格契约，客户端必须保证每帧恰好一行 JSON（帧自带 \n 终止符）。
@@ -248,6 +263,16 @@ void testArgvWhitelist() {
   expectArgv(helper::HelperTaskRunner::buildArgv(spec),
              {"/usr/bin/ll-cli", "upgrade", "--json", "org.deepin.demo"},
              "update maps to upgrade and drops version/force");
+  // 两种白名单模板只多出固定旗标，版本和 force 的升级限制仍然成立。
+  spec.noAutoPrune = true;
+  expectArgv(helper::HelperTaskRunner::buildArgv(spec),
+      {"/usr/bin/ll-cli", "upgrade", "--json", "org.deepin.demo", "--no-auto-prune"},
+      "update preserves dependency cleanup choice");
+  spec.operation = helper::HelperOperation::kInstall;
+  spec.version = "1.2.3";
+  expectArgv(helper::HelperTaskRunner::buildArgv(spec),
+      {"/usr/bin/ll-cli", "install", "--json", "org.deepin.demo/1.2.3", "--force", "--no-auto-prune"},
+      "install preserves dependency cleanup choice");
 }
 
 void testSerialStateMachine() {

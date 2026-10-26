@@ -353,6 +353,8 @@ class _ControllableLinglongCliRepository implements LinglongCliRepository {
     String appId, {
     String? version,
     bool force = false,
+    // 取消用例保留完整生产签名，取消路径不重新读取清理偏好。
+    bool noAutoPrune = false,
   }) async* {
     startedApps.add(appId);
     final controller = StreamController<InstallProgress>();
@@ -373,10 +375,17 @@ class _ControllableLinglongCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<void> uninstallApp(String appId, String? version) async {}
+  Future<void> uninstallApp(
+    String appId,
+    String? version, {
+    bool noAutoPrune = false,
+  }) async {}
 
   @override
-  Stream<InstallProgress> updateApp(String appId) async* {}
+  Stream<InstallProgress> updateApp(
+    String appId, {
+    bool noAutoPrune = false,
+  }) async* {}
 }
 
 class _FakeAnalyticsRepository implements AnalyticsRepository {

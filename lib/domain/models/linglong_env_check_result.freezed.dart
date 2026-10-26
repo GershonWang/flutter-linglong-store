@@ -423,7 +423,9 @@ $LinuxDistributionCopyWith<$Res> get distribution {
 /// @nodoc
 mixin _$LinglongRepoInfo {
 
- String get name; String get url; String? get alias; String? get priority;
+ String get name; String get url; String? get alias; String? get priority;/// 上游镜像开关；缺字段时不能推断为 false。
+@JsonKey(name: 'mirror_enabled') bool? get isMirrorEnabled;/// 已保存的镜像地区，关闭镜像后仍可能保留此配置。
+ String? get region;
 /// Create a copy of LinglongRepoInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -436,16 +438,16 @@ $LinglongRepoInfoCopyWith<LinglongRepoInfo> get copyWith => _$LinglongRepoInfoCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinglongRepoInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.url, url) || other.url == url)&&(identical(other.alias, alias) || other.alias == alias)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinglongRepoInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.url, url) || other.url == url)&&(identical(other.alias, alias) || other.alias == alias)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.isMirrorEnabled, isMirrorEnabled) || other.isMirrorEnabled == isMirrorEnabled)&&(identical(other.region, region) || other.region == region));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,url,alias,priority);
+int get hashCode => Object.hash(runtimeType,name,url,alias,priority,isMirrorEnabled,region);
 
 @override
 String toString() {
-  return 'LinglongRepoInfo(name: $name, url: $url, alias: $alias, priority: $priority)';
+  return 'LinglongRepoInfo(name: $name, url: $url, alias: $alias, priority: $priority, isMirrorEnabled: $isMirrorEnabled, region: $region)';
 }
 
 
@@ -456,7 +458,7 @@ abstract mixin class $LinglongRepoInfoCopyWith<$Res>  {
   factory $LinglongRepoInfoCopyWith(LinglongRepoInfo value, $Res Function(LinglongRepoInfo) _then) = _$LinglongRepoInfoCopyWithImpl;
 @useResult
 $Res call({
- String name, String url, String? alias, String? priority
+ String name, String url, String? alias, String? priority,@JsonKey(name: 'mirror_enabled') bool? isMirrorEnabled, String? region
 });
 
 
@@ -473,12 +475,14 @@ class _$LinglongRepoInfoCopyWithImpl<$Res>
 
 /// Create a copy of LinglongRepoInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? url = null,Object? alias = freezed,Object? priority = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? url = null,Object? alias = freezed,Object? priority = freezed,Object? isMirrorEnabled = freezed,Object? region = freezed,}) {
   return _then(LinglongRepoInfo(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,alias: freezed == alias ? _self.alias : alias // ignore: cast_nullable_to_non_nullable
 as String?,priority: freezed == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as String?,isMirrorEnabled: freezed == isMirrorEnabled ? _self.isMirrorEnabled : isMirrorEnabled // ignore: cast_nullable_to_non_nullable
+as bool?,region: freezed == region ? _self.region : region // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -561,10 +565,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String url,  String? alias,  String? priority)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String url,  String? alias,  String? priority, @JsonKey(name: 'mirror_enabled')  bool? isMirrorEnabled,  String? region)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LinglongRepoInfo() when $default != null:
-return $default(_that.name,_that.url,_that.alias,_that.priority);case _:
+return $default(_that.name,_that.url,_that.alias,_that.priority,_that.isMirrorEnabled,_that.region);case _:
   return orElse();
 
 }
@@ -582,10 +586,10 @@ return $default(_that.name,_that.url,_that.alias,_that.priority);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String url,  String? alias,  String? priority)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String url,  String? alias,  String? priority, @JsonKey(name: 'mirror_enabled')  bool? isMirrorEnabled,  String? region)  $default,) {final _that = this;
 switch (_that) {
 case _LinglongRepoInfo():
-return $default(_that.name,_that.url,_that.alias,_that.priority);}
+return $default(_that.name,_that.url,_that.alias,_that.priority,_that.isMirrorEnabled,_that.region);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -599,10 +603,10 @@ return $default(_that.name,_that.url,_that.alias,_that.priority);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String url,  String? alias,  String? priority)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String url,  String? alias,  String? priority, @JsonKey(name: 'mirror_enabled')  bool? isMirrorEnabled,  String? region)?  $default,) {final _that = this;
 switch (_that) {
 case _LinglongRepoInfo() when $default != null:
-return $default(_that.name,_that.url,_that.alias,_that.priority);case _:
+return $default(_that.name,_that.url,_that.alias,_that.priority,_that.isMirrorEnabled,_that.region);case _:
   return null;
 
 }
@@ -614,13 +618,17 @@ return $default(_that.name,_that.url,_that.alias,_that.priority);case _:
 @JsonSerializable()
 
 class _LinglongRepoInfo implements LinglongRepoInfo {
-  const _LinglongRepoInfo({required this.name, required this.url, this.alias, this.priority});
+  const _LinglongRepoInfo({required this.name, required this.url, this.alias, this.priority, @JsonKey(name: 'mirror_enabled') this.isMirrorEnabled, this.region});
   factory _LinglongRepoInfo.fromJson(Map<String, dynamic> json) => _$LinglongRepoInfoFromJson(json);
 
 @override final  String name;
 @override final  String url;
 @override final  String? alias;
 @override final  String? priority;
+/// 上游镜像开关；缺字段时不能推断为 false。
+@override@JsonKey(name: 'mirror_enabled') final  bool? isMirrorEnabled;
+/// 已保存的镜像地区，关闭镜像后仍可能保留此配置。
+@override final  String? region;
 
 /// Create a copy of LinglongRepoInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -635,16 +643,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinglongRepoInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.url, url) || other.url == url)&&(identical(other.alias, alias) || other.alias == alias)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinglongRepoInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.url, url) || other.url == url)&&(identical(other.alias, alias) || other.alias == alias)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.isMirrorEnabled, isMirrorEnabled) || other.isMirrorEnabled == isMirrorEnabled)&&(identical(other.region, region) || other.region == region));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,url,alias,priority);
+int get hashCode => Object.hash(runtimeType,name,url,alias,priority,isMirrorEnabled,region);
 
 @override
 String toString() {
-  return 'LinglongRepoInfo(name: $name, url: $url, alias: $alias, priority: $priority)';
+  return 'LinglongRepoInfo(name: $name, url: $url, alias: $alias, priority: $priority, isMirrorEnabled: $isMirrorEnabled, region: $region)';
 }
 
 
@@ -655,7 +663,7 @@ abstract mixin class _$LinglongRepoInfoCopyWith<$Res> implements $LinglongRepoIn
   factory _$LinglongRepoInfoCopyWith(_LinglongRepoInfo value, $Res Function(_LinglongRepoInfo) _then) = __$LinglongRepoInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String url, String? alias, String? priority
+ String name, String url, String? alias, String? priority,@JsonKey(name: 'mirror_enabled') bool? isMirrorEnabled, String? region
 });
 
 
@@ -672,12 +680,14 @@ class __$LinglongRepoInfoCopyWithImpl<$Res>
 
 /// Create a copy of LinglongRepoInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? url = null,Object? alias = freezed,Object? priority = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? url = null,Object? alias = freezed,Object? priority = freezed,Object? isMirrorEnabled = freezed,Object? region = freezed,}) {
   return _then(_LinglongRepoInfo(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,alias: freezed == alias ? _self.alias : alias // ignore: cast_nullable_to_non_nullable
 as String?,priority: freezed == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as String?,isMirrorEnabled: freezed == isMirrorEnabled ? _self.isMirrorEnabled : isMirrorEnabled // ignore: cast_nullable_to_non_nullable
+as bool?,region: freezed == region ? _self.region : region // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

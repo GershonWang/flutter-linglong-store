@@ -2,12 +2,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/install_queue_state.dart';
+import '../../domain/models/linglong_env_check_result.dart';
 import '../../domain/models/linglong_environment_management.dart';
 import '../../domain/models/linglong_repository_config.dart';
 import '../services/linglong_environment_management_service.dart';
 import 'application_dependency_providers.dart';
 import 'install_queue_provider.dart';
 import 'linglong_env_provider.dart';
+import 'linglong_cli_capabilities_provider.dart';
+import 'linglong_app_analysis_provider.dart';
+
+/// 镜像写入已提交但无法确认结果，调用方必须展示未确认反馈而非成功通知。
+class LinglongMirrorConfirmationException implements Exception {
+  /// 保存完整回读诊断，供界面复制和用户排查。
+  const LinglongMirrorConfirmationException(this.diagnostic);
+
+  /// 回读失败或配置不符的真实原因。
+  final String diagnostic;
+
+  /// 不叠加业务提示；界面通过国际化文案解释未确认状态。
+  @override
+  String toString() => diagnostic;
+}
 
 enum LinglongEnvironmentManagementStatus {
   idle,
@@ -25,6 +41,7 @@ class LinglongEnvironmentManagementState {
     this.activeAction,
     this.repairResult,
     this.errorMessage,
+    this.unconfirmedMirrorAlias,
   });
 
   final LinglongEnvironmentManagementStatus status;
@@ -33,6 +50,9 @@ class LinglongEnvironmentManagementState {
   final LinglongEnvironmentRepairAction? activeAction;
   final LinglongEnvironmentRepairResult? repairResult;
   final String? errorMessage;
+
+  /// 最近一次已提交但未回读确认的仓库；非空时整个旧配置快照均视为未知。
+  final String? unconfirmedMirrorAlias;
 
   bool get isBusy =>
       status == LinglongEnvironmentManagementStatus.loading ||
@@ -48,6 +68,8 @@ class LinglongEnvironmentManagementState {
     bool clearActiveAction = false,
     bool clearError = false,
     bool clearRepairResult = false,
+    String? unconfirmedMirrorAlias,
+    bool clearUnconfirmedMirror = false,
   }) {
     return LinglongEnvironmentManagementState(
       status: status ?? this.status,
@@ -60,6 +82,9 @@ class LinglongEnvironmentManagementState {
           ? null
           : (repairResult ?? this.repairResult),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      unconfirmedMirrorAlias: clearUnconfirmedMirror
+          ? null
+          : (unconfirmedMirrorAlias ?? this.unconfirmedMirrorAlias),
     );
   }
 }
@@ -106,6 +131,7 @@ class LinglongEnvironmentManagement
         status: LinglongEnvironmentManagementStatus.ready,
         analysis: analysis,
         repositoryConfig: repositoryConfig,
+        clearUnconfirmedMirror: true,
         clearActiveAction: true,
         clearError: true,
       );
@@ -127,6 +153,7 @@ class LinglongEnvironmentManagement
       state = state.copyWith(
         status: LinglongEnvironmentManagementStatus.ready,
         repositoryConfig: repositoryConfig,
+        clearUnconfirmedMirror: true,
         clearActiveAction: true,
         clearError: true,
       );
@@ -255,15 +282,77 @@ class LinglongEnvironmentManagement
     );
   }
 
+  /// 提交镜像配置后严格回读；低版只发送既有开关命令。
   Future<String> setRepositoryMirror(
     String aliasOrName, {
     required bool enabled,
-  }) {
-    return _runRepositoryMutation(
-      () => ref
-          .read(linglongRepositoryManagementRepositoryProvider)
-          .setRepositoryMirror(aliasOrName, enabled: enabled),
+    String? region,
+  }) async {
+    if (state.isBusy) throw StateError('Repository operation already running');
+    final supportsRegion = ref
+        .read(linglongCliCapabilitiesProvider)
+        .supportsMirrorRegion;
+    final requestedRegion = enabled && supportsRegion ? region : null;
+    if (requestedRegion != null &&
+        !LinglongRepoInfo.isSafeMirrorRegion(requestedRegion)) {
+      throw ArgumentError.value(
+        requestedRegion,
+        'region',
+        'Unsafe mirror region code',
+      );
+    }
+    final repository = ref.read(linglongRepositoryManagementRepositoryProvider);
+    state = state.copyWith(
+      status: LinglongEnvironmentManagementStatus.applying,
+      clearError: true,
     );
+    String output;
+    try {
+      output = await repository.setRepositoryMirror(
+        aliasOrName,
+        enabled: enabled,
+        region: requestedRegion,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        status: LinglongEnvironmentManagementStatus.failed,
+        errorMessage: _formatError(error),
+      );
+      rethrow;
+    }
+
+    try {
+      final config = await repository.getRepositoryConfig();
+      final matching = config.repos.where(
+        (repo) => (repo.alias ?? repo.name) == aliasOrName,
+      );
+      final repo = matching.length == 1 ? matching.single : null;
+      if (repo == null ||
+          repo.isMirrorEnabled != enabled ||
+          (enabled &&
+              supportsRegion &&
+              (repo.region ?? '') != (requestedRegion ?? ''))) {
+        throw StateError(
+          'Mirror configuration readback did not match requested state',
+        );
+      }
+      state = state.copyWith(
+        status: LinglongEnvironmentManagementStatus.ready,
+        repositoryConfig: config,
+        clearError: true,
+        clearUnconfirmedMirror: true,
+      );
+      return output;
+    } catch (error, stackTrace) {
+      AppLogger.error('[LinglongEnvManagement] 镜像配置已提交但未确认', error, stackTrace);
+      final diagnostic = _formatError(error);
+      state = state.copyWith(
+        status: LinglongEnvironmentManagementStatus.failed,
+        unconfirmedMirrorAlias: aliasOrName,
+        errorMessage: diagnostic,
+      );
+      throw LinglongMirrorConfirmationException(diagnostic);
+    }
   }
 
   Future<LinglongEnvironmentRepairResult> _runRepairAction(
@@ -279,6 +368,8 @@ class LinglongEnvironmentManagement
 
     try {
       final result = await operation();
+      // 修复和迁移可能改变 inode 与仓库占用；失效只读缓存不会触发隐藏页扫描。
+      if (result.success) invalidateLinglongAppAnalysis(ref);
       state = state.copyWith(repairResult: result);
       await load();
       state = state.copyWith(repairResult: result);

@@ -33,6 +33,8 @@ struct HelperRequest {
   std::string appId;
   std::string version;
   bool force = false;
+  /// 只控制依赖自动清理，旧请求缺字段时继续使用上游默认行为。
+  bool noAutoPrune = false;
 };
 
 /// 请求解析结果分类。

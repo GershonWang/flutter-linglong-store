@@ -11,6 +11,142 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'إضافة مستودع';
+
+  @override
+  String get a11yMirrorActions => 'إجراءات المستودع';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'نسخ رسالة الخطأ';
+
+  @override
+  String get a11yMirrorConfirm => 'تأكيد';
+
+  @override
+  String get a11yMirrorCancel => 'إلغاء';
+
+  @override
+  String get a11yMirrorRepositories => 'قائمة إعدادات مرايا المستودعات';
+
+  @override
+  String get mirrorRegionTitle => 'منطقة المرآة';
+
+  @override
+  String get mirrorRegionAuto => 'تلقائي';
+
+  @override
+  String get mirrorRegionChina => 'الصين (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'الولايات المتحدة (US)';
+
+  @override
+  String get mirrorRegionEurope => 'أوروبا (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'منطقة مخصصة';
+
+  @override
+  String get mirrorRegionCode => 'رمز المنطقة';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'استخدم حروفًا أو أرقامًا أو شرطات أو شرطات سفلية، بدءًا بحرف أو رقم.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'تم إرسال الإعدادات؛ لم يتم تأكيد الحالة بعد';
+
+  @override
+  String get mirrorStatusUnknown => 'حالة المرآة غير معروفة';
+
+  @override
+  String get mirrorCustomRegionTitle => 'تعيين منطقة المرآة';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'مفتاح المرآة للمستودع ⁨$repository⁩';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'منطقة المرآة للمستودع ⁨$repository⁩';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'تشخيص إعدادات المرآة';
+
+  @override
+  String get a11yAnalysisRefresh => 'تحديث';
+
+  @override
+  String get a11yAnalysisRetry => 'إعادة المحاولة';
+
+  @override
+  String get a11yAnalysisCopy => 'نسخ';
+
+  @override
+  String get a11yAnalysisSort => 'ترتيب الوحدات';
+
+  @override
+  String get a11yAnalysisVersion => 'الإصدار المثبت';
+
+  @override
+  String get analysisSpace => 'تحليل المساحة';
+
+  @override
+  String get analysisApp => 'المساحة والاعتماديات';
+
+  @override
+  String get analysisRepository => 'استخدام المستودع';
+
+  @override
+  String get analysisModulesTotal => 'إجمالي الوحدات المثبتة';
+
+  @override
+  String get analysisActual => 'تقدير موزع';
+
+  @override
+  String get analysisExclusive => 'حصري';
+
+  @override
+  String get analysisShared => 'مشترك';
+
+  @override
+  String get analysisLogical => 'منطقي';
+
+  @override
+  String get analysisDependencies => 'بيئات التطبيق';
+
+  @override
+  String get analysisEmpty => 'لا توجد بيانات تحليل';
+
+  @override
+  String get analysisSearch => 'البحث عن الوحدات';
+
+  @override
+  String get analysisSort => 'ترتيب الوحدات';
+
+  @override
+  String get analysisAllocationNotice =>
+      'توزع الكتل المشتركة بين الوحدات. لا تمثل هذه القيم المساحة التي يمكن استعادتها بإلغاء التثبيت.';
+
+  @override
+  String get analysisInstalledVersion => 'الإصدار المثبت';
+
+  @override
+  String get analysisNoMatches => 'لا توجد وحدات مطابقة';
+
+  @override
+  String get analysisDescending => 'الأكبر أولاً';
+
+  @override
+  String get a11yAnalysisArea => 'تحليل المساحة';
+
+  @override
+  String get a11yAnalysisApp => 'المساحة والاعتماديات';
+
+  @override
   String get appTitle => 'متجر تطبيقات Linglong (الإصدار المجتمعي)';
 
   @override
@@ -646,6 +782,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get showBaseServices => 'عرض الخدمات الأساسية';
+
+  @override
+  String get autoPruneDependencies => 'تنظيف التبعيات غير المستخدمة تلقائيا';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'ينظف لينابس التبعيات غير المستخدمة بعد التحديث أو الإزالة. تعطيل الخيار يحتفظ بالتبعيات ولا يضمن الاحتفاظ بإصدارات التطبيق السابقة.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'تنظيف التبعيات غير المستخدمة تلقائيا';
 
   @override
   String get showBaseServicesDesc =>
@@ -2733,4 +2880,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'مضى ⁨$elapsed⁩';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'يمكنك متابعة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها. يتطلب تثبيت التطبيقات المحلية وتشغيلها وإدارتها أو تحديثها بيئة ⁨Linglong⁩ سليمة.';
+
+  @override
+  String get continueBrowsing => 'متابعة التصفح';
+
+  @override
+  String get envRequiredTitle => 'بيئة ⁨Linglong⁩ مطلوبة';
+
+  @override
+  String get envRequiredDescription =>
+      'تتطلب هذه الميزة بيئة ⁨Linglong⁩ محلية. ثبّتها أو أصلحها لإدارة التطبيقات المثبتة وتحديثاتها. يمكنك مواصلة تصفح المتجر والبحث عن التطبيقات وعرض تفاصيلها.';
+
+  @override
+  String get configureLinglongEnvironment => 'تثبيت البيئة أو إصلاحها';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'التثبيت جارٍ. يرجى الانتظار حتى اكتماله. لا يمكن إغلاق هذا الإشعار أثناء التثبيت.';
+
+  @override
+  String get a11yContinueBrowsing => 'إغلاق إشعار البيئة ومتابعة تصفح المتجر';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'تثبيت بيئة ⁨Linglong⁩ أو إصلاحها';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'فتح دليل التثبيت اليدوي لبيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => 'إعادة فحص بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'نسخ معلومات تشخيص بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'فتح مجلد سجل تثبيت بيئة ⁨Linglong⁩';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'إعادة تشغيل خدمة مدير حزم ⁨Linglong⁩';
 }

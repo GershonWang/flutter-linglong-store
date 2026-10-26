@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/models/install_task.dart';
 import 'app_collection_sync_provider.dart';
 import 'application_dependency_providers.dart';
+import 'auto_prune_preference_provider.dart';
 import 'installed_apps_provider.dart';
 import 'install_queue_provider.dart';
 import 'running_process_provider.dart';
@@ -21,7 +22,12 @@ AppUninstallService appUninstallService(Ref ref) {
   return AppUninstallService(
     readRunningApps: () => runningProcess.currentApps,
     killRunningApp: runningProcess.killApp,
-    uninstallApp: cliRepository.uninstallApp,
+    // 所有卸载入口共用一次策略快照，不在各页面复制参数判断。
+    uninstallApp: (appId, version) => cliRepository.uninstallApp(
+      appId,
+      version,
+      noAutoPrune: ref.read(noAutoPrunePreferenceProvider),
+    ),
     removeInstalledApp: installedApps.removeApp,
     syncAfterUninstall: collectionSyncService.syncAfterSuccessfulOperation,
     // 读取当前正在执行（非排队等待）的安装/更新任务

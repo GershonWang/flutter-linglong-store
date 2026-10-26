@@ -1,7 +1,10 @@
+import argparse
 import importlib.util
+import os
 import pathlib
 import sys
 import unittest
+from unittest import mock
 
 
 MODULE_PATH = (
@@ -127,6 +130,34 @@ class SyncGithubReleaseToGiteeTests(unittest.TestCase):
             ),
             "https://github.com/test/releases/download/v1/a.deb",
         )
+
+    def _build_args(self):
+        return argparse.Namespace(
+            github_repo=None,
+            gitee_repo=None,
+            max_releases=10,
+            max_file_size_mb=100,
+        )
+
+    def test_build_config_allows_missing_github_token(self):
+        # 公开仓库支持匿名访问：GITHUB_TOKEN 缺失时不应阻断配置构建，
+        # 仅保留 GITEE_TOKEN 为必填项。
+        module = load_module()
+
+        env = {"GITHUB_TOKEN": "", "GITEE_TOKEN": "gitee-token"}
+        with mock.patch.dict(os.environ, env, clear=False):
+            config = module.build_config(self._build_args())
+
+        self.assertEqual(config.github_token, "")
+        self.assertEqual(config.gitee_token, "gitee-token")
+
+    def test_build_config_still_requires_gitee_token(self):
+        module = load_module()
+
+        env = {"GITHUB_TOKEN": "github-token", "GITEE_TOKEN": ""}
+        with mock.patch.dict(os.environ, env, clear=False):
+            with self.assertRaises(SystemExit):
+                module.build_config(self._build_args())
 
 
 if __name__ == "__main__":

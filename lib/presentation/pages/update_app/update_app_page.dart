@@ -7,6 +7,8 @@ import '../../../application/providers/app_collection_sync_provider.dart';
 import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/ignored_updates_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
+import '../../../application/providers/linglong_env_provider.dart';
+import '../../../application/providers/launch_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/runtime_form_provider.dart';
 import '../../../application/providers/update_all_controller.dart';
@@ -27,6 +29,7 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/ignored_updates_dialog.dart';
 import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
+import '../../widgets/linglong_environment_required_view.dart';
 
 /// 应用更新页
 class UpdateAppPage extends ConsumerStatefulWidget {
@@ -40,8 +43,27 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   @override
   void initState() {
     super.initState();
+    // 关闭启动自动检查的用户仍会主动打开更新页；等待本机初始化完成再补检查。
+    // 已有启动检查结果时不补发，也不重复刷新刚由启动流程加载的已安装快照。
+    ref.listenManual(
+      launchSequenceProvider.select((launch) => launch.isBrowseOnly),
+      (previous, browseOnly) {
+        if (previous == true && !browseOnly) {
+          unawaited(Future.microtask(_checkUpdatesAfterEnvironmentRecovery));
+        }
+      },
+    );
     // 页面加载时检查更新
     unawaited(Future.microtask(_syncUpdates));
+  }
+
+  /// 环境修复期间停留在更新页的用户需要一次主动检查，避免空快照被当成最新。
+  Future<void> _checkUpdatesAfterEnvironmentRecovery() async {
+    if (!mounted || ref.read(linglongEnvProvider).isUnavailable) return;
+    final updates = ref.read(updateAppsProvider);
+    if (!updates.hasLoadedOnce && !updates.isLoading) {
+      await ref.read(updateAppsProvider.notifier).checkUpdates();
+    }
   }
 
   /// 同步已安装快照后重新检查更新。
@@ -49,6 +71,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   /// 更新页属于用户主动核对本机状态的入口，必须先刷新 `ll-cli list --json`
   /// 对应的已安装应用快照，再计算远端可更新列表，避免更新完成后继续使用旧版本。
   Future<void> _syncUpdates() {
+    // 未配置玲珑时不读取本机版本，也不触发远端更新比较；修复后由启动流程同步。
+    if (ref.read(linglongEnvProvider).isUnavailable) {
+      return Future<void>.value();
+    }
     return ref
         .read(appCollectionSyncServiceProvider)
         .syncAfterSuccessfulOperation();
@@ -121,6 +147,15 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 缺环境不能显示「全部为最新版本」的空结果，提供明确说明与统一修复入口。
+    final unavailable = ref.watch(
+      linglongEnvProvider.select((env) => env.isUnavailable),
+    );
+    if (unavailable) {
+      return LinglongEnvironmentRequiredView(
+        featureName: AppLocalizations.of(context)!.update,
+      );
+    }
     final state = ref.watch(updateAppsProvider);
     // 页面级只订阅“是否存在活跃任务”这一布尔事实；进度 tick 不会改变它。
     // 每行的任务与入队状态由 _UpdatableAppItem 自行 select，安装进度
@@ -243,7 +278,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
       return l10n.updateCheckFailed;
     }
 
-    if (state.isLoading && !state.hasLoadedOnce) {
+    if (!state.hasLoadedOnce &&
+        (state.isLoading || ref.read(linglongEnvProvider).isReady)) {
       return l10n.checkingUpdate;
     }
 
@@ -258,8 +294,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   ) {
     final l10n = AppLocalizations.of(context)!;
 
-    // 加载中状态 — 仅在首次加载（列表为空且尚无历史结果）时显示全屏 loading。
-    if (state.isLoading && state.apps.isEmpty && !state.hasLoadedOnce) {
+    // 首次无可信结果时等待启动恢复或主动检查，避免刚修复环境就展示「全部最新」。
+    if (state.apps.isEmpty &&
+        !state.hasLoadedOnce &&
+        (state.isLoading || ref.read(linglongEnvProvider).isReady)) {
       return const Center(child: CircularProgressIndicator());
     }
 

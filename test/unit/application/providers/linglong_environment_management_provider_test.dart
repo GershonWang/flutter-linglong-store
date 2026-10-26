@@ -6,6 +6,9 @@ import 'package:linglong_store/application/providers/linglong_environment_manage
 import 'package:linglong_store/application/services/linglong_environment_management_service.dart';
 import 'package:linglong_store/application/services/linglong_environment_service.dart';
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/application/providers/linglong_cli_capabilities_provider.dart';
+import 'package:linglong_store/domain/models/linglong_cli_capabilities.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
@@ -15,6 +18,8 @@ import 'package:linglong_store/domain/models/linglong_repository_config.dart';
 import 'package:linglong_store/domain/repositories/linglong_repository_management_repository.dart';
 
 void main() {
+  // 失败场景保留真实诊断路径，先初始化生产日志依赖。
+  setUpAll(AppLogger.init);
   group('LinglongEnvironmentManagement provider', () {
     test('load reads analysis and repository config', () async {
       final service = _FakeManagementService();
@@ -147,6 +152,155 @@ void main() {
         expect(state.repositoryConfig?.repos.single.name, 'stable');
       },
     );
+
+    test('镜像写入后回读失败必须向调用方报告失败', () async {
+      final repository = _FakeRepositoryManagementRepository()
+        ..readError = StateError('readback failed');
+      final container = _createContainer(_FakeManagementService(), repository);
+      addTearDown(container.dispose);
+      await expectLater(
+        container
+            .read(linglongEnvironmentManagementProvider.notifier)
+            .setRepositoryMirror('stable', enabled: true),
+        throwsA(isA<Exception>()),
+      );
+      expect(
+        container.read(linglongEnvironmentManagementProvider).errorMessage,
+        contains('readback failed'),
+      );
+    });
+    test('地区开启关闭重新开启及自动选择均回读确认', () async {
+      final repository = _FakeRepositoryManagementRepository();
+      final container = _createContainer(
+        _FakeManagementService(),
+        repository,
+        cliVersion: '1.14.0',
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        linglongEnvironmentManagementProvider.notifier,
+      );
+      await notifier.setRepositoryMirror('stable', enabled: true, region: 'CN');
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .repositoryConfig!
+            .repos
+            .single
+            .region,
+        'CN',
+      );
+      await notifier.setRepositoryMirror('stable', enabled: false);
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .repositoryConfig!
+            .repos
+            .single
+            .region,
+        'CN',
+      );
+      await notifier.setRepositoryMirror('stable', enabled: true, region: 'CN');
+      await notifier.setRepositoryMirror('stable', enabled: true);
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .repositoryConfig!
+            .repos
+            .single
+            .region,
+        isNull,
+      );
+      expect(repository.mirrorCalls, [
+        {'enabled': true, 'region': 'CN'},
+        {'enabled': false, 'region': null},
+        {'enabled': true, 'region': 'CN'},
+        {'enabled': true, 'region': null},
+      ]);
+    });
+
+    test('低版请求仍只执行旧镜像开关，不透传地区', () async {
+      final repository = _FakeRepositoryManagementRepository();
+      final container = _createContainer(
+        _FakeManagementService(),
+        repository,
+        cliVersion: '1.13.0',
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(linglongEnvironmentManagementProvider.notifier)
+          .setRepositoryMirror('stable', enabled: true, region: 'CN');
+      expect(repository.mirrorCalls.single, {'enabled': true, 'region': null});
+    });
+
+    test('回读与请求不一致时不能成功并标记仓库状态未知', () async {
+      final repository = _FakeRepositoryManagementRepository()
+        ..ignoreMirrorMutation = true;
+      final container = _createContainer(
+        _FakeManagementService(),
+        repository,
+        cliVersion: '1.14.0',
+      );
+      addTearDown(container.dispose);
+      await expectLater(
+        container
+            .read(linglongEnvironmentManagementProvider.notifier)
+            .setRepositoryMirror('stable', enabled: true, region: 'CN'),
+        throwsA(isA<LinglongMirrorConfirmationException>()),
+      );
+      final state = container.read(linglongEnvironmentManagementProvider);
+      expect(state.status, LinglongEnvironmentManagementStatus.failed);
+      expect(state.unconfirmedMirrorAlias, 'stable');
+    });
+    test('连续两个仓库写入后回读失败保持整体快照未确认，完整刷新才清除', () async {
+      final repository = _FakeRepositoryManagementRepository()
+        ..extraRepos = [
+          const LinglongRepoInfo(
+            name: 'second',
+            url: 'https://repo.example.com',
+            isMirrorEnabled: true,
+            region: 'EU',
+          ),
+        ];
+      final container = _createContainer(
+        _FakeManagementService(),
+        repository,
+        cliVersion: '1.14.0',
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        linglongEnvironmentManagementProvider.notifier,
+      );
+      await notifier.load();
+      repository.readError = StateError('cannot confirm config');
+      for (final name in ['stable', 'second']) {
+        await expectLater(
+          notifier.setRepositoryMirror(name, enabled: true, region: 'US'),
+          throwsA(isA<LinglongMirrorConfirmationException>()),
+        );
+      }
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .unconfirmedMirrorAlias,
+        'second',
+      );
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .repositoryConfig!
+            .repos,
+        hasLength(2),
+      );
+      repository.readError = null;
+      await notifier.refreshRepositoryConfig();
+      expect(
+        container
+            .read(linglongEnvironmentManagementProvider)
+            .unconfirmedMirrorAlias,
+        isNull,
+      );
+    });
   });
 }
 
@@ -154,9 +308,13 @@ ProviderContainer _createContainer(
   _FakeManagementService service,
   _FakeRepositoryManagementRepository repository, {
   InstallQueueState installQueueState = const InstallQueueState(),
+  String? cliVersion,
 }) {
   return ProviderContainer(
     overrides: [
+      linglongCliCapabilitiesProvider.overrideWithValue(
+        LinglongCliCapabilities.fromVersion(cliVersion),
+      ),
       linglongEnvironmentManagementServiceProvider.overrideWithValue(service),
       linglongRepositoryManagementRepositoryProvider.overrideWithValue(
         repository,
@@ -251,21 +409,34 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
 
 class _FakeRepositoryManagementRepository
     implements LinglongRepositoryManagementRepository {
+  /// 模拟提交完成后的配置读取失败，验证不能误报成功。
+  Object? readError;
+
+  /// 模拟后端未接受新配置，避免写命令成功被当成配置成功。
+  bool ignoreMirrorMutation = false;
+
+  /// 记录镜像边界参数，避免使用真实系统配置。
+  final mirrorCalls = <Map<String, Object?>>[];
+
+  /// 第二仓库用于验证连续回读失败不能恢复过期条目的确认语义。
+  List<LinglongRepoInfo> extraRepos = const [];
+
+  /// 遵循上游关闭保留地区、自动清除地区的配置快照。
+  LinglongRepoInfo repo = const LinglongRepoInfo(
+    name: 'stable',
+    url: 'https://repo.example.com',
+    priority: '0',
+  );
   int getCallCount = 0;
   final addCalls = <Map<String, String?>>[];
 
   @override
   Future<LinglongRepositoryConfig> getRepositoryConfig() async {
     getCallCount += 1;
-    return const LinglongRepositoryConfig(
+    if (readError != null) throw readError!;
+    return LinglongRepositoryConfig(
       defaultRepo: 'stable',
-      repos: [
-        LinglongRepoInfo(
-          name: 'stable',
-          url: 'https://repo.example.com',
-          priority: '0',
-        ),
-      ],
+      repos: [repo, ...extraRepos],
     );
   }
 
@@ -289,7 +460,17 @@ class _FakeRepositoryManagementRepository
   Future<String> setRepositoryMirror(
     String aliasOrName, {
     required bool enabled,
-  }) async => 'ok';
+    String? region,
+  }) async {
+    mirrorCalls.add({'enabled': enabled, 'region': region});
+    if (!ignoreMirrorMutation) {
+      repo = repo.copyWith(
+        isMirrorEnabled: enabled,
+        region: enabled ? region : repo.region,
+      );
+    }
+    return 'ok';
+  }
 
   @override
   Future<String> setRepositoryPriority(

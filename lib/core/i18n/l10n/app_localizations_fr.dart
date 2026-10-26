@@ -11,6 +11,142 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Ajouter un dépôt';
+
+  @override
+  String get a11yMirrorActions => 'Actions sur le dépôt';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Copier le message d\'erreur';
+
+  @override
+  String get a11yMirrorConfirm => 'Confirmer';
+
+  @override
+  String get a11yMirrorCancel => 'Annuler';
+
+  @override
+  String get a11yMirrorRepositories => 'Liste des paramètres des miroirs';
+
+  @override
+  String get mirrorRegionTitle => 'Région du miroir';
+
+  @override
+  String get mirrorRegionAuto => 'Automatique';
+
+  @override
+  String get mirrorRegionChina => 'Chine (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'États-Unis (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Europe (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Région personnalisée';
+
+  @override
+  String get mirrorRegionCode => 'Code de région';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Utilisez lettres, chiffres, tirets ou tirets bas, en commençant par une lettre ou un chiffre.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Paramètres envoyés ; état non confirmé';
+
+  @override
+  String get mirrorStatusUnknown => 'État du miroir inconnu';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Définir la région du miroir';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Interrupteur du miroir pour $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Région du miroir pour $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Diagnostic de configuration du miroir';
+
+  @override
+  String get a11yAnalysisRefresh => 'Actualiser';
+
+  @override
+  String get a11yAnalysisRetry => 'Réessayer';
+
+  @override
+  String get a11yAnalysisCopy => 'Copier';
+
+  @override
+  String get a11yAnalysisSort => 'Trier les modules';
+
+  @override
+  String get a11yAnalysisVersion => 'Version installée';
+
+  @override
+  String get analysisSpace => 'Analyse de l’espace';
+
+  @override
+  String get analysisApp => 'Espace et dépendances';
+
+  @override
+  String get analysisRepository => 'Espace du dépôt';
+
+  @override
+  String get analysisModulesTotal => 'Total des modules installés';
+
+  @override
+  String get analysisActual => 'Estimation répartie';
+
+  @override
+  String get analysisExclusive => 'Exclusif';
+
+  @override
+  String get analysisShared => 'Partagé';
+
+  @override
+  String get analysisLogical => 'Logique';
+
+  @override
+  String get analysisDependencies => 'Environnements de l’application';
+
+  @override
+  String get analysisEmpty => 'Aucune donnée d’analyse';
+
+  @override
+  String get analysisSearch => 'Rechercher des modules';
+
+  @override
+  String get analysisSort => 'Trier les modules';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Les blocs partagés sont répartis entre les modules. Ces valeurs ne représentent pas l’espace libéré par une désinstallation.';
+
+  @override
+  String get analysisInstalledVersion => 'Version installée';
+
+  @override
+  String get analysisNoMatches => 'Aucun module correspondant';
+
+  @override
+  String get analysisDescending => 'Plus grands d’abord';
+
+  @override
+  String get a11yAnalysisArea => 'Analyse de l’espace';
+
+  @override
+  String get a11yAnalysisApp => 'Espace et dépendances';
+
+  @override
   String get appTitle => 'Linyaps Store Édition Communautaire';
 
   @override
@@ -599,6 +735,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Afficher les services d\'exécution de base';
+
+  @override
+  String get autoPruneDependencies =>
+      'Supprimer automatiquement les dépendances inutilisées';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps nettoie les dépendances inutilisées après les mises à jour ou suppressions. Désactiver conserve les dépendances, sans garantir les anciennes versions des applications.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Supprimer automatiquement les dépendances inutilisées';
 
   @override
   String get showBaseServicesDesc =>
@@ -2677,4 +2825,54 @@ class AppLocalizationsFr extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Temps d\'exécution $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'Vous pouvez continuer à parcourir la boutique, rechercher des applications et consulter leurs détails. Un environnement Linglong opérationnel est nécessaire pour installer, exécuter et gérer les applications locales ou leurs mises à jour.';
+
+  @override
+  String get continueBrowsing => 'Continuer à parcourir';
+
+  @override
+  String get envRequiredTitle => 'Environnement Linglong requis';
+
+  @override
+  String get envRequiredDescription =>
+      'Cette fonction nécessite un environnement Linglong local. Installez-le ou réparez-le pour gérer les applications installées et leurs mises à jour. Vous pouvez toujours parcourir la boutique, rechercher des applications et consulter leurs détails.';
+
+  @override
+  String get configureLinglongEnvironment =>
+      'Installer ou réparer l’environnement';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'L’installation est en cours. Veuillez attendre la fin. Cet avis ne peut pas être fermé pendant l’installation.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Fermer l’avis sur l’environnement et continuer à parcourir la boutique';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Installer ou réparer l’environnement Linglong';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Ouvrir le guide d’installation manuelle de Linglong';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Vérifier à nouveau l’environnement Linglong';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Copier le diagnostic de l’environnement Linglong';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Ouvrir le dossier des journaux d’installation de Linglong';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Redémarrer le service du gestionnaire de paquets Linglong';
 }

@@ -20,6 +20,8 @@ struct TaskSpec {
   std::string appId;
   std::string version;
   bool force = false;
+  /// 调用方已通过版本门槛，只允许生成固定的依赖清理旗标。
+  bool noAutoPrune = false;
 };
 
 /// cancel 请求的判定结果。
@@ -38,6 +40,7 @@ class HelperTaskRunner {
   /// update 请求映射为 `upgrade` 子命令（§5.1）；install 仅在显式 version 时
   /// 拼 `appId/version`，force 只对 install 追加 `--force`。请求内容不可能
   /// 出现在模板的其他位置。
+  /// 清理偏好只接受布尔值，不接收外部 argv。
   static std::vector<std::string> buildArgv(const TaskSpec& spec);
 
   HelperTaskRunner() = default;

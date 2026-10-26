@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/cli_executor.dart';
 import '../../core/storage/cache_service.dart';
+import 'linglong_env_provider.dart';
 
 part 'app_search_index_provider.g.dart';
 
@@ -155,18 +158,28 @@ const _kLegacyCacheKey = 'search_index_json';
 /// 索引略旧只影响候选列表内容，不影响跳转正确性。
 const _kIndexFreshTtl = Duration(hours: 24);
 
+/// 索引的 CLI 边界集中在此，便于验证缺环境时没有启动任何本机命令。
+final appSearchIndexCliLoaderProvider = Provider<Future<CliOutput> Function()>(
+  (ref) =>
+      () => CliExecutor.execute([
+        'search',
+        '.',
+        '--json',
+      ], timeout: const Duration(seconds: 30)),
+);
+
 /// 将精简条目编码为紧凑 JSON（位置数组，字段顺序与 [decodeCompactIndex] 对应）。
 String encodeCompactIndex(List<SearchSuggestionEntry> entries) => jsonEncode([
-      for (final e in entries)
-        [
-          e.appId,
-          e.name,
-          e.version ?? '',
-          e.arch ?? '',
-          e.repoName ?? '',
-          e.module ?? '',
-        ],
-    ]);
+  for (final e in entries)
+    [
+      e.appId,
+      e.name,
+      e.version ?? '',
+      e.arch ?? '',
+      e.repoName ?? '',
+      e.module ?? '',
+    ],
+]);
 
 /// 解码 [encodeCompactIndex] 生成的紧凑 JSON；格式损坏时返回空列表（视为未命中）。
 List<SearchSuggestionEntry> decodeCompactIndex(String jsonStr) {
@@ -203,8 +216,34 @@ String? _orEmptyToNull(Object? value) {
 /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 @Riverpod(keepAlive: true)
 class AppSearchIndex extends _$AppSearchIndex {
+  /// CLI 仍在等待时只保留一次恢复请求，避免安装完成后重复加载大索引。
+  bool _isFetching = false;
+
+  /// 仅环境曾不可用时补刷新，普通安装进度和重复检测不产生额外 CLI。
+  bool _needsEnvironmentRefresh = false;
+
+  /// 不可用环境的晚到响应不能替换候选或持久化成新缓存。
+  int _latestRequestId = 0;
+
   @override
   AsyncValue<List<SearchSuggestionEntry>> build() {
+    // Provider 首次创建时也可能已经处于体验模式，修复后需刷新新环境的仓库索引。
+    _needsEnvironmentRefresh = ref.read(linglongEnvProvider).isUnavailable;
+    ref.listen(
+      linglongEnvProvider.select((env) => (env.isUnavailable, env.isReady)),
+      (previous, next) {
+        if (next.$1) {
+          _latestRequestId++;
+          _needsEnvironmentRefresh = true;
+          // 缓存候选仍可用于浏览，无缓存时停止无意义的加载占位。
+          if (state is! AsyncData) {
+            state = const AsyncData([]);
+          }
+        } else if (next.$2 && _needsEnvironmentRefresh) {
+          unawaited(_fetchFromCli());
+        }
+      },
+    );
     // CacheService 为 LazyBox，缓存读取是异步磁盘 IO：先返回 loading，
     // 水合完成后命中则立即回填，未命中则直接拉取 ll-cli。
     _hydrateFromCache();
@@ -249,13 +288,22 @@ class AppSearchIndex extends _$AppSearchIndex {
   }
 
   Future<void> _fetchFromCli() async {
+    if (!ref.mounted) return;
+    // 缺环境不会影响远程搜索页；候选缓存可保留，但不重试必然失败的 CLI。
+    if (ref.read(linglongEnvProvider).isUnavailable) {
+      _needsEnvironmentRefresh = true;
+      if (state is! AsyncData) {
+        state = const AsyncData([]);
+      }
+      return;
+    }
+    if (_isFetching) return;
+    _isFetching = true;
+    _needsEnvironmentRefresh = false;
+    final requestId = ++_latestRequestId;
     try {
-      final output = await CliExecutor.execute([
-        'search',
-        '.',
-        '--json',
-      ], timeout: const Duration(seconds: 30));
-      if (!ref.mounted) return;
+      final output = await ref.read(appSearchIndexCliLoaderProvider)();
+      if (!_canApplyRequest(requestId)) return;
       if (!output.success) {
         // 首次加载且无缓存时回退空列表
         if (state is! AsyncData) {
@@ -265,9 +313,11 @@ class AppSearchIndex extends _$AppSearchIndex {
       }
       // 全仓库索引是应用内最大的单体 JSON，解析移入后台 isolate，
       // 避免启动/刷新期间主 isolate 卡顿与分配峰值。
-      final entries = await Isolate.run(() => parseSearchIndexJson(output.stdout));
+      final entries = await Isolate.run(
+        () => parseSearchIndexJson(output.stdout),
+      );
       AppLogger.info('[SearchIndex] ll-cli 加载完成: ${entries.length} 条应用');
-      if (!ref.mounted) return;
+      if (!_canApplyRequest(requestId)) return;
       state = AsyncData(entries);
       // 写入精简格式缓存供下次启动使用；TTL 控制新鲜期，过期后重新拉取
       await CacheService.set(
@@ -276,12 +326,26 @@ class AppSearchIndex extends _$AppSearchIndex {
         ttl: _kIndexFreshTtl,
       );
     } catch (e, stack) {
-      if (!ref.mounted) return;
+      if (!_canApplyRequest(requestId)) return;
       AppLogger.warning('[SearchIndex] ll-cli 加载失败', e, stack);
       // 首次加载且无缓存时回退空列表
       if (state is! AsyncData) {
         state = const AsyncData([]);
       }
+    } finally {
+      _isFetching = false;
+      // 环境在旧查询等待期间修复时，待旧查询结束再补一次，保持单请求执行。
+      if (ref.mounted &&
+          _needsEnvironmentRefresh &&
+          ref.read(linglongEnvProvider).isReady) {
+        unawaited(_fetchFromCli());
+      }
     }
   }
+
+  /// 缓存写入与 UI 回填共享环境和请求序号守卫，避免保存失效索引。
+  bool _canApplyRequest(int requestId) =>
+      ref.mounted &&
+      requestId == _latestRequestId &&
+      !ref.read(linglongEnvProvider).isUnavailable;
 }

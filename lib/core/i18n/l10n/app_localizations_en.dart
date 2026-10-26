@@ -11,6 +11,142 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'Add repository';
+
+  @override
+  String get a11yMirrorActions => 'Repository actions';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'Copy error message';
+
+  @override
+  String get a11yMirrorConfirm => 'Confirm';
+
+  @override
+  String get a11yMirrorCancel => 'Cancel';
+
+  @override
+  String get a11yMirrorRepositories => 'Mirror repository settings list';
+
+  @override
+  String get mirrorRegionTitle => 'Mirror Region';
+
+  @override
+  String get mirrorRegionAuto => 'Automatic';
+
+  @override
+  String get mirrorRegionChina => 'China (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => 'United States (US)';
+
+  @override
+  String get mirrorRegionEurope => 'Europe (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'Custom Region';
+
+  @override
+  String get mirrorRegionCode => 'Region Code';
+
+  @override
+  String get mirrorRegionInvalid =>
+      'Use letters, numbers, hyphens or underscores, starting with a letter or number.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed =>
+      'Settings submitted; status is not yet confirmed';
+
+  @override
+  String get mirrorStatusUnknown => 'Mirror status unknown';
+
+  @override
+  String get mirrorCustomRegionTitle => 'Set Mirror Region';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return 'Mirror switch for $repository';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return 'Mirror region for $repository';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'Mirror configuration diagnostics';
+
+  @override
+  String get a11yAnalysisRefresh => 'Refresh';
+
+  @override
+  String get a11yAnalysisRetry => 'Retry';
+
+  @override
+  String get a11yAnalysisCopy => 'Copy';
+
+  @override
+  String get a11yAnalysisSort => 'Sort modules';
+
+  @override
+  String get a11yAnalysisVersion => 'Installed version';
+
+  @override
+  String get analysisSpace => 'Space analysis';
+
+  @override
+  String get analysisApp => 'Space and dependencies';
+
+  @override
+  String get analysisRepository => 'Repository usage';
+
+  @override
+  String get analysisModulesTotal => 'Installed module total';
+
+  @override
+  String get analysisActual => 'Allocated estimate';
+
+  @override
+  String get analysisExclusive => 'Exclusive';
+
+  @override
+  String get analysisShared => 'Shared';
+
+  @override
+  String get analysisLogical => 'Logical';
+
+  @override
+  String get analysisDependencies => 'Applications\' environments';
+
+  @override
+  String get analysisEmpty => 'No analysis data';
+
+  @override
+  String get analysisSearch => 'Search modules';
+
+  @override
+  String get analysisSort => 'Sort modules';
+
+  @override
+  String get analysisAllocationNotice =>
+      'Shared blocks are allocated across modules. These values do not indicate space recoverable by uninstalling.';
+
+  @override
+  String get analysisInstalledVersion => 'Installed version';
+
+  @override
+  String get analysisNoMatches => 'No matching modules';
+
+  @override
+  String get analysisDescending => 'Largest first';
+
+  @override
+  String get a11yAnalysisArea => 'Space analysis';
+
+  @override
+  String get a11yAnalysisApp => 'Space and dependencies';
+
+  @override
   String get appTitle => 'Linyaps Store Community Edition';
 
   @override
@@ -589,6 +725,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showBaseServices => 'Show base runtime services';
+
+  @override
+  String get autoPruneDependencies =>
+      'Automatically remove unused dependencies';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      'Linyaps cleans up unused dependencies after upgrades or removals. Turning this off retains dependencies, but does not preserve historical app versions.';
+
+  @override
+  String get a11yAutoPruneDependencies =>
+      'Automatically remove unused dependencies';
 
   @override
   String get showBaseServicesDesc =>
@@ -2556,4 +2704,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return 'Elapsed $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'You can continue browsing the store, searching for apps, and viewing details. Installing, running, and managing local apps or app updates requires a working Linglong environment.';
+
+  @override
+  String get continueBrowsing => 'Continue browsing';
+
+  @override
+  String get envRequiredTitle => 'Linglong environment required';
+
+  @override
+  String get envRequiredDescription =>
+      'This feature requires a local Linglong environment. Install or repair it to manage installed apps and app updates. You can still browse the store, search for apps, and view details.';
+
+  @override
+  String get configureLinglongEnvironment => 'Install or repair environment';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'Installation is in progress. Please wait until it finishes. This notice cannot be closed during installation.';
+
+  @override
+  String get a11yContinueBrowsing =>
+      'Close the environment notice and continue browsing the store';
+
+  @override
+  String get a11yConfigureLinglongEnvironment =>
+      'Install or repair the Linglong environment';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Open the manual Linglong installation guide';
+
+  @override
+  String get a11yRecheckLinglongEnvironment =>
+      'Check the Linglong environment again';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic =>
+      'Copy Linglong environment diagnostics';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Open the Linglong installation log folder';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Restart the Linglong package manager service';
 }

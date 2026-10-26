@@ -11,6 +11,139 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => '添加仓库';
+
+  @override
+  String get a11yMirrorActions => '仓库操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '复制错误信息';
+
+  @override
+  String get a11yMirrorConfirm => '确认';
+
+  @override
+  String get a11yMirrorCancel => '取消';
+
+  @override
+  String get a11yMirrorRepositories => '镜像仓库配置列表';
+
+  @override
+  String get mirrorRegionTitle => '镜像地区';
+
+  @override
+  String get mirrorRegionAuto => '自动选择';
+
+  @override
+  String get mirrorRegionChina => '中国 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '美国 (US)';
+
+  @override
+  String get mirrorRegionEurope => '欧洲 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '自定义地区';
+
+  @override
+  String get mirrorRegionCode => '地区代码';
+
+  @override
+  String get mirrorRegionInvalid => '仅允许字母、数字、连字符和下划线，且以字母或数字开头。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '设置已提交，状态尚未确认';
+
+  @override
+  String get mirrorStatusUnknown => '镜像状态未知';
+
+  @override
+  String get mirrorCustomRegionTitle => '设置镜像地区';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository 的镜像开关';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository 的镜像地区';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '镜像配置诊断';
+
+  @override
+  String get a11yAnalysisRefresh => '刷新';
+
+  @override
+  String get a11yAnalysisRetry => '重试';
+
+  @override
+  String get a11yAnalysisCopy => '复制';
+
+  @override
+  String get a11yAnalysisSort => '模块排序';
+
+  @override
+  String get a11yAnalysisVersion => '已安装版本';
+
+  @override
+  String get analysisSpace => '空间分析';
+
+  @override
+  String get analysisApp => '空间与依赖';
+
+  @override
+  String get analysisRepository => '仓库真实占用';
+
+  @override
+  String get analysisModulesTotal => '已安装模块实际总量';
+
+  @override
+  String get analysisActual => '实际（分摊估算）';
+
+  @override
+  String get analysisExclusive => '独占';
+
+  @override
+  String get analysisShared => '共享';
+
+  @override
+  String get analysisLogical => '逻辑';
+
+  @override
+  String get analysisDependencies => '应用使用的环境';
+
+  @override
+  String get analysisEmpty => '暂无分析数据';
+
+  @override
+  String get analysisSearch => '搜索模块';
+
+  @override
+  String get analysisSort => '模块排序';
+
+  @override
+  String get analysisAllocationNotice => '共享数据块按模块分摊。这些数值不代表卸载可释放的空间。';
+
+  @override
+  String get analysisInstalledVersion => '已安装版本';
+
+  @override
+  String get analysisNoMatches => '没有匹配的模块';
+
+  @override
+  String get analysisDescending => '从大到小';
+
+  @override
+  String get a11yAnalysisArea => '空间分析';
+
+  @override
+  String get a11yAnalysisApp => '空间与依赖';
+
+  @override
   String get appTitle => '玲珑应用商店社区版';
 
   @override
@@ -557,6 +690,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get showBaseServices => '显示基础运行服务';
+
+  @override
+  String get autoPruneDependencies => '自动清理未使用依赖';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '由玲珑在升级或卸载后清理闲置依赖。关闭后保留依赖，不保证保留历史应用版本。';
+
+  @override
+  String get a11yAutoPruneDependencies => '自动清理未使用依赖';
 
   @override
   String get showBaseServicesDesc => '在已安装列表中显示底层基础运行服务';
@@ -2433,11 +2576,185 @@ class AppLocalizationsZh extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return '已运行 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '你可以继续浏览商店、搜索应用和查看详情。安装、运行、管理本机应用及应用更新需要先安装或修复玲珑环境。';
+
+  @override
+  String get continueBrowsing => '继续浏览';
+
+  @override
+  String get envRequiredTitle => '需要玲珑环境';
+
+  @override
+  String get envRequiredDescription =>
+      '此功能需要本机玲珑环境。安装或修复环境后，即可管理已安装应用和应用更新；你现在仍可浏览商店、搜索应用及查看详情。';
+
+  @override
+  String get configureLinglongEnvironment => '安装或修复环境';
+
+  @override
+  String get envInstallationInProgressNotice => '安装正在进行，请等待完成。安装过程中无法关闭此提示。';
+
+  @override
+  String get a11yContinueBrowsing => '关闭环境提醒并继续浏览商店';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => '安装或修复玲珑环境';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation => '打开玲珑环境手动安装指南';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => '重新检测玲珑环境';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => '复制玲珑环境诊断信息';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => '打开玲珑环境安装日志目录';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService => '重启玲珑包管理器服务';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
 class AppLocalizationsZhHant extends AppLocalizationsZh {
   AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get a11yMirrorAddRepository => '新增儲存庫';
+
+  @override
+  String get a11yMirrorActions => '儲存庫操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '複製錯誤資訊';
+
+  @override
+  String get a11yMirrorConfirm => '確認';
+
+  @override
+  String get a11yMirrorCancel => '取消';
+
+  @override
+  String get a11yMirrorRepositories => '鏡像倉庫設定清單';
+
+  @override
+  String get mirrorRegionTitle => '鏡像地區';
+
+  @override
+  String get mirrorRegionAuto => '自動選擇';
+
+  @override
+  String get mirrorRegionChina => '中國 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '美國 (US)';
+
+  @override
+  String get mirrorRegionEurope => '歐洲 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '自訂地區';
+
+  @override
+  String get mirrorRegionCode => '地區代碼';
+
+  @override
+  String get mirrorRegionInvalid => '僅允許字母、數字、連字號和底線，並以字母或數字開頭。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '設定已提交，狀態尚未確認';
+
+  @override
+  String get mirrorStatusUnknown => '鏡像狀態未知';
+
+  @override
+  String get mirrorCustomRegionTitle => '設定鏡像地區';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository 的鏡像開關';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository 的鏡像地區';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '鏡像設定診斷';
+
+  @override
+  String get a11yAnalysisRefresh => '重新整理';
+
+  @override
+  String get a11yAnalysisRetry => '重試';
+
+  @override
+  String get a11yAnalysisCopy => '複製';
+
+  @override
+  String get a11yAnalysisSort => '模組排序';
+
+  @override
+  String get a11yAnalysisVersion => '已安裝版本';
+
+  @override
+  String get analysisSpace => '空間分析';
+
+  @override
+  String get analysisApp => '空間與依賴';
+
+  @override
+  String get analysisRepository => '儲存庫實際用量';
+
+  @override
+  String get analysisModulesTotal => '已安裝模組實際總量';
+
+  @override
+  String get analysisActual => '實際（分攤估算）';
+
+  @override
+  String get analysisExclusive => '獨占';
+
+  @override
+  String get analysisShared => '共用';
+
+  @override
+  String get analysisLogical => '邏輯';
+
+  @override
+  String get analysisDependencies => '應用程式使用的環境';
+
+  @override
+  String get analysisEmpty => '暫無分析資料';
+
+  @override
+  String get analysisSearch => '搜尋模組';
+
+  @override
+  String get analysisSort => '模組排序';
+
+  @override
+  String get analysisAllocationNotice => '共用資料區塊按模組分攤。這些數值不代表解除安裝可釋放的空間。';
+
+  @override
+  String get analysisInstalledVersion => '已安裝版本';
+
+  @override
+  String get analysisNoMatches => '沒有符合的模組';
+
+  @override
+  String get analysisDescending => '從大到小';
+
+  @override
+  String get a11yAnalysisArea => '空間分析';
+
+  @override
+  String get a11yAnalysisApp => '空間與依賴';
 
   @override
   String get appTitle => '玲瓏應用商店社群版';
@@ -2986,6 +3303,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get showBaseServices => '顯示基礎執行服務';
+
+  @override
+  String get autoPruneDependencies => '自動清理未使用相依套件';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '玲瓏在升級或移除後清理閒置相依套件。關閉後保留相依套件，但不保證保留歷史應用程式版本。';
+
+  @override
+  String get a11yAutoPruneDependencies => '自動清理未使用相依套件';
 
   @override
   String get showBaseServicesDesc => '在已安裝清單中顯示底層基礎執行服務';
@@ -4863,4 +5190,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String repairElapsedTime(String elapsed) {
     return '已執行 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '你可以繼續瀏覽商店、搜尋應用程式及查看詳情。安裝、執行、管理本機應用程式及應用程式更新需要先安裝或修復玲瓏環境。';
+
+  @override
+  String get continueBrowsing => '繼續瀏覽';
+
+  @override
+  String get envRequiredTitle => '需要玲瓏環境';
+
+  @override
+  String get envRequiredDescription =>
+      '此功能需要本機玲瓏環境。安裝或修復環境後，即可管理已安裝應用程式及應用程式更新；你現在仍可瀏覽商店、搜尋應用程式及查看詳情。';
+
+  @override
+  String get configureLinglongEnvironment => '安裝或修復環境';
+
+  @override
+  String get envInstallationInProgressNotice => '安裝正在進行，請等待完成。安裝過程中無法關閉此提示。';
+
+  @override
+  String get a11yContinueBrowsing => '關閉環境提醒並繼續瀏覽商店';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => '安裝或修復玲瓏環境';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation => '開啟玲瓏環境手動安裝指南';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => '重新偵測玲瓏環境';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => '複製玲瓏環境診斷資訊';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => '開啟玲瓏環境安裝記錄目錄';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService => '重新啟動玲瓏套件管理員服務';
 }

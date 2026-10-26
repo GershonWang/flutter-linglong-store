@@ -13,6 +13,8 @@ std::vector<std::string> HelperTaskRunner::buildArgv(const TaskSpec& spec) {
     argv.emplace_back("upgrade");
     argv.emplace_back("--json");
     argv.push_back(spec.appId);
+    // 两类包操作使用同一可选清理控制，不接收任意外部选项。
+    if (spec.noAutoPrune) argv.emplace_back("--no-auto-prune");
     return argv;
   }
   argv.emplace_back("install");
@@ -22,6 +24,7 @@ std::vector<std::string> HelperTaskRunner::buildArgv(const TaskSpec& spec) {
   if (spec.force) {
     argv.emplace_back("--force");
   }
+  if (spec.noAutoPrune) argv.emplace_back("--no-auto-prune");
   return argv;
 }
 

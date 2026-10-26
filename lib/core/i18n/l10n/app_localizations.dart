@@ -115,6 +115,264 @@ abstract class AppLocalizations {
     Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
   ];
 
+  /// No description provided for @a11yMirrorAddRepository.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加仓库'**
+  String get a11yMirrorAddRepository;
+
+  /// No description provided for @a11yMirrorActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库操作'**
+  String get a11yMirrorActions;
+
+  /// No description provided for @a11yMirrorCopyDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制错误信息'**
+  String get a11yMirrorCopyDiagnostic;
+
+  /// No description provided for @a11yMirrorConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认'**
+  String get a11yMirrorConfirm;
+
+  /// No description provided for @a11yMirrorCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get a11yMirrorCancel;
+
+  /// No description provided for @a11yMirrorRepositories.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像仓库配置列表'**
+  String get a11yMirrorRepositories;
+
+  /// No description provided for @mirrorRegionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像地区'**
+  String get mirrorRegionTitle;
+
+  /// No description provided for @mirrorRegionAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动选择'**
+  String get mirrorRegionAuto;
+
+  /// No description provided for @mirrorRegionChina.
+  ///
+  /// In zh, this message translates to:
+  /// **'中国 (CN)'**
+  String get mirrorRegionChina;
+
+  /// No description provided for @mirrorRegionUnitedStates.
+  ///
+  /// In zh, this message translates to:
+  /// **'美国 (US)'**
+  String get mirrorRegionUnitedStates;
+
+  /// No description provided for @mirrorRegionEurope.
+  ///
+  /// In zh, this message translates to:
+  /// **'欧洲 (EU)'**
+  String get mirrorRegionEurope;
+
+  /// No description provided for @mirrorRegionCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义地区'**
+  String get mirrorRegionCustom;
+
+  /// No description provided for @mirrorRegionCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'地区代码'**
+  String get mirrorRegionCode;
+
+  /// No description provided for @mirrorRegionInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅允许字母、数字、连字符和下划线，且以字母或数字开头。'**
+  String get mirrorRegionInvalid;
+
+  /// No description provided for @mirrorConfigurationUnconfirmed.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置已提交，状态尚未确认'**
+  String get mirrorConfigurationUnconfirmed;
+
+  /// No description provided for @mirrorStatusUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像状态未知'**
+  String get mirrorStatusUnknown;
+
+  /// No description provided for @mirrorCustomRegionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置镜像地区'**
+  String get mirrorCustomRegionTitle;
+
+  /// No description provided for @a11yMirrorToggle.
+  ///
+  /// In zh, this message translates to:
+  /// **'{repository} 的镜像开关'**
+  String a11yMirrorToggle(String repository);
+
+  /// No description provided for @a11yMirrorRegion.
+  ///
+  /// In zh, this message translates to:
+  /// **'{repository} 的镜像地区'**
+  String a11yMirrorRegion(String repository);
+
+  /// No description provided for @a11yMirrorDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像配置诊断'**
+  String get a11yMirrorDiagnostic;
+
+  /// No description provided for @a11yAnalysisRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get a11yAnalysisRefresh;
+
+  /// No description provided for @a11yAnalysisRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get a11yAnalysisRetry;
+
+  /// No description provided for @a11yAnalysisCopy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get a11yAnalysisCopy;
+
+  /// No description provided for @a11yAnalysisSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'模块排序'**
+  String get a11yAnalysisSort;
+
+  /// No description provided for @a11yAnalysisVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装版本'**
+  String get a11yAnalysisVersion;
+
+  /// No description provided for @analysisSpace.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间分析'**
+  String get analysisSpace;
+
+  /// No description provided for @analysisApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间与依赖'**
+  String get analysisApp;
+
+  /// No description provided for @analysisRepository.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库真实占用'**
+  String get analysisRepository;
+
+  /// No description provided for @analysisModulesTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装模块实际总量'**
+  String get analysisModulesTotal;
+
+  /// No description provided for @analysisActual.
+  ///
+  /// In zh, this message translates to:
+  /// **'实际（分摊估算）'**
+  String get analysisActual;
+
+  /// No description provided for @analysisExclusive.
+  ///
+  /// In zh, this message translates to:
+  /// **'独占'**
+  String get analysisExclusive;
+
+  /// No description provided for @analysisShared.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享'**
+  String get analysisShared;
+
+  /// No description provided for @analysisLogical.
+  ///
+  /// In zh, this message translates to:
+  /// **'逻辑'**
+  String get analysisLogical;
+
+  /// No description provided for @analysisDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用使用的环境'**
+  String get analysisDependencies;
+
+  /// No description provided for @analysisEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无分析数据'**
+  String get analysisEmpty;
+
+  /// No description provided for @analysisSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索模块'**
+  String get analysisSearch;
+
+  /// No description provided for @analysisSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'模块排序'**
+  String get analysisSort;
+
+  /// No description provided for @analysisAllocationNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享数据块按模块分摊。这些数值不代表卸载可释放的空间。'**
+  String get analysisAllocationNotice;
+
+  /// No description provided for @analysisInstalledVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装版本'**
+  String get analysisInstalledVersion;
+
+  /// No description provided for @analysisNoMatches.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的模块'**
+  String get analysisNoMatches;
+
+  /// No description provided for @analysisDescending.
+  ///
+  /// In zh, this message translates to:
+  /// **'从大到小'**
+  String get analysisDescending;
+
+  /// No description provided for @a11yAnalysisArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间分析'**
+  String get a11yAnalysisArea;
+
+  /// No description provided for @a11yAnalysisApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'空间与依赖'**
+  String get a11yAnalysisApp;
+
   /// No description provided for @appTitle.
   ///
   /// In zh, this message translates to:
@@ -1128,6 +1386,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'显示基础运行服务'**
   String get showBaseServices;
+
+  /// No description provided for @autoPruneDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动清理未使用依赖'**
+  String get autoPruneDependencies;
+
+  /// No description provided for @autoPruneDependenciesDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'由玲珑在升级或卸载后清理闲置依赖。关闭后保留依赖，不保证保留历史应用版本。'**
+  String get autoPruneDependenciesDescription;
+
+  /// No description provided for @a11yAutoPruneDependencies.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动清理未使用依赖'**
+  String get a11yAutoPruneDependencies;
 
   /// No description provided for @showBaseServicesDesc.
   ///
@@ -4387,6 +4663,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已运行 {elapsed}'**
   String repairElapsedTime(String elapsed);
+
+  /// No description provided for @envBrowseNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'你可以继续浏览商店、搜索应用和查看详情。安装、运行、管理本机应用及应用更新需要先安装或修复玲珑环境。'**
+  String get envBrowseNotice;
+
+  /// No description provided for @continueBrowsing.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续浏览'**
+  String get continueBrowsing;
+
+  /// No description provided for @envRequiredTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要玲珑环境'**
+  String get envRequiredTitle;
+
+  /// No description provided for @envRequiredDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'此功能需要本机玲珑环境。安装或修复环境后，即可管理已安装应用和应用更新；你现在仍可浏览商店、搜索应用及查看详情。'**
+  String get envRequiredDescription;
+
+  /// No description provided for @configureLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装或修复环境'**
+  String get configureLinglongEnvironment;
+
+  /// No description provided for @envInstallationInProgressNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装正在进行，请等待完成。安装过程中无法关闭此提示。'**
+  String get envInstallationInProgressNotice;
+
+  /// No description provided for @a11yContinueBrowsing.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭环境提醒并继续浏览商店'**
+  String get a11yContinueBrowsing;
+
+  /// No description provided for @a11yConfigureLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装或修复玲珑环境'**
+  String get a11yConfigureLinglongEnvironment;
+
+  /// No description provided for @a11yManualLinglongEnvironmentInstallation.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开玲珑环境手动安装指南'**
+  String get a11yManualLinglongEnvironmentInstallation;
+
+  /// No description provided for @a11yRecheckLinglongEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新检测玲珑环境'**
+  String get a11yRecheckLinglongEnvironment;
+
+  /// No description provided for @a11yCopyLinglongEnvironmentDiagnostic.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制玲珑环境诊断信息'**
+  String get a11yCopyLinglongEnvironmentDiagnostic;
+
+  /// No description provided for @a11yOpenLinglongInstallLogDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开玲珑环境安装日志目录'**
+  String get a11yOpenLinglongInstallLogDirectory;
+
+  /// No description provided for @a11yRestartLinglongPackageManagerService.
+  ///
+  /// In zh, this message translates to:
+  /// **'重启玲珑包管理器服务'**
+  String get a11yRestartLinglongPackageManagerService;
 }
 
 class _AppLocalizationsDelegate

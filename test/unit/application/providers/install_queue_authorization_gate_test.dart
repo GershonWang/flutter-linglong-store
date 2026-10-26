@@ -44,6 +44,8 @@ class _GateFakeCliRepository implements LinglongCliRepository {
     String appId, {
     String? version,
     bool force = false,
+    // 扩展签名不改变原有授权门闩测试语义。
+    bool noAutoPrune = false,
   }) async* {
     installedApps.add(appId);
     final gate = holdInstall;
@@ -102,10 +104,10 @@ class _GateFakeCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<void> uninstallApp(String appId, String? version) async {}
+  Future<void> uninstallApp(String appId, String? version, {bool noAutoPrune = false}) async {}
 
   @override
-  Stream<InstallProgress> updateApp(String appId) async* {
+  Stream<InstallProgress> updateApp(String appId, {bool noAutoPrune = false}) async* {
     yield InstallProgress(
       appId: appId,
       status: InstallStatus.success,

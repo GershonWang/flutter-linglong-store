@@ -19,16 +19,18 @@ abstract class LinglongCliRepository {
   /// [appId] 应用ID
   /// [version] 目标版本，不指定则安装最新版
   /// [force] 是否强制重新安装
+  /// [noAutoPrune] 由已确认版本能力和入队偏好冻结，只跳过未使用依赖清理。
   Stream<InstallProgress> installApp(
     String appId, {
     String? version,
     bool force = false,
+    bool noAutoPrune = false,
   });
 
   /// 更新应用（返回进度流）
   ///
   /// 始终更新到最新版，不接受版本参数。
-  Stream<InstallProgress> updateApp(String appId);
+  Stream<InstallProgress> updateApp(String appId, {bool noAutoPrune = false});
 
   /// 取消安装/更新任务
   ///
@@ -51,7 +53,12 @@ abstract class LinglongCliRepository {
   ///   自身解析目标（用于应用详情页头部“整体卸载”场景，此处不应
   ///   依赖详情接口返回的“最新版本号”，因为该版本号不一定对应
   ///   实际已安装实例）。
-  Future<void> uninstallApp(String appId, String? version);
+  /// [noAutoPrune] 不阻止旧应用替换或不可达对象回收，不能承诺保留历史版本。
+  Future<void> uninstallApp(
+    String appId,
+    String? version, {
+    bool noAutoPrune = false,
+  });
 
   /// 运行应用
   Future<void> runApp(String appId);

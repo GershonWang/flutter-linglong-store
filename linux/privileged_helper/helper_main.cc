@@ -427,6 +427,8 @@ int main() {
             spec.appId = parsed.request.appId;
             spec.version = parsed.request.version;
             spec.force = parsed.request.force;
+            // 只转发已校验的类型化清理控制，实际 argv 由任务执行器生成。
+            spec.noAutoPrune = parsed.request.noAutoPrune;
             const std::vector<std::string> argv =
                 helper::HelperTaskRunner::buildArgv(spec);
             if (!session.child.spawn(argv, childEnv)) {

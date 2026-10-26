@@ -11,6 +11,140 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => '저장소 추가';
+
+  @override
+  String get a11yMirrorActions => '저장소 작업';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => '오류 메시지 복사';
+
+  @override
+  String get a11yMirrorConfirm => '확인';
+
+  @override
+  String get a11yMirrorCancel => '취소';
+
+  @override
+  String get a11yMirrorRepositories => '저장소 미러 설정 목록';
+
+  @override
+  String get mirrorRegionTitle => '미러 지역';
+
+  @override
+  String get mirrorRegionAuto => '자동 선택';
+
+  @override
+  String get mirrorRegionChina => '중국 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '미국 (US)';
+
+  @override
+  String get mirrorRegionEurope => '유럽 (EU)';
+
+  @override
+  String get mirrorRegionCustom => '사용자 지정 지역';
+
+  @override
+  String get mirrorRegionCode => '지역 코드';
+
+  @override
+  String get mirrorRegionInvalid => '문자 또는 숫자로 시작하고 문자, 숫자, 하이픈, 밑줄만 사용하세요.';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '설정을 제출했지만 상태는 아직 확인되지 않았습니다';
+
+  @override
+  String get mirrorStatusUnknown => '미러 상태 알 수 없음';
+
+  @override
+  String get mirrorCustomRegionTitle => '미러 지역 설정';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository의 미러 전환';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository의 미러 지역';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => '미러 설정 진단';
+
+  @override
+  String get a11yAnalysisRefresh => '새로 고침';
+
+  @override
+  String get a11yAnalysisRetry => '재시도';
+
+  @override
+  String get a11yAnalysisCopy => '복사';
+
+  @override
+  String get a11yAnalysisSort => '모듈 정렬';
+
+  @override
+  String get a11yAnalysisVersion => '설치된 버전';
+
+  @override
+  String get analysisSpace => '공간 분석';
+
+  @override
+  String get analysisApp => '공간 및 의존성';
+
+  @override
+  String get analysisRepository => '저장소 사용량';
+
+  @override
+  String get analysisModulesTotal => '설치된 모듈 합계';
+
+  @override
+  String get analysisActual => '분담 추정치';
+
+  @override
+  String get analysisExclusive => '독점';
+
+  @override
+  String get analysisShared => '공유';
+
+  @override
+  String get analysisLogical => '논리';
+
+  @override
+  String get analysisDependencies => '앱이 사용하는 환경';
+
+  @override
+  String get analysisEmpty => '분석 데이터 없음';
+
+  @override
+  String get analysisSearch => '모듈 검색';
+
+  @override
+  String get analysisSort => '모듈 정렬';
+
+  @override
+  String get analysisAllocationNotice =>
+      '공유 블록은 모듈 간에 분담됩니다. 이 값은 제거 시 확보할 수 있는 공간을 나타내지 않습니다.';
+
+  @override
+  String get analysisInstalledVersion => '설치된 버전';
+
+  @override
+  String get analysisNoMatches => '일치하는 모듈 없음';
+
+  @override
+  String get analysisDescending => '큰 순서';
+
+  @override
+  String get a11yAnalysisArea => '공간 분석';
+
+  @override
+  String get a11yAnalysisApp => '공간 및 의존성';
+
+  @override
   String get appTitle => 'Linyaps 스토어 커뮤니티 에디션';
 
   @override
@@ -567,6 +701,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get showBaseServices => '기반 런타임 서비스 표시';
+
+  @override
+  String get autoPruneDependencies => '사용하지 않는 의존성 자동 정리';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '업데이트 또는 제거 후 사용하지 않는 의존성을 정리합니다. 끄면 의존성은 유지되지만 이전 앱 버전 보존은 보장되지 않습니다.';
+
+  @override
+  String get a11yAutoPruneDependencies => '사용하지 않는 의존성 자동 정리';
 
   @override
   String get showBaseServicesDesc => '설치된 목록에 기반 런타임 서비스를 표시합니다';
@@ -2470,4 +2614,48 @@ class AppLocalizationsKo extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return '실행 시간 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      '스토어 둘러보기, 앱 검색 및 상세 정보 확인은 계속 이용할 수 있습니다. 로컬 앱을 설치, 실행, 관리하거나 업데이트하려면 정상적인 Linglong 환경이 필요합니다.';
+
+  @override
+  String get continueBrowsing => '계속 둘러보기';
+
+  @override
+  String get envRequiredTitle => 'Linglong 환경 필요';
+
+  @override
+  String get envRequiredDescription =>
+      '이 기능에는 로컬 Linglong 환경이 필요합니다. 환경을 설치하거나 복구하면 설치된 앱과 앱 업데이트를 관리할 수 있습니다. 스토어 둘러보기, 앱 검색 및 상세 정보 확인은 계속 이용할 수 있습니다.';
+
+  @override
+  String get configureLinglongEnvironment => '환경 설치 또는 복구';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      '설치 중입니다. 완료될 때까지 기다려 주세요. 설치 중에는 이 알림을 닫을 수 없습니다.';
+
+  @override
+  String get a11yContinueBrowsing => '환경 알림을 닫고 스토어 계속 둘러보기';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => 'Linglong 환경 설치 또는 복구';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Linglong 수동 설치 안내 열기';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => 'Linglong 환경 다시 확인';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => 'Linglong 환경 진단 정보 복사';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory => 'Linglong 설치 로그 폴더 열기';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Linglong 패키지 관리자 서비스 다시 시작';
 }

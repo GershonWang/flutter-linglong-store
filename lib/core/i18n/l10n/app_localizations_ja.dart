@@ -11,6 +11,140 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get a11yMirrorAddRepository => 'リポジトリを追加';
+
+  @override
+  String get a11yMirrorActions => 'リポジトリ操作';
+
+  @override
+  String get a11yMirrorCopyDiagnostic => 'エラーメッセージをコピー';
+
+  @override
+  String get a11yMirrorConfirm => '確認';
+
+  @override
+  String get a11yMirrorCancel => 'キャンセル';
+
+  @override
+  String get a11yMirrorRepositories => 'リポジトリのミラー設定一覧';
+
+  @override
+  String get mirrorRegionTitle => 'ミラー地域';
+
+  @override
+  String get mirrorRegionAuto => '自動選択';
+
+  @override
+  String get mirrorRegionChina => '中国 (CN)';
+
+  @override
+  String get mirrorRegionUnitedStates => '米国 (US)';
+
+  @override
+  String get mirrorRegionEurope => '欧州 (EU)';
+
+  @override
+  String get mirrorRegionCustom => 'カスタム地域';
+
+  @override
+  String get mirrorRegionCode => '地域コード';
+
+  @override
+  String get mirrorRegionInvalid => '英字または数字で始め、英字、数字、ハイフン、アンダースコアを使用してください。';
+
+  @override
+  String get mirrorConfigurationUnconfirmed => '設定を送信しました。状態は未確認です';
+
+  @override
+  String get mirrorStatusUnknown => 'ミラーの状態が不明';
+
+  @override
+  String get mirrorCustomRegionTitle => 'ミラー地域を設定';
+
+  @override
+  String a11yMirrorToggle(String repository) {
+    return '$repository のミラー切り替え';
+  }
+
+  @override
+  String a11yMirrorRegion(String repository) {
+    return '$repository のミラー地域';
+  }
+
+  @override
+  String get a11yMirrorDiagnostic => 'ミラー設定の診断';
+
+  @override
+  String get a11yAnalysisRefresh => '更新';
+
+  @override
+  String get a11yAnalysisRetry => '再試行';
+
+  @override
+  String get a11yAnalysisCopy => 'コピー';
+
+  @override
+  String get a11yAnalysisSort => 'モジュールの並べ替え';
+
+  @override
+  String get a11yAnalysisVersion => 'インストール済みバージョン';
+
+  @override
+  String get analysisSpace => '容量分析';
+
+  @override
+  String get analysisApp => '容量と依存関係';
+
+  @override
+  String get analysisRepository => 'リポジトリの使用量';
+
+  @override
+  String get analysisModulesTotal => 'インストール済みモジュールの合計';
+
+  @override
+  String get analysisActual => '実際（按分推定）';
+
+  @override
+  String get analysisExclusive => '専用';
+
+  @override
+  String get analysisShared => '共有';
+
+  @override
+  String get analysisLogical => '論理';
+
+  @override
+  String get analysisDependencies => 'アプリが使用する環境';
+
+  @override
+  String get analysisEmpty => '分析データがありません';
+
+  @override
+  String get analysisSearch => 'モジュールを検索';
+
+  @override
+  String get analysisSort => 'モジュールの並べ替え';
+
+  @override
+  String get analysisAllocationNotice =>
+      '共有ブロックはモジュール間で按分されます。これらの値はアンインストールで解放できる容量ではありません。';
+
+  @override
+  String get analysisInstalledVersion => 'インストール済みバージョン';
+
+  @override
+  String get analysisNoMatches => '一致するモジュールがありません';
+
+  @override
+  String get analysisDescending => '大きい順';
+
+  @override
+  String get a11yAnalysisArea => '容量分析';
+
+  @override
+  String get a11yAnalysisApp => '容量と依存関係';
+
+  @override
   String get appTitle => 'Linyaps ストアコミュニティ版';
 
   @override
@@ -569,6 +703,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get showBaseServices => '基盤ランタイムサービスを表示';
+
+  @override
+  String get autoPruneDependencies => '未使用の依存関係を自動削除';
+
+  @override
+  String get autoPruneDependenciesDescription =>
+      '更新や削除後に未使用の依存関係を整理します。無効にすると依存関係は残りますが、過去のアプリバージョンは保持されません。';
+
+  @override
+  String get a11yAutoPruneDependencies => '未使用の依存関係を自動削除';
 
   @override
   String get showBaseServicesDesc => 'インストール済みリストに基盤ランタイムサービスを表示します';
@@ -2474,4 +2618,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String repairElapsedTime(String elapsed) {
     return '実行時間 $elapsed';
   }
+
+  @override
+  String get envBrowseNotice =>
+      'ストアの閲覧、アプリの検索、詳細の確認は引き続き利用できます。ローカルアプリのインストール、実行、管理、更新には、正常な Linglong 環境が必要です。';
+
+  @override
+  String get continueBrowsing => '閲覧を続ける';
+
+  @override
+  String get envRequiredTitle => 'Linglong 環境が必要です';
+
+  @override
+  String get envRequiredDescription =>
+      'この機能にはローカルの Linglong 環境が必要です。環境をインストールまたは修復すると、インストール済みアプリとアプリ更新を管理できます。ストアの閲覧、アプリの検索、詳細の確認は引き続き利用できます。';
+
+  @override
+  String get configureLinglongEnvironment => '環境をインストール・修復';
+
+  @override
+  String get envInstallationInProgressNotice =>
+      'インストール中です。完了するまでお待ちください。インストール中はこの通知を閉じられません。';
+
+  @override
+  String get a11yContinueBrowsing => '環境の通知を閉じてストアの閲覧を続ける';
+
+  @override
+  String get a11yConfigureLinglongEnvironment => 'Linglong 環境をインストールまたは修復';
+
+  @override
+  String get a11yManualLinglongEnvironmentInstallation =>
+      'Linglong の手動インストールガイドを開く';
+
+  @override
+  String get a11yRecheckLinglongEnvironment => 'Linglong 環境を再確認';
+
+  @override
+  String get a11yCopyLinglongEnvironmentDiagnostic => 'Linglong 環境の診断情報をコピー';
+
+  @override
+  String get a11yOpenLinglongInstallLogDirectory =>
+      'Linglong インストールログのフォルダーを開く';
+
+  @override
+  String get a11yRestartLinglongPackageManagerService =>
+      'Linglong パッケージマネージャーサービスを再起動';
 }
